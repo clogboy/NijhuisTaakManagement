@@ -166,7 +166,7 @@ export default function Agenda() {
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
 
   // Check if scheduler trigger is on cooldown (30 minutes)
-  const isOnCooldown = lastTriggerTime && (Date.now() - lastTriggerTime) < 30 * 60 * 1000;
+  const isOnCooldown = Boolean(lastTriggerTime && (Date.now() - lastTriggerTime) < 30 * 60 * 1000);
   const cooldownMinutesLeft = lastTriggerTime ? Math.ceil((30 * 60 * 1000 - (Date.now() - lastTriggerTime)) / (1000 * 60)) : 0;
 
   // Scheduler trigger mutation with cooldown tracking
@@ -234,6 +234,19 @@ export default function Agenda() {
     const today = new Date(selectedDate).getDay();
     return weeklyEthos?.find(ethos => ethos.dayOfWeek === today);
   };
+
+  // Use effect to refresh cooldown timer
+  useEffect(() => {
+    if (isOnCooldown) {
+      const interval = setInterval(() => {
+        if (lastTriggerTime && (Date.now() - lastTriggerTime) >= 30 * 60 * 1000) {
+          setLastTriggerTime(null);
+        }
+      }, 60000); // Check every minute
+      
+      return () => clearInterval(interval);
+    }
+  }, [isOnCooldown, lastTriggerTime]);
 
   return (
     <AppLayout title="AI Agenda" subtitle="Intelligent time management with Eisenhower matrix">
@@ -329,25 +342,28 @@ export default function Agenda() {
                 </div>
 
                 {/* Today's Ethos */}
-                {getTodayEthos() && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Target size={16} className="text-red-600" />
-                      <span className="font-medium text-red-800">Today's Ethos</span>
-                    </div>
-                    <p className="text-red-700 font-medium">{getTodayEthos()?.ethos}</p>
-                    <p className="text-red-600 text-sm mt-1">{getTodayEthos()?.description}</p>
-                    {getTodayEthos()?.focusAreas && getTodayEthos()?.focusAreas.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {getTodayEthos()?.focusAreas.map((area: string) => (
-                          <Badge key={area} variant="secondary" className="bg-red-100 text-red-800">
-                            {area}
-                          </Badge>
-                        ))}
+                {(() => {
+                  const todayEthos = getTodayEthos();
+                  return todayEthos && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Target size={16} className="text-red-600" />
+                        <span className="font-medium text-red-800">Today's Ethos</span>
                       </div>
-                    )}
-                  </div>
-                )}
+                      <p className="text-red-700 font-medium">{todayEthos.ethos}</p>
+                      <p className="text-red-600 text-sm mt-1">{todayEthos.description}</p>
+                      {todayEthos.focusAreas && todayEthos.focusAreas.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {todayEthos.focusAreas.map((area: string) => (
+                            <Badge key={area} variant="secondary" className="bg-red-100 text-red-800">
+                              {area}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
 
