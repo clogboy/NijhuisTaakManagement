@@ -19,7 +19,9 @@ import {
   Menu,
   X,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  Pin,
+  PinOff
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,6 +55,7 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const [location] = useLocation();
   const queryClient = useQueryClient();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { data: user, isLoading } = useQuery<{ user: User }>({
     queryKey: ["/api/auth/me"],
@@ -95,17 +98,29 @@ export default function AppLayout({
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
+      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 flex flex-col transition-all duration-300`}>
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-ms-blue rounded-lg flex items-center justify-center">
-              <FolderOpen className="text-white" size={16} />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-neutral-dark">Dossier Manager</h1>
-              <p className="text-xs text-neutral-medium">Activity Management</p>
-            </div>
+          <div className="flex items-center justify-between">
+            {!isSidebarCollapsed && (
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-ms-blue rounded-lg flex items-center justify-center">
+                  <FolderOpen className="text-white" size={16} />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-neutral-dark">Dossier Manager</h1>
+                  <p className="text-xs text-neutral-medium">Activity Management</p>
+                </div>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="p-1 h-8 w-8 hover:bg-gray-100 ml-auto"
+            >
+              {isSidebarCollapsed ? <Pin size={16} /> : <PinOff size={16} />}
+            </Button>
           </div>
         </div>
 
@@ -121,13 +136,14 @@ export default function AppLayout({
               return (
                 <li key={item.path}>
                   <Link href={item.path}>
-                    <div className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                    <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                       isActive 
                         ? "text-white bg-ms-blue" 
                         : "text-neutral-medium hover:text-neutral-dark hover:bg-gray-100"
-                    }`}>
-                      <Icon size={16} className="mr-3" />
-                      {item.label}
+                    }`}
+                    title={isSidebarCollapsed ? item.label : undefined}>
+                      <Icon size={16} className={isSidebarCollapsed ? "" : "mr-3"} />
+                      {!isSidebarCollapsed && item.label}
                     </div>
                   </Link>
                 </li>
