@@ -180,7 +180,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/activities", requireAuth, async (req: any, res) => {
     try {
-      const activityData = insertActivitySchema.parse(req.body);
+      // Convert string dates to Date objects for validation
+      const data = { ...req.body };
+      if (data.dueDate && typeof data.dueDate === 'string') {
+        data.dueDate = new Date(data.dueDate);
+      }
+      
+      const activityData = insertActivitySchema.parse(data);
       const activity = await storage.createActivity({
         ...activityData,
         createdBy: req.user.id,

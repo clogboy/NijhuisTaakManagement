@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, CheckSquare, Play, Square, Filter, Settings } from "lucide-react";
+import { Calendar, Clock, CheckSquare, Play, Square, Filter, Settings, CalendarCheck, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +61,29 @@ export default function TimeBlocking() {
     queryKey: ["/api/timeblocks", { startDate: startDate.toISOString(), endDate: endDate.toISOString() }],
   });
 
+  // Microsoft Calendar events query
+  const { data: calendarEvents = [] } = useQuery({
+    queryKey: ["/api/calendar/events", { startDate: selectedDate.toISOString(), endDate: addDays(selectedDate, 1).toISOString() }],
+    enabled: true,
+  });
+
+  // Calendar conflict checking mutation
+  const checkConflictsMutation = useMutation({
+    mutationFn: async (timeBlocks: Array<{ startTime: Date; endTime: Date; title: string }>) => {
+      return apiRequest("/api/calendar/check-conflicts", "POST", { timeBlocks });
+    },
+  });
+
+  // Calendar sync mutation
+  const syncCalendarMutation = useMutation({
+    mutationFn: async (timeBlockIds: number[]) => {
+      return apiRequest("/api/calendar/sync", "POST", { timeBlockIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar/events"] });
+    },
+  });
+
   // Schedule preview mutation
   const previewMutation = useMutation({
     mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
@@ -80,14 +103,12 @@ export default function TimeBlocking() {
   // Auto schedule mutation
   const scheduleMutation = useMutation({
     mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
-      return apiRequest("/api/smart-schedule", {
-        method: "POST",
-        body: JSON.stringify({
-          activityIds: params.activityIds,
-          date: params.date.toISOString(),
-          options: params.options
-        }),
-      }) as Promise<ScheduleResult>;
+      const response = await apiRequest("/api/smart-schedule", "POST", {
+        activityIds: params.activityIds,
+        date: params.date.toISOString(),
+        options: params.options
+      });
+      return response as ScheduleResult;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/timeblocks"] });
@@ -100,10 +121,7 @@ export default function TimeBlocking() {
   // Complete time block mutation
   const completeMutation = useMutation({
     mutationFn: async (blockId: number) => {
-      return apiRequest(`/api/timeblocks/${blockId}`, {
-        method: "PUT",
-        body: JSON.stringify({ isCompleted: true }),
-      });
+      return apiRequest(`/api/timeblocks/${blockId}`, "PUT", { isCompleted: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/timeblocks"] });
@@ -426,6 +444,75 @@ export default function TimeBlocking() {
                 )}
               </div>
             </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Microsoft Calendar Events */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5" />
+              Microsoft Calendar
+              <Badge variant="outline" className="text-xs">
+                {calendarEvents.length} events
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-64">
+              {calendarEvents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CalendarCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <div>No calendar events found</div>
+                  <div className="text-sm mt-1">
+                    Connect your Microsoft account to sync events
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {calendarEvents
+                    .sort((a: any, b: any) => new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime())
+                    .map((event: any) => (
+                      <div
+                        key={event.id}
+                        className="p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{event.subject}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {formatTime(new Date(event.start.dateTime))} - {formatTime(new Date(event.end.dateTime))}
+                            </div>
+                            {event.location?.displayName && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                📍 {event.location.displayName}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            Calendar
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </ScrollArea>
+            
+            {timeBlocks.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => syncCalendarMutation.mutate(timeBlocks.map(b => b.id))}
+                  disabled={syncCalendarMutation.isPending}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  {syncCalendarMutation.isPending ? "Syncing..." : "Sync Time Blocks to Calendar"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
         </div>
