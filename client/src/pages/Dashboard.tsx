@@ -178,52 +178,52 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
+    <div className="flex-1 overflow-y-auto p-3 sm:p-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="text-white" size={16} />
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="text-white" size={12} />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-neutral-medium">Urgent Activities</p>
-                  <p className="text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium">Urgent Activities</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <Clock className="text-white" size={16} />
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <Clock className="text-white" size={12} />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-neutral-medium">Due This Week</p>
-                  <p className="text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium">Due This Week</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="text-white" size={16} />
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="text-white" size={12} />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-neutral-medium">Completed</p>
-                  <p className="text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium">Completed</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -233,20 +233,20 @@ export default function Dashboard() {
             className="cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => window.location.href = "/contacts"}
           >
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-ms-blue rounded-lg flex items-center justify-center">
-                      <Users className="text-white" size={16} />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-ms-blue rounded-lg flex items-center justify-center">
+                      <Users className="text-white" size={12} />
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-neutral-medium">Active Contacts</p>
-                    <p className="text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
+                  <div className="ml-2 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium">Active Contacts</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-neutral-medium hover:text-neutral-dark">
+                <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark">
                   Manage →
                 </Button>
               </div>
@@ -293,7 +293,94 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card Layout */}
+          <div className="block md:hidden space-y-3">
+            {filteredActivities?.map((activity) => (
+              <Card 
+                key={activity.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => {
+                  setSelectedActivity(activity);
+                  setIsTaskDetailModalOpen(true);
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {/* Title and Priority */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 ${getPriorityColor(activity.priority)} rounded-full`}></div>
+                          <h3 className="font-medium text-neutral-dark text-sm">{activity.title}</h3>
+                        </div>
+                        {activity.description && (
+                          <p className="text-xs text-neutral-medium mt-1 line-clamp-2">{activity.description}</p>
+                        )}
+                      </div>
+                      <Badge className={getPriorityBadgeColor(activity.priority)}>
+                        {activity.priority}
+                      </Badge>
+                    </div>
+                    
+                    {/* Details Row */}
+                    <div className="flex items-center justify-between text-xs text-neutral-medium">
+                      <div className="flex items-center gap-4">
+                        {activity.dueDate && (
+                          <div className="flex items-center gap-1">
+                            <Clock size={12} />
+                            <span>{format(new Date(activity.dueDate), "MMM dd")}</span>
+                          </div>
+                        )}
+                        {activity.participants && activity.participants.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <User size={12} />
+                            <span>{activity.participants.length}</span>
+                          </div>
+                        )}
+                      </div>
+                      <Badge className={getStatusBadgeColor(activity.status)} size="sm">
+                        {activity.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditActivity(activity);
+                        }}
+                        className="text-ms-blue hover:text-ms-blue-dark h-8 w-8 p-0"
+                      >
+                        <Edit size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendEmail();
+                        }}
+                        className="text-neutral-medium hover:text-neutral-dark h-8 w-8 p-0"
+                      >
+                        <Mail size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {!filteredActivities?.length && (
+              <div className="text-center py-8 text-neutral-medium">
+                No activities found matching your filters
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -307,7 +394,7 @@ export default function Dashboard() {
                     Due Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">
-                    Assigned To
+                    Participants
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">
                     Status

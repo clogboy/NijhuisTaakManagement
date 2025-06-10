@@ -196,16 +196,18 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] w-[95vw] sm:w-full overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span>{activity.title}</span>
-            <Badge variant={activity.priority === "urgent" ? "destructive" : "secondary"}>
-              {activity.priority}
-            </Badge>
-            <Badge variant={activity.status === "completed" ? "default" : "outline"}>
-              {activity.status}
-            </Badge>
+          <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <span className="text-base sm:text-lg">{activity.title}</span>
+            <div className="flex gap-2">
+              <Badge variant={activity.priority === "urgent" ? "destructive" : "secondary"} className="text-xs">
+                {activity.priority}
+              </Badge>
+              <Badge variant={activity.status === "completed" ? "default" : "outline"} className="text-xs">
+                {activity.status}
+              </Badge>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -220,7 +222,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
           </div>
 
           <Tabs defaultValue="comments" className="flex-1">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
               <TabsTrigger value="comments" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 Comments ({comments.length})
