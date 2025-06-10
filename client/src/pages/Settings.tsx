@@ -308,7 +308,7 @@ export default function Settings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="start-time">Start Time</Label>
-                  <Select value={preferences.workingHours.start} onValueChange={(value) => 
+                  <Select value={preferences.workingHours?.start || "09:00"} onValueChange={(value) => 
                     handleWorkingHoursChange('start', value)
                   }>
                     <SelectTrigger>
@@ -324,7 +324,7 @@ export default function Settings() {
                 </div>
                 <div>
                   <Label htmlFor="end-time">End Time</Label>
-                  <Select value={preferences.workingHours.end} onValueChange={(value) => 
+                  <Select value={preferences.workingHours?.end || "17:00"} onValueChange={(value) => 
                     handleWorkingHoursChange('end', value)
                   }>
                     <SelectTrigger>
