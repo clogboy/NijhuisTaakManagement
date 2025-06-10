@@ -8,7 +8,7 @@ export interface AuthState {
 
 export const mockMSALConfig = {
   auth: {
-    clientId: process.env.VITE_MICROSOFT_CLIENT_ID || "mock-client-id",
+    clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID || "mock-client-id",
     authority: "https://login.microsoftonline.com/common",
     redirectUri: window.location.origin,
   },

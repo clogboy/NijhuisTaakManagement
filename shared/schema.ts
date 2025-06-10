@@ -27,6 +27,7 @@ export const activities = pgTable("activities", {
   description: text("description"),
   priority: text("priority").notNull().default("normal"), // 'low', 'normal', 'urgent'
   status: text("status").notNull().default("planned"), // 'planned', 'in_progress', 'completed'
+  statusTags: text("status_tags").array(),
   dueDate: timestamp("due_date"),
   assignedTo: integer("assigned_to").references(() => contacts.id),
   createdBy: integer("created_by").notNull().references(() => users.id),
@@ -51,6 +52,21 @@ export const quickWins = pgTable("quick_wins", {
   linkedActivityId: integer("linked_activity_id").references(() => activities.id),
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const roadblocks = pgTable("roadblocks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  severity: text("severity").notNull().default("medium"), // 'low', 'medium', 'high', 'critical'
+  status: text("status").notNull().default("open"), // 'open', 'in_progress', 'resolved'
+  linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id),
+  reportedDate: timestamp("reported_date").notNull(),
+  resolvedDate: timestamp("resolved_date"),
+  resolution: text("resolution"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Insert schemas
@@ -84,6 +100,13 @@ export const insertQuickWinSchema = createInsertSchema(quickWins).omit({
   createdAt: true,
 });
 
+export const insertRoadblockSchema = createInsertSchema(roadblocks).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -99,3 +122,6 @@ export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 export type QuickWin = typeof quickWins.$inferSelect;
 export type InsertQuickWin = z.infer<typeof insertQuickWinSchema>;
+
+export type Roadblock = typeof roadblocks.$inferSelect;
+export type InsertRoadblock = z.infer<typeof insertRoadblockSchema>;

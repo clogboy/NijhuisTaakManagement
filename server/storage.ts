@@ -1,4 +1,4 @@
-import { users, contacts, activities, activityLogs, quickWins, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin } from "@shared/schema";
+import { users, contacts, activities, activityLogs, quickWins, roadblocks, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
@@ -31,6 +31,13 @@ export interface IStorage {
   getQuickWins(userId: number): Promise<QuickWin[]>;
   createQuickWin(quickWin: InsertQuickWin & { createdBy: number }): Promise<QuickWin>;
   deleteQuickWin(id: number): Promise<void>;
+
+  // Roadblocks
+  getRoadblocks(userId: number, isAdmin: boolean): Promise<Roadblock[]>;
+  getRoadblock(id: number): Promise<Roadblock | undefined>;
+  createRoadblock(roadblock: InsertRoadblock & { createdBy: number }): Promise<Roadblock>;
+  updateRoadblock(id: number, roadblock: Partial<InsertRoadblock>): Promise<Roadblock>;
+  deleteRoadblock(id: number): Promise<void>;
 
   // Stats
   getActivityStats(userId: number, isAdmin: boolean): Promise<{
@@ -147,6 +154,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuickWin(id: number): Promise<void> {
     await db.delete(quickWins).where(eq(quickWins.id, id));
+  }
+
+  async getRoadblocks(userId: number, isAdmin: boolean): Promise<Roadblock[]> {
+    if (isAdmin) {
+      return await db.select().from(roadblocks).orderBy(desc(roadblocks.reportedDate));
+    } else {
+      return await db.select().from(roadblocks)
+        .where(eq(roadblocks.createdBy, userId))
+        .orderBy(desc(roadblocks.reportedDate));
+    }
+  }
+
+  async getRoadblock(id: number): Promise<Roadblock | undefined> {
+    const [roadblock] = await db.select().from(roadblocks).where(eq(roadblocks.id, id));
+    return roadblock || undefined;
+  }
+
+  async createRoadblock(roadblock: InsertRoadblock & { createdBy: number }): Promise<Roadblock> {
+    const [newRoadblock] = await db.insert(roadblocks).values({
+      ...roadblock,
+      updatedAt: new Date(),
+    }).returning();
+    return newRoadblock;
+  }
+
+  async updateRoadblock(id: number, roadblock: Partial<InsertRoadblock>): Promise<Roadblock> {
+    const [updatedRoadblock] = await db.update(roadblocks)
+      .set({ ...roadblock, updatedAt: new Date() })
+      .where(eq(roadblocks.id, id))
+      .returning();
+    return updatedRoadblock;
+  }
+
+  async deleteRoadblock(id: number): Promise<void> {
+    await db.delete(roadblocks).where(eq(roadblocks.id, id));
   }
 
   async getActivityStats(userId: number, isAdmin: boolean): Promise<{

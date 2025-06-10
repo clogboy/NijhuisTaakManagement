@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema } from "@shared/schema";
+import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema } from "@shared/schema";
 import { z } from "zod";
 
 const loginUserSchema = z.object({
@@ -242,6 +242,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get stats error:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Roadblocks routes
+  app.get("/api/roadblocks", requireAuth, async (req: any, res) => {
+    try {
+      const roadblocks = await storage.getRoadblocks(req.user.id, req.user.role === "admin");
+      res.json(roadblocks);
+    } catch (error) {
+      console.error("Get roadblocks error:", error);
+      res.status(500).json({ message: "Failed to fetch roadblocks" });
+    }
+  });
+
+  app.post("/api/roadblocks", requireAuth, async (req: any, res) => {
+    try {
+      const roadblockData = insertRoadblockSchema.parse(req.body);
+      const roadblock = await storage.createRoadblock({
+        ...roadblockData,
+        createdBy: req.user.id,
+      });
+      res.json(roadblock);
+    } catch (error) {
+      console.error("Create roadblock error:", error);
+      res.status(400).json({ message: "Invalid roadblock data" });
+    }
+  });
+
+  app.put("/api/roadblocks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const roadblockId = parseInt(req.params.id);
+      const roadblockData = insertRoadblockSchema.partial().parse(req.body);
+      const roadblock = await storage.updateRoadblock(roadblockId, roadblockData);
+      res.json(roadblock);
+    } catch (error) {
+      console.error("Update roadblock error:", error);
+      res.status(400).json({ message: "Invalid roadblock data" });
+    }
+  });
+
+  app.delete("/api/roadblocks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const roadblockId = parseInt(req.params.id);
+      await storage.deleteRoadblock(roadblockId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete roadblock error:", error);
+      res.status(500).json({ message: "Failed to delete roadblock" });
     }
   });
 
