@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema } from "@shared/schema";
+import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema } from "@shared/schema";
+import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { z } from "zod";
 
 const loginUserSchema = z.object({
@@ -305,6 +306,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Send email error:", error);
       res.status(500).json({ message: "Failed to send email" });
+    }
+  });
+
+  // Weekly Ethos routes
+  app.get("/api/ethos", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const ethos = await storage.getWeeklyEthos(req.session.userId);
+      res.json(ethos);
+    } catch (error) {
+      console.error("Get weekly ethos error:", error);
+      res.status(500).json({ message: "Failed to get weekly ethos" });
+    }
+  });
+
+  app.get("/api/ethos/day/:dayOfWeek", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const dayOfWeek = parseInt(req.params.dayOfWeek);
+      const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
+      res.json(ethos);
+    } catch (error) {
+      console.error("Get daily ethos error:", error);
+      res.status(500).json({ message: "Failed to get daily ethos" });
+    }
+  });
+
+  app.post("/api/ethos", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const ethosData = insertWeeklyEthosSchema.parse(req.body);
+      const ethos = await storage.createWeeklyEthos({
+        ...ethosData,
+        createdBy: req.session.userId,
+      });
+      
+      res.json(ethos);
+    } catch (error) {
+      console.error("Create weekly ethos error:", error);
+      res.status(500).json({ message: "Failed to create weekly ethos" });
+    }
+  });
+
+  app.put("/api/ethos/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const ethosData = insertWeeklyEthosSchema.partial().parse(req.body);
+      const ethos = await storage.updateWeeklyEthos(id, ethosData);
+      
+      res.json(ethos);
+    } catch (error) {
+      console.error("Update weekly ethos error:", error);
+      res.status(500).json({ message: "Failed to update weekly ethos" });
+    }
+  });
+
+  app.post("/api/agenda/generate", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { date, maxTaskSwitches } = req.body;
+      const targetDate = new Date(date);
+      const dayOfWeek = targetDate.getDay();
+      
+      // Get activities for the user
+      const user = await storage.getUser(req.session.userId);
+      const activities = await storage.getActivities(req.session.userId, user?.isAdmin || false);
+      
+      // Get ethos for the day
+      const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
+      
+      // Generate AI-powered agenda
+      const agendaSuggestion = await generateDailyAgenda(
+        activities.filter(a => a.status !== 'completed'),
+        ethos,
+        maxTaskSwitches || 3
+      );
+      
+      res.json({
+        eisenhowerMatrix: agendaSuggestion.eisenhowerMatrix,
+        suggestions: agendaSuggestion.suggestions,
+        taskSwitchOptimization: agendaSuggestion.taskSwitchOptimization,
+        estimatedTaskSwitches: agendaSuggestion.estimatedTaskSwitches,
+        scheduledActivities: agendaSuggestion.scheduledActivities,
+      });
+    } catch (error) {
+      console.error("Generate agenda error:", error);
+      res.status(500).json({ message: "Failed to generate agenda" });
+    }
+  });
+
+  app.get("/api/eisenhower", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { date } = req.query;
+      const targetDate = date ? new Date(date as string) : new Date();
+      const dayOfWeek = targetDate.getDay();
+      
+      // Get activities and ethos
+      const user = await storage.getUser(req.session.userId);
+      const activities = await storage.getActivities(req.session.userId, user?.isAdmin || false);
+      const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
+      
+      // Categorize activities using Eisenhower matrix
+      const matrix = await categorizeActivitiesWithEisenhower(
+        activities.filter(a => a.status !== 'completed'),
+        ethos
+      );
+      
+      res.json(matrix);
+    } catch (error) {
+      console.error("Get Eisenhower matrix error:", error);
+      res.status(500).json({ message: "Failed to get Eisenhower matrix" });
     }
   });
 

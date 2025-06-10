@@ -267,6 +267,76 @@ export class DatabaseStorage implements IStorage {
       activeContacts: activeContacts.length,
     };
   }
+
+  // Weekly Ethos methods
+  async getWeeklyEthos(userId: number): Promise<WeeklyEthos[]> {
+    return await db.select().from(weeklyEthos).where(eq(weeklyEthos.createdBy, userId));
+  }
+
+  async getWeeklyEthosByDay(userId: number, dayOfWeek: number): Promise<WeeklyEthos | undefined> {
+    const [ethos] = await db.select().from(weeklyEthos)
+      .where(and(eq(weeklyEthos.createdBy, userId), eq(weeklyEthos.dayOfWeek, dayOfWeek)));
+    return ethos || undefined;
+  }
+
+  async createWeeklyEthos(ethos: InsertWeeklyEthos & { createdBy: number }): Promise<WeeklyEthos> {
+    const [newEthos] = await db.insert(weeklyEthos).values(ethos).returning();
+    return newEthos;
+  }
+
+  async updateWeeklyEthos(id: number, ethosUpdate: Partial<InsertWeeklyEthos>): Promise<WeeklyEthos> {
+    const [updatedEthos] = await db.update(weeklyEthos)
+      .set({ ...ethosUpdate, updatedAt: new Date() })
+      .where(eq(weeklyEthos.id, id))
+      .returning();
+    return updatedEthos;
+  }
+
+  async deleteWeeklyEthos(id: number): Promise<void> {
+    await db.delete(weeklyEthos).where(eq(weeklyEthos.id, id));
+  }
+
+  // Daily Agenda methods
+  async getDailyAgendas(userId: number, startDate?: Date, endDate?: Date): Promise<DailyAgenda[]> {
+    let query = db.select().from(dailyAgendas).where(eq(dailyAgendas.createdBy, userId));
+    
+    if (startDate && endDate) {
+      query = query.where(and(
+        eq(dailyAgendas.createdBy, userId),
+        sql`${dailyAgendas.date} >= ${startDate}`,
+        sql`${dailyAgendas.date} <= ${endDate}`
+      ));
+    }
+    
+    return await query.orderBy(desc(dailyAgendas.date));
+  }
+
+  async getDailyAgenda(userId: number, date: Date): Promise<DailyAgenda | undefined> {
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const [agenda] = await db.select().from(dailyAgendas)
+      .where(and(
+        eq(dailyAgendas.createdBy, userId),
+        sql`DATE(${dailyAgendas.date}) = DATE(${dateOnly})`
+      ));
+    return agenda || undefined;
+  }
+
+  async createDailyAgenda(agenda: InsertDailyAgenda & { createdBy: number }): Promise<DailyAgenda> {
+    const [newAgenda] = await db.insert(dailyAgendas).values(agenda).returning();
+    return newAgenda;
+  }
+
+  async updateDailyAgenda(id: number, agendaUpdate: Partial<InsertDailyAgenda>): Promise<DailyAgenda> {
+    const [updatedAgenda] = await db.update(dailyAgendas)
+      .set({ ...agendaUpdate, updatedAt: new Date() })
+      .where(eq(dailyAgendas.id, id))
+      .returning();
+    return updatedAgenda;
+  }
+
+  async deleteDailyAgenda(id: number): Promise<void> {
+    await db.delete(dailyAgendas).where(eq(dailyAgendas.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();
