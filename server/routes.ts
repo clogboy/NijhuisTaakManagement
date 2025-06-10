@@ -841,15 +841,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Scheduler management routes
-  app.get("/api/scheduler/status", requireAuth, (req, res) => {
-    const { dailyScheduler } = require("./scheduler");
-    const status = dailyScheduler.getStatus();
-    res.json(status);
+  app.get("/api/scheduler/status", requireAuth, async (req, res) => {
+    try {
+      const { dailyScheduler } = await import("./scheduler");
+      const status = dailyScheduler.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Failed to get scheduler status:", error);
+      res.status(500).json({ message: "Failed to get scheduler status" });
+    }
   });
 
   app.post("/api/scheduler/trigger", requireAuth, async (req: any, res) => {
     try {
-      const { dailyScheduler } = require("./scheduler");
+      const { dailyScheduler } = await import("./scheduler");
       await dailyScheduler.triggerSync(req.user.id);
       res.json({ message: "Daily sync triggered successfully" });
     } catch (error) {

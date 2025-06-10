@@ -65,6 +65,23 @@ export default function AppLayout({
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
+  
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Sync sidebar state and theme with user preferences when preferences load
   useEffect(() => {
@@ -128,8 +145,24 @@ export default function AppLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      {/* Mobile Menu Overlay */}
+      {isMobile && isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-sidebar-background shadow-sm border-r border-sidebar-border flex flex-col transition-all duration-300`}>
+      <div className={`
+        ${isMobile ? 
+          `fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }` : 
+          `${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`
+        } 
+        bg-sidebar-background shadow-sm border-r border-sidebar-border flex flex-col
+      `}>
         {/* Header */}
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
@@ -144,14 +177,26 @@ export default function AppLayout({
                 </div>
               </div>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
-            >
-              {isSidebarCollapsed ? <Pin size={16} /> : <PinOff size={16} />}
-            </Button>
+            {!isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
+              >
+                {isSidebarCollapsed ? <Pin size={16} /> : <PinOff size={16} />}
+              </Button>
+            )}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
+              >
+                <X size={16} />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -167,12 +212,19 @@ export default function AppLayout({
               return (
                 <li key={item.path}>
                   <Link href={item.path}>
-                    <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                      isActive 
-                        ? "text-sidebar-primary-foreground bg-sidebar-primary" 
-                        : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
-                    }`}
-                    title={isSidebarCollapsed ? item.label : undefined}>
+                    <div 
+                      className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                        isActive 
+                          ? "text-sidebar-primary-foreground bg-sidebar-primary" 
+                          : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
+                      }`}
+                      title={isSidebarCollapsed ? item.label : undefined}
+                      onClick={() => {
+                        if (isMobile) {
+                          setIsMobileMenuOpen(false);
+                        }
+                      }}
+                    >
                       <Icon size={16} className={isSidebarCollapsed ? "" : "mr-3"} />
                       {!isSidebarCollapsed && item.label}
                     </div>
@@ -189,30 +241,45 @@ export default function AppLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-background shadow-sm border-b border-border px-6 py-4">
+        <header className="bg-background shadow-sm border-b border-border px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
-              <p className="text-sm text-muted-foreground">{subtitle}</p>
-            </div>
             <div className="flex items-center space-x-3">
+              {/* Mobile Menu Button */}
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2 h-8 w-8 hover:bg-gray-100"
+                >
+                  <Menu size={16} />
+                </Button>
+              )}
+              <div className="min-w-0">
+                <h2 className="text-lg md:text-2xl font-semibold text-foreground truncate">{title}</h2>
+                <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">{subtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 md:space-x-3">
               {showFilterButton && (
                 <Button
                   variant="outline"
                   onClick={onOpenFilterPanel}
                   className="text-neutral-dark border-gray-300 hover:bg-gray-50"
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Filter size={16} className="mr-2" />
-                  Filters
+                  <Filter size={16} className={isMobile ? "" : "mr-2"} />
+                  {!isMobile && "Filters"}
                 </Button>
               )}
               {showCreateButton && (
                 <Button
                   onClick={onCreateActivity}
                   className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Plus size={16} className="mr-2" />
-                  New Activity
+                  <Plus size={16} className={isMobile ? "" : "mr-2"} />
+                  {!isMobile && "New Activity"}
                 </Button>
               )}
               
