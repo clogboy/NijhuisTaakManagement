@@ -88,7 +88,7 @@ export default function AppLayout({
     { path: "/quickwins", icon: Trophy, label: "Quick Wins" },
     { path: "/roadblocks", icon: AlertTriangle, label: "Roadblocks" },
     { path: "/agenda", icon: Calendar, label: "AI Agenda" },
-    { path: "/timeblocking", icon: Clock, label: "Time Blocking" },
+    // { path: "/timeblocking", icon: Clock, label: "Time Blocking" }, // Temporarily disabled
     { path: "/reports", icon: BarChart3, label: "Reports" },
   ];
 
