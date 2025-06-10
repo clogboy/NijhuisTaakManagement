@@ -179,7 +179,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="p-4 sm:p-6">
+      <div className="p-3 sm:p-4">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <Card>

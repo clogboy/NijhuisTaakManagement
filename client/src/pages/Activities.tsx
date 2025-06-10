@@ -123,7 +123,7 @@ export default function Activities() {
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
       {/* Activities List */}
       <div className="w-full md:w-1/2 border-r-0 md:border-r border-gray-200 overflow-y-auto">
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
           <h2 className="text-lg md:text-xl font-semibold text-neutral-dark">Activities</h2>
           <Button
@@ -227,7 +227,7 @@ export default function Activities() {
 
       {/* Activity Details & Logs */}
       <div className="flex-1 overflow-y-auto border-t md:border-t-0 border-gray-200">
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4">
         {selectedActivity ? (
           <div className="space-y-6">
             <div>

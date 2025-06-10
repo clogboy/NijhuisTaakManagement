@@ -251,7 +251,7 @@ export default function Agenda() {
   return (
     <AppLayout title="AI Agenda" subtitle="Intelligent time management with Eisenhower matrix">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4">
           <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>

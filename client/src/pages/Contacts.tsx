@@ -67,7 +67,7 @@ export default function Contacts() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-6">
+    <div className="flex-1 overflow-y-auto p-3 sm:p-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-3">
         <div className="min-w-0">

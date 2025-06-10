@@ -201,7 +201,7 @@ export default function Settings() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="p-4 sm:p-6">
+      <div className="p-3 sm:p-4">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
           <Badge variant="outline" className="text-xs">
