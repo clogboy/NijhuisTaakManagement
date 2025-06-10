@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   User as UserIcon,
   Clock,
@@ -50,17 +51,18 @@ export default function Settings() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { theme, language, setTheme, setLanguage, resetToSystem } = useTheme();
 
   const [preferences, setPreferences] = useState<UserPreferences>({
     workingHours: { start: "09:00", end: "17:00" },
     timezone: "Europe/Amsterdam",
-    language: "en",
+    language: language,
     emailNotifications: true,
     pushNotifications: true,
     weeklyDigest: true,
     calendarSync: false,
     autoTimeBlocks: false,
-    darkMode: false,
+    darkMode: theme === 'dark',
     compactSidebar: false,
     aiSuggestions: true,
   });
@@ -442,22 +444,22 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Dark mode</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Switch between light and dark themes
                     {window.matchMedia('(prefers-color-scheme: dark)').matches ? ' (System: Dark)' : ' (System: Light)'}
                   </p>
                 </div>
                 <Switch 
-                  checked={preferences.darkMode}
+                  checked={theme === 'dark'}
                   onCheckedChange={(checked) => 
-                    handlePreferenceChange('darkMode', checked)
+                    setTheme(checked ? 'dark' : 'light')
                   }
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Compact sidebar</p>
-                  <p className="text-sm text-gray-500">Start with collapsed sidebar by default</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Start with collapsed sidebar by default</p>
                 </div>
                 <Switch 
                   checked={preferences.compactSidebar}
@@ -468,8 +470,8 @@ export default function Settings() {
               </div>
               <div>
                 <Label htmlFor="language">Interface Language</Label>
-                <Select value={preferences.language} onValueChange={(value) => 
-                  handlePreferenceChange('language', value)
+                <Select value={language} onValueChange={(value) => 
+                  setLanguage(value as 'en' | 'nl')
                 }>
                   <SelectTrigger>
                     <SelectValue placeholder="Select language" />
@@ -487,7 +489,7 @@ export default function Settings() {
               <div className="pt-4">
                 <Button 
                   variant="outline" 
-                  onClick={handleResetToSystem}
+                  onClick={resetToSystem}
                   className="w-full"
                 >
                   Reset to System Preferences
