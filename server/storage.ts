@@ -1,4 +1,4 @@
-import { users, contacts, activities, activityLogs, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock } from "@shared/schema";
+import { users, contacts, activities, activityLogs, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
@@ -71,9 +71,9 @@ export interface IStorage {
   getTimeBlocksForActivity(activityId: number): Promise<TimeBlock[]>;
 
   // User Preferences
-  getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
-  createUserPreferences(preferences: InsertUserPreferences & { createdBy: number }): Promise<UserPreferences>;
-  updateUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>): Promise<UserPreferences>;
+  getUserPreferences(userId: number): Promise<any | undefined>;
+  createUserPreferences(preferences: any & { createdBy: number }): Promise<any>;
+  updateUserPreferences(userId: number, preferences: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -396,25 +396,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User Preferences methods
-  async getUserPreferences(userId: number): Promise<UserPreferences | undefined> {
+  async getUserPreferences(userId: number): Promise<any | undefined> {
     const [userPrefs] = await db.select().from(userPreferences)
-      .where(eq(userPreferences.createdBy, userId));
-    return userPrefs || undefined;
+      .where(eq(userPreferences.userId, userId));
+    return userPrefs?.preferences || undefined;
   }
 
-  async createUserPreferences(preferences: InsertUserPreferences & { createdBy: number }): Promise<UserPreferences> {
+  async createUserPreferences(preferences: any & { createdBy: number }): Promise<any> {
+    const { createdBy, ...prefsData } = preferences;
     const [newPrefs] = await db.insert(userPreferences)
-      .values(preferences)
+      .values({
+        userId: createdBy,
+        preferences: prefsData
+      })
       .returning();
-    return newPrefs;
+    return newPrefs.preferences;
   }
 
-  async updateUserPreferences(userId: number, preferencesUpdate: Partial<InsertUserPreferences>): Promise<UserPreferences> {
-    const [updatedPrefs] = await db.update(userPreferences)
-      .set({ ...preferencesUpdate, updatedAt: new Date() })
-      .where(eq(userPreferences.createdBy, userId))
-      .returning();
-    return updatedPrefs;
+  async updateUserPreferences(userId: number, preferencesUpdate: any): Promise<any> {
+    // Get existing preferences first
+    const existing = await this.getUserPreferences(userId);
+    const mergedPrefs = { ...existing, ...preferencesUpdate };
+    
+    if (existing) {
+      // Update existing record
+      const [updatedPrefs] = await db.update(userPreferences)
+        .set({ 
+          preferences: mergedPrefs,
+          updatedAt: new Date() 
+        })
+        .where(eq(userPreferences.userId, userId))
+        .returning();
+      return updatedPrefs.preferences;
+    } else {
+      // Create new record if none exists
+      return await this.createUserPreferences({ 
+        ...mergedPrefs, 
+        createdBy: userId 
+      });
+    }
   }
 }
 
