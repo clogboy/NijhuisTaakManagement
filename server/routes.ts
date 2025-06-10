@@ -615,8 +615,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await timeBlockingService.autoScheduleActivities(
         req.user.id,
-        activityIds,
         scheduleDate,
+        activityIds,
         options
       );
       

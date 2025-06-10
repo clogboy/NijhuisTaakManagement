@@ -319,8 +319,8 @@ export class TimeBlockingService {
    */
   async autoScheduleActivities(
     userId: number,
-    date: Date,
     activityIds: number[],
+    date: Date,
     options?: Partial<SmartScheduleOptions>
   ): Promise<ScheduleResult> {
     const opts = { ...this.defaultOptions, ...options };
