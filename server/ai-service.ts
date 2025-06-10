@@ -163,6 +163,21 @@ Return a JSON object with this exact structure:
       try {
         // Force key switching by trying again
         const workingOpenAI = await getWorkingOpenAI();
+        
+        const ethosContext = ethos ? 
+          `Today's ethos: "${ethos.ethos}" - ${ethos.description}. Focus areas: ${ethos.focusAreas?.join(', ')}` : 
+          'No specific ethos defined for today';
+
+        const activitiesData = activities.map(activity => ({
+          id: activity.id,
+          title: activity.title,
+          description: activity.description,
+          priority: activity.priority,
+          dueDate: activity.dueDate,
+          status: activity.status,
+          statusTags: activity.statusTags
+        }));
+        
         const retryPrompt = `
 You are a productivity expert using the Eisenhower Matrix to categorize tasks. Analyze these activities and categorize them into four quadrants:
 

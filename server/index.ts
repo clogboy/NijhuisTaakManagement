@@ -70,7 +70,8 @@ app.use((req, res, next) => {
   }
 
   // Use PORT environment variable for deployment flexibility
-  const port = parseInt(process.env.PORT || "5000");
+  // Default to 5000 for development, 8080 for production
+  const port = parseInt(process.env.PORT || (process.env.NODE_ENV === "production" ? "8080" : "5000"));
   server.listen({
     port,
     host: "0.0.0.0",
