@@ -24,8 +24,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         user = await storage.getUserByEmail(email);
         if (user && !user.microsoftId) {
-          // Update existing user with Microsoft ID
-          user = await storage.updateUser(user.id, { microsoftId });
+          // Update existing user with Microsoft ID and correct name
+          user = await storage.updateUser(user.id, { microsoftId, name });
         }
       }
       

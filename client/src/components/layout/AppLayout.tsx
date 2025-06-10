@@ -13,8 +13,20 @@ import {
   BarChart3, 
   LogOut,
   Filter,
-  Plus
+  Plus,
+  User as UserIcon,
+  Settings,
+  Menu,
+  X
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { apiRequest } from "@/lib/queryClient";
 import { User } from "@shared/schema";
 
@@ -95,23 +107,7 @@ export default function AppLayout({
           </div>
         </div>
 
-        {/* User Info */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <Avatar className="w-8 h-8 bg-ms-blue">
-              <AvatarFallback className="text-white text-sm font-medium bg-ms-blue">
-                {getInitials(user.user.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-dark truncate">{user.user.name}</p>
-              <p className="text-xs text-neutral-medium truncate">{user.user.email}</p>
-            </div>
-            <Badge variant={user.user.role === "admin" ? "default" : "secondary"} className="text-xs">
-              {user.user.role === "admin" ? "Admin" : "User"}
-            </Badge>
-          </div>
-        </div>
+
 
         {/* Navigation */}
         <nav className="flex-1 p-4">
@@ -138,18 +134,7 @@ export default function AppLayout({
           </ul>
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-neutral-medium hover:text-neutral-dark hover:bg-gray-100"
-            onClick={() => logoutMutation.mutate()}
-            disabled={logoutMutation.isPending}
-          >
-            <LogOut size={16} className="mr-3" />
-            Sign Out
-          </Button>
-        </div>
+
       </div>
 
       {/* Main Content */}
@@ -181,6 +166,52 @@ export default function AppLayout({
                   New Activity
                 </Button>
               )}
+              
+              {/* Profile Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-ms-blue text-white">
+                        {getInitials(user.user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.user.email}
+                      </p>
+                      <Badge 
+                        variant={user.user.role === "admin" ? "default" : "secondary"} 
+                        className="text-xs w-fit"
+                      >
+                        {user.user.role === "admin" ? "Admin" : "User"}
+                      </Badge>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => logoutMutation.mutate()}
+                    disabled={logoutMutation.isPending}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{logoutMutation.isPending ? "Signing out..." : "Sign out"}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
