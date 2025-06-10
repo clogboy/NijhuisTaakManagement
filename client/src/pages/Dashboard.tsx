@@ -28,6 +28,7 @@ import { Activity, Contact, QuickWin } from "@shared/schema";
 import NewActivityModal from "@/components/modals/NewActivityModal";
 import EditActivityModal from "@/components/modals/EditActivityModal";
 import EmailModal from "@/components/modals/EmailModal";
+import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import { format } from "date-fns";
 
@@ -42,6 +43,7 @@ export default function Dashboard() {
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [sortBy, setSortBy] = useState<string>("priority");
@@ -312,7 +314,14 @@ export default function Dashboard() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredActivities?.map((activity) => (
-                  <tr key={activity.id} className="hover:bg-gray-50 cursor-pointer">
+                  <tr 
+                    key={activity.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setSelectedActivity(activity);
+                      setIsTaskDetailModalOpen(true);
+                    }}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-2 h-2 ${getPriorityColor(activity.priority)} rounded-full mr-3`}></div>
@@ -348,7 +357,10 @@ export default function Dashboard() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEditActivity(activity)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditActivity(activity);
+                          }}
                           className="text-ms-blue hover:text-ms-blue-dark"
                         >
                           <Edit size={16} />
@@ -356,7 +368,10 @@ export default function Dashboard() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={handleSendEmail}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendEmail();
+                          }}
                           className="text-neutral-medium hover:text-neutral-dark"
                         >
                           <Mail size={16} />

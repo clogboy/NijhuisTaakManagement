@@ -295,7 +295,7 @@ export default function Activities() {
                     <div key={log.id} className="border-l-4 border-ms-blue pl-4 py-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-neutral-dark">
-                          {format(new Date(log.entryDate), "MMM dd, yyyy")}
+                          {log.entryDate ? format(new Date(log.entryDate), "MMM dd, yyyy") : "No date"}
                         </span>
                         <span className="text-xs text-neutral-medium">
                           {format(new Date(log.createdAt), "MMM dd, yyyy 'at' h:mm a")}
