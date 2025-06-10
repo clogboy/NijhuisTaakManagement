@@ -146,16 +146,17 @@ export default function Settings() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 p-6 pb-0">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
           <Badge variant="outline" className="text-xs">
             User ID: {user?.user.id}
           </Badge>
         </div>
-        
-        <div className="space-y-6">
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Information */}
           <Card>
             <CardHeader>
@@ -394,9 +395,6 @@ export default function Settings() {
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="nl">Dutch</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
