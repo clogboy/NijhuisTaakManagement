@@ -1,161 +1,98 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings as SettingsIcon, Bell, Shield, Palette, Database, Calendar, Clock, User as UserIcon, Download, Save } from "lucide-react";
+import {
+  User as UserIcon,
+  Clock,
+  Bell,
+  Calendar,
+  Palette,
+  Shield,
+  Download,
+  Globe,
+  Moon,
+  Sun,
+  Settings2
+} from "lucide-react";
 import { User as UserType } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+
+interface UserPreferences {
+  workingHours: {
+    start: string;
+    end: string;
+  };
+  timezone: string;
+  language: string;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  weeklyDigest: boolean;
+  calendarSync: boolean;
+  autoTimeBlocks: boolean;
+  darkMode: boolean;
+  compactSidebar: boolean;
+  aiSuggestions: boolean;
+}
 
 export default function Settings() {
   const { data: user, isLoading } = useQuery<{ user: UserType }>({
     queryKey: ["/api/auth/me"],
   });
-  
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  // User preferences state
-  const [preferences, setPreferences] = useState({
-    emailNotifications: false,
-    dailyReminders: true,
-    urgentAlerts: true,
+
+  const [preferences, setPreferences] = useState<UserPreferences>({
+    workingHours: { start: "09:00", end: "17:00" },
+    timezone: "Europe/Amsterdam",
+    language: "en",
+    emailNotifications: true,
+    pushNotifications: true,
+    weeklyDigest: true,
+    calendarSync: false,
+    autoTimeBlocks: false,
     darkMode: false,
     compactSidebar: false,
-    analyticsEnabled: true,
     aiSuggestions: true,
-    workingHours: {
-      start: "09:00",
-      end: "17:00"
-    },
-    timeZone: "UTC",
-    language: "en"
   });
-  
-  // Profile update state
+
   const [profileData, setProfileData] = useState({
-    name: "",
-    email: "",
-    bio: ""
+    bio: "",
+    department: "",
+    location: "",
+    phone: "",
   });
-
-  // Initialize form data when user loads
-  useState(() => {
-    if (user?.user) {
-      setProfileData({
-        name: user.user.name || "",
-        email: user.user.email || "",
-        bio: ""
-      });
-    }
-  });
-
-  // Update user profile mutation
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: Partial<typeof profileData>) => {
-      return apiRequest(`/api/users/${user?.user.id}`, "PUT", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Update failed",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Export data mutation
-  const exportDataMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("/api/export", "GET");
-      return response;
-    },
-    onSuccess: (data) => {
-      // Create and download file
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `activity-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Export completed",
-        description: "Your data has been exported successfully.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Export failed",
-        description: "Failed to export data. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate(profileData);
-  };
 
   const handleExportData = () => {
-    exportDataMutation.mutate();
+    // Export user data logic
+    console.log("Exporting user data...");
   };
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="space-y-4">
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="text-center">
-          <p className="text-gray-500">Unable to load settings.</p>
-        </div>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-blue"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 p-6 pb-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
           <Badge variant="outline" className="text-xs">
             User ID: {user?.user.id}
           </Badge>
         </div>
-
-        <div className="space-y-6">
+      </div>
+      
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Information */}
           <Card>
             <CardHeader>
@@ -168,99 +105,111 @@ export default function Settings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter your full name"
-                  />
+                  <Input id="name" value={user?.user.name || ""} disabled />
                 </div>
                 <div>
                   <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Enter your email"
+                  <Input id="email" value={user?.user.email || ""} disabled />
+                </div>
+                <div>
+                  <Label htmlFor="department">Department</Label>
+                  <Input 
+                    id="department" 
+                    value={profileData.department}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, department: e.target.value }))}
+                    placeholder="Engineering, Sales, Marketing..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input 
+                    id="location" 
+                    value={profileData.location}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="Amsterdam, Netherlands"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input 
+                    id="phone" 
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+31 6 1234 5678"
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="bio">Bio / Description</Label>
-                <Textarea
-                  id="bio"
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea 
+                  id="bio" 
                   value={profileData.bio}
                   onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
                   placeholder="Tell us about yourself..."
                   rows={3}
                 />
               </div>
-              <Button 
-                onClick={handleSaveProfile}
-                disabled={updateProfileMutation.isPending}
-                className="w-full sm:w-auto"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
-              </Button>
             </CardContent>
           </Card>
 
-          {/* Working Hours & Time Zone */}
+          {/* Working Hours & Schedule */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Working Hours & Time Zone
+                Working Hours & Schedule
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="start-time">Start Time</Label>
-                  <Input
-                    id="start-time"
-                    type="time"
-                    value={preferences.workingHours.start}
-                    onChange={(e) => setPreferences(prev => ({
-                      ...prev,
-                      workingHours: { ...prev.workingHours, start: e.target.value }
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end-time">End Time</Label>
-                  <Input
-                    id="end-time"
-                    type="time"
-                    value={preferences.workingHours.end}
-                    onChange={(e) => setPreferences(prev => ({
-                      ...prev,
-                      workingHours: { ...prev.workingHours, end: e.target.value }
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="timezone">Time Zone</Label>
-                  <Select value={preferences.timeZone} onValueChange={(value) => 
-                    setPreferences(prev => ({ ...prev, timeZone: value }))
+                  <Select value={preferences.workingHours.start} onValueChange={(value) => 
+                    setPreferences(prev => ({ ...prev, workingHours: { ...prev.workingHours, start: value } }))
                   }>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
+                      <SelectValue placeholder="Select start time" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time</SelectItem>
-                      <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                      <SelectItem value="Europe/London">London</SelectItem>
-                      <SelectItem value="Europe/Paris">Paris</SelectItem>
-                      <SelectItem value="Europe/Amsterdam">Amsterdam</SelectItem>
+                      <SelectItem value="07:00">07:00</SelectItem>
+                      <SelectItem value="08:00">08:00</SelectItem>
+                      <SelectItem value="09:00">09:00</SelectItem>
+                      <SelectItem value="10:00">10:00</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label htmlFor="end-time">End Time</Label>
+                  <Select value={preferences.workingHours.end} onValueChange={(value) => 
+                    setPreferences(prev => ({ ...prev, workingHours: { ...prev.workingHours, end: value } }))
+                  }>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="16:00">16:00</SelectItem>
+                      <SelectItem value="17:00">17:00</SelectItem>
+                      <SelectItem value="18:00">18:00</SelectItem>
+                      <SelectItem value="19:00">19:00</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="timezone">Timezone</Label>
+                <Select value={preferences.timezone} onValueChange={(value) => 
+                  setPreferences(prev => ({ ...prev, timezone: value }))
+                }>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select timezone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Europe/Amsterdam">Europe/Amsterdam (CET)</SelectItem>
+                    <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
+                    <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
+                    <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
@@ -277,7 +226,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Email notifications</p>
-                  <p className="text-sm text-gray-500">Receive updates about activities and deadlines</p>
+                  <p className="text-sm text-gray-500">Receive email updates about activities and deadlines</p>
                 </div>
                 <Switch 
                   checked={preferences.emailNotifications}
@@ -288,25 +237,25 @@ export default function Settings() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Daily agenda reminders</p>
-                  <p className="text-sm text-gray-500">Get productivity suggestions each morning</p>
+                  <p className="font-medium">Push notifications</p>
+                  <p className="text-sm text-gray-500">Get browser notifications for urgent tasks</p>
                 </div>
                 <Switch 
-                  checked={preferences.dailyReminders}
+                  checked={preferences.pushNotifications}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, dailyReminders: checked }))
+                    setPreferences(prev => ({ ...prev, pushNotifications: checked }))
                   }
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Urgent activity alerts</p>
-                  <p className="text-sm text-gray-500">Immediate notifications for high-priority items</p>
+                  <p className="font-medium">Weekly digest</p>
+                  <p className="text-sm text-gray-500">Summary of your week's productivity and upcoming tasks</p>
                 </div>
                 <Switch 
-                  checked={preferences.urgentAlerts}
+                  checked={preferences.weeklyDigest}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, urgentAlerts: checked }))
+                    setPreferences(prev => ({ ...prev, weeklyDigest: checked }))
                   }
                 />
               </div>
@@ -446,7 +395,7 @@ export default function Settings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
+                <Download className="h-5 w-5" />
                 Data Management
               </CardTitle>
             </CardHeader>
@@ -456,27 +405,10 @@ export default function Settings() {
                   <p className="font-medium">Export your data</p>
                   <p className="text-sm text-gray-500">Download all your activities, contacts, and settings</p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleExportData}
-                  disabled={exportDataMutation.isPending}
-                >
+                <Button onClick={handleExportData} variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
-                  {exportDataMutation.isPending ? "Exporting..." : "Export Data"}
+                  Export
                 </Button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Activity analytics</p>
-                  <p className="text-sm text-gray-500">Allow usage data collection for insights</p>
-                </div>
-                <Switch 
-                  checked={preferences.analyticsEnabled}
-                  onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, analyticsEnabled: checked }))
-                  }
-                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
