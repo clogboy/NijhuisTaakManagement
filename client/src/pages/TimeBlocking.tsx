@@ -64,14 +64,14 @@ export default function TimeBlocking() {
   // Schedule preview mutation
   const previewMutation = useMutation({
     mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
-      return apiRequest<ScheduleResult>("/api/schedule-preview", {
+      return apiRequest("/api/schedule-preview", {
         method: "POST",
         body: JSON.stringify({
           activityIds: params.activityIds,
           date: params.date.toISOString(),
           options: params.options
         }),
-      });
+      }) as Promise<ScheduleResult>;
     },
     onSuccess: (result) => {
       setPreviewResult(result);
@@ -82,14 +82,14 @@ export default function TimeBlocking() {
   // Auto schedule mutation
   const scheduleMutation = useMutation({
     mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
-      return apiRequest<ScheduleResult>("/api/smart-schedule", {
+      return apiRequest("/api/smart-schedule", {
         method: "POST",
         body: JSON.stringify({
           activityIds: params.activityIds,
           date: params.date.toISOString(),
           options: params.options
         }),
-      });
+      }) as Promise<ScheduleResult>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/timeblocks"] });
@@ -394,11 +394,11 @@ export default function TimeBlocking() {
                               <span className="text-sm font-medium text-gray-900 dark:text-white">
                                 {formatTime(block.startTime)} - {formatTime(block.endTime)}
                               </span>
-                              <Badge variant="outline" size="sm">
+                              <Badge variant="outline">
                                 {formatDuration(block.duration)}
                               </Badge>
                               {block.blockType === 'break' && (
-                                <Badge variant="secondary" size="sm">Break</Badge>
+                                <Badge variant="secondary">Break</Badge>
                               )}
                             </div>
                             <p className="text-sm font-medium text-gray-900 dark:text-white">

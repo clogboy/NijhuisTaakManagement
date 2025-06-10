@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,14 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const [location] = useLocation();
   const queryClient = useQueryClient();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   const { data: user, isLoading } = useQuery<{ user: User }>({
     queryKey: ["/api/auth/me"],
@@ -81,6 +88,7 @@ export default function AppLayout({
     { path: "/quickwins", icon: Trophy, label: "Quick Wins" },
     { path: "/roadblocks", icon: AlertTriangle, label: "Roadblocks" },
     { path: "/agenda", icon: Calendar, label: "AI Agenda" },
+    { path: "/timeblocking", icon: Clock, label: "Time Blocking" },
     { path: "/reports", icon: BarChart3, label: "Reports" },
   ];
 
