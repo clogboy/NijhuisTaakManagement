@@ -231,11 +231,11 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
               </TabsTrigger>
               <TabsTrigger value="quickwins" className="flex items-center gap-2">
                 <Trophy className="h-4 w-4" />
-                Quick Wins ({quickWins.length})
+                Linked Quick Wins ({quickWins.length})
               </TabsTrigger>
               <TabsTrigger value="roadblocks" className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
-                Roadblocks ({roadblocks.length})
+                Linked Roadblocks ({roadblocks.length})
               </TabsTrigger>
             </TabsList>
 
@@ -348,8 +348,11 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-5 w-5" />
-                    Add Quick Win
+                    Add Quick Win to Task
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Quick wins are small, high-impact actions that can be completed within this task.
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Input
