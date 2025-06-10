@@ -28,6 +28,7 @@ export const activities = pgTable("activities", {
   priority: text("priority").notNull().default("normal"), // 'low', 'normal', 'urgent'
   status: text("status").notNull().default("planned"), // 'planned', 'in_progress', 'completed'
   statusTags: text("status_tags").array(),
+  estimatedDuration: integer("estimated_duration"), // in minutes
   dueDate: timestamp("due_date"),
   assignedTo: integer("assigned_to").references(() => contacts.id),
   createdBy: integer("created_by").notNull().references(() => users.id),
@@ -173,3 +174,30 @@ export type InsertWeeklyEthos = z.infer<typeof insertWeeklyEthosSchema>;
 
 export type DailyAgenda = typeof dailyAgendas.$inferSelect;
 export type InsertDailyAgenda = z.infer<typeof insertDailyAgendaSchema>;
+
+export const timeBlocks = pgTable("time_blocks", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").references(() => activities.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  duration: integer("duration").notNull(), // in minutes
+  blockType: text("block_type").notNull().default("task"), // 'task', 'break', 'meeting', 'focus'
+  isScheduled: boolean("is_scheduled").notNull().default(false),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  priority: text("priority").notNull().default("normal"), // 'low', 'normal', 'high', 'urgent'
+  color: text("color"), // hex color for visual identification
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTimeBlockSchema = createInsertSchema(timeBlocks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type TimeBlock = typeof timeBlocks.$inferSelect;
+export type InsertTimeBlock = z.infer<typeof insertTimeBlockSchema>;

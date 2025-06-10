@@ -1,4 +1,4 @@
-import { users, contacts, activities, activityLogs, quickWins, roadblocks, weeklyEthos, dailyAgendas, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda } from "@shared/schema";
+import { users, contacts, activities, activityLogs, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
@@ -61,6 +61,14 @@ export interface IStorage {
   createDailyAgenda(agenda: InsertDailyAgenda & { createdBy: number }): Promise<DailyAgenda>;
   updateDailyAgenda(id: number, agenda: Partial<InsertDailyAgenda>): Promise<DailyAgenda>;
   deleteDailyAgenda(id: number): Promise<void>;
+
+  // Time Blocks
+  getTimeBlocks(userId: number, startDate?: Date, endDate?: Date): Promise<TimeBlock[]>;
+  getTimeBlock(id: number): Promise<TimeBlock | undefined>;
+  createTimeBlock(timeBlock: InsertTimeBlock & { createdBy: number }): Promise<TimeBlock>;
+  updateTimeBlock(id: number, timeBlock: Partial<InsertTimeBlock>): Promise<TimeBlock>;
+  deleteTimeBlock(id: number): Promise<void>;
+  getTimeBlocksForActivity(activityId: number): Promise<TimeBlock[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -345,6 +353,49 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDailyAgenda(id: number): Promise<void> {
     await db.delete(dailyAgendas).where(eq(dailyAgendas.id, id));
+  }
+
+  // Time Blocks implementation
+  async getTimeBlocks(userId: number, startDate?: Date, endDate?: Date): Promise<TimeBlock[]> {
+    let query = db.select().from(timeBlocks).where(eq(timeBlocks.createdBy, userId));
+    
+    if (startDate && endDate) {
+      query = query.where(and(
+        eq(timeBlocks.createdBy, userId),
+        sql`${timeBlocks.startTime} >= ${startDate}`,
+        sql`${timeBlocks.endTime} <= ${endDate}`
+      ));
+    }
+    
+    return await query.orderBy(timeBlocks.startTime);
+  }
+
+  async getTimeBlock(id: number): Promise<TimeBlock | undefined> {
+    const [timeBlock] = await db.select().from(timeBlocks).where(eq(timeBlocks.id, id));
+    return timeBlock || undefined;
+  }
+
+  async createTimeBlock(timeBlock: InsertTimeBlock & { createdBy: number }): Promise<TimeBlock> {
+    const [newTimeBlock] = await db.insert(timeBlocks).values(timeBlock).returning();
+    return newTimeBlock;
+  }
+
+  async updateTimeBlock(id: number, timeBlockUpdate: Partial<InsertTimeBlock>): Promise<TimeBlock> {
+    const [updatedTimeBlock] = await db.update(timeBlocks)
+      .set({ ...timeBlockUpdate, updatedAt: new Date() })
+      .where(eq(timeBlocks.id, id))
+      .returning();
+    return updatedTimeBlock;
+  }
+
+  async deleteTimeBlock(id: number): Promise<void> {
+    await db.delete(timeBlocks).where(eq(timeBlocks.id, id));
+  }
+
+  async getTimeBlocksForActivity(activityId: number): Promise<TimeBlock[]> {
+    return await db.select().from(timeBlocks)
+      .where(eq(timeBlocks.activityId, activityId))
+      .orderBy(timeBlocks.startTime);
   }
 }
 
