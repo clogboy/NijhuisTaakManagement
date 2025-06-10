@@ -438,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get activities for the user
       const user = await storage.getUser(req.session.userId);
-      const activities = await storage.getActivities(req.session.userId, user?.isAdmin || false);
+      const activities = await storage.getActivities(req.session.userId, user?.role === 'admin');
       
       // Get ethos for the day
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
@@ -475,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get activities and ethos
       const user = await storage.getUser(req.session.userId);
-      const activities = await storage.getActivities(req.session.userId, user?.isAdmin || false);
+      const activities = await storage.getActivities(req.session.userId, user?.role === 'admin');
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
       
       // Categorize activities using Eisenhower matrix

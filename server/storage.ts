@@ -231,17 +231,8 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    let baseQuery = db.select().from(activities);
-    
-    if (!isAdmin) {
-      baseQuery = baseQuery.where(or(
-        eq(activities.createdBy, userId),
-        sql`${userId} = ANY(${activities.assignedUsers})`
-      ));
-    }
-
     // Get urgent count
-    const urgentActivities = await baseQuery.where(
+    const urgentActivities = await db.select().from(activities).where(
       and(
         eq(activities.priority, 'urgent'),
         !isAdmin ? or(
@@ -252,7 +243,7 @@ export class DatabaseStorage implements IStorage {
     );
 
     // Get due this week count
-    const dueThisWeekActivities = await baseQuery.where(
+    const dueThisWeekActivities = await db.select().from(activities).where(
       and(
         sql`${activities.dueDate} <= ${weekFromNow}`,
         sql`${activities.dueDate} >= ${now}`,
@@ -264,7 +255,7 @@ export class DatabaseStorage implements IStorage {
     );
 
     // Get completed count
-    const completedActivities = await baseQuery.where(
+    const completedActivities = await db.select().from(activities).where(
       and(
         eq(activities.status, 'completed'),
         !isAdmin ? or(
@@ -315,17 +306,17 @@ export class DatabaseStorage implements IStorage {
 
   // Daily Agenda methods
   async getDailyAgendas(userId: number, startDate?: Date, endDate?: Date): Promise<DailyAgenda[]> {
-    let query = db.select().from(dailyAgendas).where(eq(dailyAgendas.createdBy, userId));
-    
     if (startDate && endDate) {
-      query = query.where(and(
+      return await db.select().from(dailyAgendas).where(and(
         eq(dailyAgendas.createdBy, userId),
         sql`${dailyAgendas.date} >= ${startDate}`,
         sql`${dailyAgendas.date} <= ${endDate}`
-      ));
+      )).orderBy(desc(dailyAgendas.date));
     }
     
-    return await query.orderBy(desc(dailyAgendas.date));
+    return await db.select().from(dailyAgendas)
+      .where(eq(dailyAgendas.createdBy, userId))
+      .orderBy(desc(dailyAgendas.date));
   }
 
   async getDailyAgenda(userId: number, date: Date): Promise<DailyAgenda | undefined> {
@@ -357,17 +348,18 @@ export class DatabaseStorage implements IStorage {
 
   // Time Blocks implementation
   async getTimeBlocks(userId: number, startDate?: Date, endDate?: Date): Promise<TimeBlock[]> {
-    let query = db.select().from(timeBlocks).where(eq(timeBlocks.createdBy, userId));
-    
     if (startDate && endDate) {
-      query = query.where(and(
+      const blocks = await db.select().from(timeBlocks).where(and(
         eq(timeBlocks.createdBy, userId),
         sql`${timeBlocks.startTime} >= ${startDate}`,
         sql`${timeBlocks.endTime} <= ${endDate}`
       ));
+      return blocks.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     }
     
-    return await query.orderBy(timeBlocks.startTime);
+    return await db.select().from(timeBlocks)
+      .where(eq(timeBlocks.createdBy, userId))
+      .orderBy(timeBlocks.startTime);
   }
 
   async getTimeBlock(id: number): Promise<TimeBlock | undefined> {
