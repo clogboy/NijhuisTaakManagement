@@ -1,8 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema } from "@shared/schema";
+import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema } from "@shared/schema";
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
+import { timeBlockingService } from "./time-blocking-service";
 import { z } from "zod";
 
 const loginUserSchema = z.object({
@@ -479,6 +480,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get Eisenhower matrix error:", error);
       res.status(500).json({ message: "Failed to get Eisenhower matrix" });
+    }
+  });
+
+  // Time Blocks routes
+  app.get("/api/timeblocks", requireAuth, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      const start = startDate ? new Date(startDate) : undefined;
+      const end = endDate ? new Date(endDate) : undefined;
+      
+      const timeBlocks = await storage.getTimeBlocks(req.user.id, start, end);
+      res.json(timeBlocks);
+    } catch (error) {
+      console.error("Get time blocks error:", error);
+      res.status(500).json({ message: "Failed to fetch time blocks" });
+    }
+  });
+
+  app.post("/api/timeblocks", requireAuth, async (req: any, res) => {
+    try {
+      const timeBlockData = insertTimeBlockSchema.parse(req.body);
+      const timeBlock = await storage.createTimeBlock({
+        ...timeBlockData,
+        createdBy: req.user.id,
+      });
+      res.json(timeBlock);
+    } catch (error) {
+      console.error("Create time block error:", error);
+      res.status(400).json({ message: "Failed to create time block" });
+    }
+  });
+
+  app.put("/api/timeblocks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertTimeBlockSchema.partial().parse(req.body);
+      const timeBlock = await storage.updateTimeBlock(id, updates);
+      res.json(timeBlock);
+    } catch (error) {
+      console.error("Update time block error:", error);
+      res.status(400).json({ message: "Failed to update time block" });
+    }
+  });
+
+  app.delete("/api/timeblocks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTimeBlock(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete time block error:", error);
+      res.status(500).json({ message: "Failed to delete time block" });
+    }
+  });
+
+  // Smart scheduling endpoint
+  app.post("/api/smart-schedule", requireAuth, async (req: any, res) => {
+    try {
+      const { activityIds, date, options } = req.body;
+      const scheduleDate = new Date(date);
+      
+      const result = await timeBlockingService.autoScheduleActivities(
+        req.user.id,
+        activityIds,
+        scheduleDate,
+        options
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Smart schedule error:", error);
+      res.status(500).json({ message: "Failed to generate smart schedule" });
+    }
+  });
+
+  // Generate schedule preview without saving
+  app.post("/api/schedule-preview", requireAuth, async (req: any, res) => {
+    try {
+      const { activityIds, date, options } = req.body;
+      const scheduleDate = new Date(date);
+      
+      // Get activities to schedule
+      const activities = [];
+      for (const id of activityIds) {
+        const activity = await storage.getActivity(id);
+        if (activity) {
+          activities.push(activity);
+        }
+      }
+      
+      const result = await timeBlockingService.generateSmartSchedule(
+        req.user.id,
+        scheduleDate,
+        activities,
+        options
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Schedule preview error:", error);
+      res.status(500).json({ message: "Failed to generate schedule preview" });
     }
   });
 
