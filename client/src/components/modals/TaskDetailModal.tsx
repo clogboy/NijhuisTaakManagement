@@ -453,8 +453,11 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5" />
-                    Report Roadblock
+                    Report Roadblock for Task
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Roadblocks are obstacles or issues that are preventing progress on this specific task.
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Input
