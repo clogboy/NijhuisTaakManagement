@@ -86,13 +86,13 @@ export default function TimeBlocking() {
 
   // Schedule preview mutation
   const previewMutation = useMutation({
-    mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
+    mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }): Promise<ScheduleResult> => {
       const response = await apiRequest("/api/schedule-preview", "POST", {
         activityIds: params.activityIds,
         date: params.date.toISOString(),
         options: params.options
       });
-      return response as ScheduleResult;
+      return await response.json();
     },
     onSuccess: (result) => {
       setPreviewResult(result);
@@ -102,13 +102,13 @@ export default function TimeBlocking() {
 
   // Auto schedule mutation
   const scheduleMutation = useMutation({
-    mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
+    mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }): Promise<ScheduleResult> => {
       const response = await apiRequest("/api/smart-schedule", "POST", {
         activityIds: params.activityIds,
         date: params.date.toISOString(),
         options: params.options
       });
-      return response as ScheduleResult;
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/timeblocks"] });
