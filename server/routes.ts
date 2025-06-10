@@ -17,7 +17,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
       
+      // First try to find by Microsoft ID
       let user = await storage.getUserByMicrosoftId(microsoftId);
+      
+      // If not found, try to find by email and update with Microsoft ID
+      if (!user) {
+        user = await storage.getUserByEmail(email);
+        if (user && !user.microsoftId) {
+          // Update existing user with Microsoft ID
+          user = await storage.updateUser(user.id, { microsoftId });
+        }
+      }
       
       if (!user) {
         // Create new user
