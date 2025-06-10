@@ -121,14 +121,14 @@ export default function AppLayout({
               return (
                 <li key={item.path}>
                   <Link href={item.path}>
-                    <a className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    <div className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                       isActive 
                         ? "text-white bg-ms-blue" 
                         : "text-neutral-medium hover:text-neutral-dark hover:bg-gray-100"
                     }`}>
                       <Icon size={16} className="mr-3" />
                       {item.label}
-                    </a>
+                    </div>
                   </Link>
                 </li>
               );
