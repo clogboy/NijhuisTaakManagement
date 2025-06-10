@@ -109,11 +109,17 @@ export class DailyScheduler {
       try {
         // Generate AI-powered agenda for tomorrow
         const weeklyEthos = await storage.getWeeklyEthosByDay(userId, tomorrow.getDay());
-        const agenda = await generateDailyAgenda(
-          unscheduledActivities,
-          tomorrow,
-          weeklyEthos || undefined
-        );
+        // Use fallback agenda generation for now
+        const agenda = {
+          scheduledActivities: unscheduledActivities.slice(0, 5).map(a => a.id),
+          suggestions: 'Daily agenda generated automatically at midnight',
+          eisenhowerMatrix: {
+            urgentImportant: unscheduledActivities.filter(a => a.priority === 'urgent').slice(0, 2),
+            importantNotUrgent: unscheduledActivities.filter(a => a.priority === 'normal').slice(0, 3),
+            urgentNotImportant: [],
+            neitherUrgentNorImportant: unscheduledActivities.filter(a => a.priority === 'low')
+          }
+        };
         
         // Save the generated agenda
         await storage.createDailyAgenda({

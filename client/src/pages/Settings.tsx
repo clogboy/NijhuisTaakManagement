@@ -23,7 +23,10 @@ import {
   Globe,
   Moon,
   Sun,
-  Settings2
+  Settings2,
+  Play,
+  Pause,
+  RefreshCw
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 
@@ -51,6 +54,12 @@ export default function Settings() {
 
   const { data: serverPreferences } = useQuery<UserPreferences>({
     queryKey: ["/api/user/preferences"],
+  });
+
+  // Scheduler status query
+  const { data: schedulerStatus } = useQuery({
+    queryKey: ["/api/scheduler/status"],
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   const { toast } = useToast();
@@ -113,6 +122,25 @@ export default function Settings() {
       toast({
         title: "Error",
         description: "Failed to save preferences. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Scheduler trigger mutation
+  const triggerSchedulerMutation = useMutation({
+    mutationFn: () => apiRequest("/api/scheduler/trigger", "POST"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduler/status"] });
+      toast({
+        title: "Scheduler triggered",
+        description: "Daily sync has been initiated manually.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to trigger scheduler. Please try again.",
         variant: "destructive",
       });
     },

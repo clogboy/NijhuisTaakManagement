@@ -5,6 +5,7 @@ import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, ins
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
+import { dailyScheduler } from "./scheduler";
 import { z } from "zod";
 import "./types";
 
@@ -838,6 +839,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+
+  // Scheduler management routes
+  app.get("/api/scheduler/status", requireAuth, (req, res) => {
+    const { dailyScheduler } = require("./scheduler");
+    const status = dailyScheduler.getStatus();
+    res.json(status);
+  });
+
+  app.post("/api/scheduler/trigger", requireAuth, async (req: any, res) => {
+    try {
+      const { dailyScheduler } = require("./scheduler");
+      await dailyScheduler.triggerSync(req.user.id);
+      res.json({ message: "Daily sync triggered successfully" });
+    } catch (error) {
+      console.error("Manual sync trigger failed:", error);
+      res.status(500).json({ message: "Failed to trigger sync" });
+    }
+  });
 
   // Health check endpoint for Fly.io
   app.get("/api/health", (req, res) => {
