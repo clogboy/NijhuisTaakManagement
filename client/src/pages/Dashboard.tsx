@@ -28,6 +28,7 @@ import { Activity, Contact, QuickWin } from "@shared/schema";
 import NewActivityModal from "@/components/modals/NewActivityModal";
 import EditActivityModal from "@/components/modals/EditActivityModal";
 import EmailModal from "@/components/modals/EmailModal";
+import TodaysTasks from "@/components/TodaysTasks";
 import { format } from "date-fns";
 
 interface DashboardStats {
@@ -223,26 +224,40 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => window.location.href = "/contacts"}
+          >
             <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-ms-blue rounded-lg flex items-center justify-center">
-                    <Users className="text-white" size={16} />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-ms-blue rounded-lg flex items-center justify-center">
+                      <Users className="text-white" size={16} />
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-neutral-medium">Active Contacts</p>
+                    <p className="text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-neutral-medium">Active Contacts</p>
-                  <p className="text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
-                </div>
+                <Button variant="ghost" size="sm" className="text-neutral-medium hover:text-neutral-dark">
+                  Manage →
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Activities Table */}
-        <Card>
-          <div className="px-6 py-4 border-b border-gray-200">
+        {/* Today's Tasks and Activities */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-1">
+            <TodaysTasks />
+          </div>
+          
+          <div className="lg:col-span-2">
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-neutral-dark">Recent Activities</h3>
               <div className="flex items-center space-x-2">
@@ -408,6 +423,8 @@ export default function Dashboard() {
             </div>
           </div>
         </Card>
+          </div>
+        </div>
       </main>
 
       {/* Filter Panel */}

@@ -17,7 +17,9 @@ import {
   User as UserIcon,
   Settings,
   Menu,
-  X
+  X,
+  Calendar,
+  AlertTriangle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -73,8 +75,8 @@ export default function AppLayout({
     { path: "/activities", icon: CheckSquare, label: "Activities" },
     { path: "/contacts", icon: Users, label: "Contacts" },
     { path: "/quickwins", icon: Trophy, label: "Quick Wins" },
-    { path: "/roadblocks", icon: FolderOpen, label: "Roadblocks" },
-    { path: "/agenda", icon: BarChart3, label: "AI Agenda" },
+    { path: "/roadblocks", icon: AlertTriangle, label: "Roadblocks" },
+    { path: "/agenda", icon: Calendar, label: "AI Agenda" },
     { path: "/reports", icon: BarChart3, label: "Reports" },
   ];
 
