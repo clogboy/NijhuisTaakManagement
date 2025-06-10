@@ -87,7 +87,7 @@ export default function Agenda() {
   const generateAgendaMutation = useMutation({
     mutationFn: async (data: { date: string; maxTaskSwitches: number }) => {
       const response = await apiRequest("POST", "/api/agenda/generate", data);
-      return response as AgendaSuggestion;
+      return response as unknown as AgendaSuggestion;
     },
     onSuccess: (data: AgendaSuggestion) => {
       setAgendaSuggestion(data);
@@ -264,9 +264,9 @@ export default function Agenda() {
                     </div>
                     <p className="text-blue-700 font-medium">{getTodayEthos()?.ethos}</p>
                     <p className="text-blue-600 text-sm mt-1">{getTodayEthos()?.description}</p>
-                    {getTodayEthos()?.focusAreas && getTodayEthos()!.focusAreas.length > 0 && (
+                    {getTodayEthos()?.focusAreas && getTodayEthos()?.focusAreas.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {getTodayEthos()!.focusAreas.map((area) => (
+                        {getTodayEthos()?.focusAreas.map((area: string) => (
                           <Badge key={area} variant="secondary" className="bg-blue-100 text-blue-800">
                             {area}
                           </Badge>
@@ -360,7 +360,7 @@ export default function Agenda() {
                         {quadrantActivities.length === 0 ? (
                           <p className="text-sm text-neutral-medium italic">No activities in this quadrant</p>
                         ) : (
-                          quadrantActivities.map((activity) => (
+                          quadrantActivities.map((activity: any) => (
                             <div key={activity.id} className="p-3 bg-white border rounded-lg">
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
@@ -383,7 +383,7 @@ export default function Agenda() {
                               </div>
                               {activity.statusTags && activity.statusTags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
-                                  {activity.statusTags.map((tag) => (
+                                  {activity.statusTags.map((tag: string) => (
                                     <Badge key={tag} variant="outline" className="text-xs">
                                       {tag}
                                     </Badge>
