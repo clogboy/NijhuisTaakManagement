@@ -62,7 +62,7 @@ export default function TimeBlocking() {
   });
 
   // Microsoft Calendar events query
-  const { data: calendarEvents = [] } = useQuery({
+  const { data: calendarEvents = [] } = useQuery<any[]>({
     queryKey: ["/api/calendar/events", { startDate: selectedDate.toISOString(), endDate: addDays(selectedDate, 1).toISOString() }],
     enabled: true,
   });
@@ -454,13 +454,13 @@ export default function TimeBlocking() {
               <CalendarCheck className="h-5 w-5" />
               Microsoft Calendar
               <Badge variant="outline" className="text-xs">
-                {calendarEvents.length} events
+                {(calendarEvents as any[]).length} events
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-64">
-              {calendarEvents.length === 0 ? (
+              {(calendarEvents as any[]).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <CalendarCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <div>No calendar events found</div>
@@ -470,7 +470,7 @@ export default function TimeBlocking() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {calendarEvents
+                  {(calendarEvents as any[])
                     .sort((a: any, b: any) => new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime())
                     .map((event: any) => (
                       <div

@@ -52,8 +52,9 @@ async function getWorkingOpenAI(): Promise<OpenAI> {
           if (process.env.OPENAI_API_KEY_BACKUP) {
             openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY_BACKUP });
             usingBackupKey = true;
+          } else {
+            throw new Error('Both OpenAI keys are currently unavailable');
           }
-          throw new Error('Both OpenAI keys are currently unavailable');
         }
       } else {
         throw new Error('OpenAI API key quota exceeded and no backup key available');
