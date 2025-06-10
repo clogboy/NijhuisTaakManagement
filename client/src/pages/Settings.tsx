@@ -454,63 +454,7 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Automated Scheduling */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Automated Scheduling
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Daily Scheduler Status</p>
-                  <p className="text-sm text-gray-500">Runs at midnight to generate agendas and auto-schedule urgent tasks</p>
-                </div>
-                <Badge variant={schedulerStatus?.isRunning ? "default" : "secondary"}>
-                  {schedulerStatus?.isRunning ? "Running" : "Stopped"}
-                </Badge>
-              </div>
-              
-              {schedulerStatus?.nextMidnight && (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Next Sync</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(schedulerStatus.nextMidnight).toLocaleDateString()} at midnight
-                    </p>
-                  </div>
-                  <Badge variant="outline">
-                    {Math.ceil((new Date(schedulerStatus.nextMidnight).getTime() - Date.now()) / (1000 * 60 * 60))}h remaining
-                  </Badge>
-                </div>
-              )}
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Manual Trigger</p>
-                  <p className="text-sm text-gray-500">Test the scheduler immediately</p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => triggerSchedulerMutation.mutate()}
-                  disabled={triggerSchedulerMutation.isPending}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${triggerSchedulerMutation.isPending ? 'animate-spin' : ''}`} />
-                  {triggerSchedulerMutation.isPending ? "Running..." : "Trigger Now"}
-                </Button>
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>What it does:</strong> Generates daily agendas, auto-schedules urgent activities, 
-                  and creates time blocks for tomorrow's tasks using your personal OpenAI tokens.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Security & Access */}
           <Card>

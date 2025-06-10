@@ -24,7 +24,8 @@ import {
   ArrowRight,
   Lightbulb,
   Settings,
-  Play
+  Play,
+  RefreshCw
 } from "lucide-react";
 import { Activity, WeeklyEthos } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -82,6 +83,16 @@ export default function Agenda() {
 
   const { data: eisenhowerMatrix } = useQuery<EisenhowerMatrix>({
     queryKey: ["/api/eisenhower", selectedDate],
+  });
+
+  // Scheduler status query
+  const { data: schedulerStatus } = useQuery<{
+    isRunning: boolean;
+    nextMidnight: string;
+    currentTime: string;
+  }>({
+    queryKey: ["/api/scheduler/status"],
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   const generateAgendaMutation = useMutation({
@@ -152,6 +163,31 @@ export default function Agenda() {
   });
 
   const [agendaSuggestion, setAgendaSuggestion] = useState<AgendaSuggestion | null>(null);
+  const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
+
+  // Check if scheduler trigger is on cooldown (30 minutes)
+  const isOnCooldown = lastTriggerTime && (Date.now() - lastTriggerTime) < 30 * 60 * 1000;
+  const cooldownMinutesLeft = lastTriggerTime ? Math.ceil((30 * 60 * 1000 - (Date.now() - lastTriggerTime)) / (1000 * 60)) : 0;
+
+  // Scheduler trigger mutation with cooldown tracking
+  const triggerSchedulerMutation = useMutation({
+    mutationFn: () => apiRequest("/api/scheduler/trigger", "POST"),
+    onSuccess: () => {
+      setLastTriggerTime(Date.now());
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduler/status"] });
+      toast({
+        title: "Daily Sync Triggered",
+        description: "Automated scheduling has been initiated for tomorrow's tasks",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error", 
+        description: "Failed to trigger scheduler. Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleGenerateAgenda = () => {
     generateAgendaMutation.mutate({
@@ -253,6 +289,43 @@ export default function Agenda() {
                       {generateAgendaMutation.isPending ? "Generating..." : "Generate AI Agenda"}
                     </Button>
                   </div>
+                </div>
+
+                {/* Scheduler Trigger Panel */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Daily Scheduler</h4>
+                      <p className="text-sm text-gray-500">Trigger automated agenda generation and task scheduling</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {schedulerStatus && (
+                        <Badge variant={schedulerStatus.isRunning ? "default" : "secondary"}>
+                          {schedulerStatus.isRunning ? "Active" : "Inactive"}
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => triggerSchedulerMutation.mutate()}
+                        disabled={triggerSchedulerMutation.isPending || isOnCooldown}
+                        className={isOnCooldown ? "opacity-50" : ""}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${triggerSchedulerMutation.isPending ? 'animate-spin' : ''}`} />
+                        {triggerSchedulerMutation.isPending 
+                          ? "Running..." 
+                          : isOnCooldown 
+                            ? `Wait ${cooldownMinutesLeft}m` 
+                            : "Trigger Sync"}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {schedulerStatus?.nextMidnight && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      Next automatic sync: {new Date(schedulerStatus.nextMidnight).toLocaleDateString()} at midnight
+                    </div>
+                  )}
                 </div>
 
                 {/* Today's Ethos */}
