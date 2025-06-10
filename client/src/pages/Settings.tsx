@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "@/lib/translations";
 import {
   User as UserIcon,
   Clock,
@@ -52,11 +53,12 @@ export default function Settings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { theme, language, setTheme, setLanguage, resetToSystem } = useTheme();
+  const t = useTranslation(language);
 
   const [preferences, setPreferences] = useState<UserPreferences>({
     workingHours: { start: "09:00", end: "17:00" },
     timezone: "Europe/Amsterdam",
-    language: language,
+    language: language || "en",
     emailNotifications: true,
     pushNotifications: true,
     weeklyDigest: true,
@@ -66,6 +68,15 @@ export default function Settings() {
     compactSidebar: false,
     aiSuggestions: true,
   });
+
+  // Sync preferences with theme context changes
+  useEffect(() => {
+    setPreferences(prev => ({
+      ...prev,
+      language: language || "en",
+      darkMode: theme === 'dark'
+    }));
+  }, [theme, language]);
 
   const [profileData, setProfileData] = useState({
     bio: "",
@@ -217,7 +228,7 @@ export default function Settings() {
     <div className="h-full flex flex-col">
       <div className="flex-shrink-0 p-6 pb-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t('settings')}</h1>
           <Badge variant="outline" className="text-xs">
             User ID: {user?.user.id}
           </Badge>
@@ -443,7 +454,7 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Dark mode</p>
+                  <p className="font-medium">{t('darkMode')}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Switch between light and dark themes
                     {window.matchMedia('(prefers-color-scheme: dark)').matches ? ' (System: Dark)' : ' (System: Light)'}
@@ -469,7 +480,7 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <Label htmlFor="language">Interface Language</Label>
+                <Label htmlFor="language">{t('language')}</Label>
                 <Select value={language} onValueChange={(value) => 
                   setLanguage(value as 'en' | 'nl')
                 }>
@@ -492,7 +503,7 @@ export default function Settings() {
                   onClick={resetToSystem}
                   className="w-full"
                 >
-                  Reset to System Preferences
+                  {t('resetToSystem')}
                 </Button>
               </div>
             </CardContent>
