@@ -41,14 +41,10 @@ export class TimeBlockingService {
   async generateSmartSchedule(
     userId: number, 
     date: Date, 
-    activityIds: number[], 
+    activities: Activity[], 
     options?: Partial<SmartScheduleOptions>
   ): Promise<ScheduleResult> {
     const opts = { ...this.defaultOptions, ...options };
-    
-    // Get activities by IDs
-    const allActivities = await storage.getActivities(userId, false);
-    const activities = allActivities.filter(activity => activityIds.includes(activity.id));
     
     // Get existing time blocks for the day
     const startOfDay = new Date(date);
@@ -358,6 +354,12 @@ export class TimeBlockingService {
         activityId: block.activityId,
         startTime: block.startTime,
         endTime: block.endTime,
+        duration: block.duration,
+        blockType: block.blockType,
+        isScheduled: block.isScheduled,
+        isCompleted: block.isCompleted,
+        priority: block.priority,
+        color: block.color,
         createdBy: userId
       });
     }
