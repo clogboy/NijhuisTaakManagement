@@ -50,6 +50,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple email/password login endpoint
+  app.post("/api/auth/simple-login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // For now, accept any password for the admin user
+      if (email === "b.weinreder@nijhuis.nl" && password === "admin123") {
+        let user = await storage.getUserByEmail(email);
+        
+        if (!user) {
+          // Create admin user if doesn't exist
+          user = await storage.createUser({
+            email,
+            name: "Bas Weinreder",
+            role: "admin",
+            microsoftId: null,
+          });
+        }
+
+        // Set user session
+        (req as any).session.userId = user.id;
+        
+        res.json({ user: { ...user } });
+      } else {
+        res.status(401).json({ message: "Invalid credentials" });
+      }
+    } catch (error) {
+      console.error("Simple login error:", error);
+      res.status(400).json({ message: "Login failed" });
+    }
+  });
+
   app.post("/api/auth/logout", (req, res) => {
     (req as any).session.destroy();
     res.json({ success: true });
