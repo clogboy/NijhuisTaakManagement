@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -62,8 +63,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
       status: "planned",
       statusTags: [],
       dueDate: "",
-      assignedTo: undefined,
-      assignedUsers: [],
+      participants: [],
     },
   });
 
@@ -253,24 +253,39 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
 
               <FormField
                 control={form.control}
-                name="assignedTo"
+                name="participants"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Contact</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select contact..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {contacts?.map((contact) => (
-                          <SelectItem key={contact.id} value={contact.id.toString()}>
-                            {contact.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Participants</FormLabel>
+                    <div className="space-y-2">
+                      {contacts?.map((contact) => (
+                        <div key={contact.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`contact-${contact.id}`}
+                            checked={field.value?.includes(contact.id) || false}
+                            onCheckedChange={(checked) => {
+                              const currentParticipants = field.value || [];
+                              if (checked) {
+                                field.onChange([...currentParticipants, contact.id]);
+                              } else {
+                                field.onChange(currentParticipants.filter(id => id !== contact.id));
+                              }
+                            }}
+                          />
+                          <label 
+                            htmlFor={`contact-${contact.id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {contact.name} ({contact.email})
+                          </label>
+                        </div>
+                      ))}
+                      {!contacts?.length && (
+                        <p className="text-sm text-muted-foreground">
+                          No contacts available. Create contacts first to add participants.
+                        </p>
+                      )}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

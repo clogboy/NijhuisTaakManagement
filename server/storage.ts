@@ -286,10 +286,7 @@ export class DatabaseStorage implements IStorage {
     const completedActivities = await db.select().from(activities).where(
       and(
         eq(activities.status, 'completed'),
-        !isAdmin ? or(
-          eq(activities.createdBy, userId),
-          sql`${userId} = ANY(${activities.assignedUsers})`
-        ) : undefined
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
     );
 

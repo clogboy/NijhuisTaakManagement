@@ -98,9 +98,14 @@ export default function Dashboard() {
     // Priority filter
     if (!priorityFilters.includes(activity.priority)) return false;
     
-    // Contact filter
-    if (selectedContacts.length > 0 && activity.assignedTo && !selectedContacts.includes(activity.assignedTo)) {
-      return false;
+    // Contact filter - check if any participants match selected contacts
+    if (selectedContacts.length > 0 && activity.participants && activity.participants.length > 0) {
+      const hasMatchingParticipant = activity.participants.some(participantId => 
+        selectedContacts.includes(participantId)
+      );
+      if (!hasMatchingParticipant) {
+        return false;
+      }
     }
     
     // Date range filter
@@ -343,7 +348,9 @@ export default function Dashboard() {
                       <div className="flex items-center">
                         <div className="w-6 h-6 bg-gray-300 rounded-full mr-2"></div>
                         <span className="text-sm text-neutral-dark">
-                          {activity.assignedTo ? getContactName(activity.assignedTo) : "Unassigned"}
+                          {activity.participants && activity.participants.length > 0 
+                            ? `${activity.participants.length} participant${activity.participants.length > 1 ? 's' : ''}`
+                            : "No participants"}
                         </span>
                       </div>
                     </td>
