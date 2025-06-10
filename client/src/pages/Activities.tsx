@@ -1,0 +1,327 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Plus, Edit } from "lucide-react";
+import { Activity, ActivityLog } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import NewActivityModal from "@/components/modals/NewActivityModal";
+import EditActivityModal from "@/components/modals/EditActivityModal";
+
+export default function Activities() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
+  const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
+  const [logEntry, setLogEntry] = useState("");
+  const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const { data: activities, isLoading } = useQuery<Activity[]>({
+    queryKey: ["/api/activities"],
+  });
+
+  const { data: activityLogs } = useQuery<ActivityLog[]>({
+    queryKey: ["/api/activities", selectedActivity?.id, "logs"],
+    enabled: !!selectedActivity,
+  });
+
+  const deleteActivityMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/activities/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      toast({
+        title: "Success",
+        description: "Activity deleted successfully",
+      });
+      if (selectedActivity) {
+        setSelectedActivity(null);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete activity",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addLogMutation = useMutation({
+    mutationFn: ({ activityId, entry, entryDate }: { activityId: number; entry: string; entryDate: string }) =>
+      apiRequest("POST", `/api/activities/${activityId}/logs`, {
+        entry,
+        entryDate: new Date(entryDate),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities", selectedActivity?.id, "logs"] });
+      toast({
+        title: "Success",
+        description: "Log entry added successfully",
+      });
+      setLogEntry("");
+      setLogDate(new Date().toISOString().split('T')[0]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add log entry",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent": return "bg-red-100 text-red-800";
+      case "normal": return "bg-orange-100 text-orange-800";
+      case "low": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed": return "bg-green-100 text-green-800";
+      case "in_progress": return "bg-yellow-100 text-yellow-800";
+      case "planned": return "bg-blue-100 text-blue-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleEditActivity = (activity: Activity) => {
+    setSelectedActivity(activity);
+    setIsEditActivityModalOpen(true);
+  };
+
+  const handleAddLogEntry = () => {
+    if (!selectedActivity || !logEntry.trim()) return;
+    
+    addLogMutation.mutate({
+      activityId: selectedActivity.id,
+      entry: logEntry,
+      entryDate: logDate,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-blue"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex overflow-hidden">
+      {/* Activities List */}
+      <div className="w-1/2 border-r border-gray-200 overflow-y-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-neutral-dark">Activities</h2>
+          <Button
+            onClick={() => setIsNewActivityModalOpen(true)}
+            className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+          >
+            <Plus size={16} className="mr-2" />
+            New Activity
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          {activities?.map((activity) => (
+            <Card
+              key={activity.id}
+              className={`cursor-pointer transition-all hover:shadow-md ${
+                selectedActivity?.id === activity.id ? "ring-2 ring-ms-blue" : ""
+              }`}
+              onClick={() => setSelectedActivity(activity)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg text-neutral-dark">{activity.title}</CardTitle>
+                    <p className="text-sm text-neutral-medium mt-1">{activity.description}</p>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditActivity(activity);
+                      }}
+                      className="text-ms-blue hover:text-ms-blue-dark"
+                    >
+                      <Edit size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteActivityMutation.mutate(activity.id);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Badge className={getPriorityColor(activity.priority)}>
+                      {activity.priority}
+                    </Badge>
+                    <Badge className={getStatusColor(activity.status)}>
+                      {activity.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                  {activity.dueDate && (
+                    <span className="text-sm text-neutral-medium">
+                      Due: {format(new Date(activity.dueDate), "MMM dd, yyyy")}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {!activities?.length && (
+            <div className="text-center py-12">
+              <p className="text-neutral-medium">No activities found</p>
+              <Button
+                onClick={() => setIsNewActivityModalOpen(true)}
+                className="mt-4 bg-ms-blue hover:bg-ms-blue-dark text-white"
+              >
+                Create your first activity
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Activity Details & Logs */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {selectedActivity ? (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-neutral-dark mb-2">
+                {selectedActivity.title}
+              </h2>
+              <p className="text-neutral-medium mb-4">{selectedActivity.description}</p>
+              
+              <div className="flex items-center space-x-4 mb-6">
+                <Badge className={getPriorityColor(selectedActivity.priority)}>
+                  {selectedActivity.priority}
+                </Badge>
+                <Badge className={getStatusColor(selectedActivity.status)}>
+                  {selectedActivity.status.replace("_", " ")}
+                </Badge>
+                {selectedActivity.dueDate && (
+                  <span className="text-sm text-neutral-medium">
+                    Due: {format(new Date(selectedActivity.dueDate), "MMM dd, yyyy")}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Add Log Entry */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Add Log Entry</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-dark mb-2">
+                    Entry Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={logDate}
+                    onChange={(e) => setLogDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-dark mb-2">
+                    Log Entry
+                  </label>
+                  <Textarea
+                    placeholder="Enter your log entry..."
+                    value={logEntry}
+                    onChange={(e) => setLogEntry(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+                <Button
+                  onClick={handleAddLogEntry}
+                  disabled={!logEntry.trim() || addLogMutation.isPending}
+                  className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+                >
+                  {addLogMutation.isPending ? "Adding..." : "Add Entry"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Activity Logs */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Activity Log</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {activityLogs?.map((log) => (
+                    <div key={log.id} className="border-l-4 border-ms-blue pl-4 py-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-neutral-dark">
+                          {format(new Date(log.entryDate), "MMM dd, yyyy")}
+                        </span>
+                        <span className="text-xs text-neutral-medium">
+                          {format(new Date(log.createdAt), "MMM dd, yyyy 'at' h:mm a")}
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-medium">{log.entry}</p>
+                    </div>
+                  ))}
+
+                  {!activityLogs?.length && (
+                    <p className="text-neutral-medium text-center py-4">
+                      No log entries yet. Add your first entry above.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-neutral-medium text-lg mb-4">Select an activity to view details</p>
+              <p className="text-neutral-medium">
+                Choose an activity from the list to see its details and log entries
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <NewActivityModal
+        open={isNewActivityModalOpen}
+        onOpenChange={setIsNewActivityModalOpen}
+      />
+
+      <EditActivityModal
+        open={isEditActivityModalOpen}
+        onOpenChange={setIsEditActivityModalOpen}
+        activity={selectedActivity}
+      />
+    </div>
+  );
+}

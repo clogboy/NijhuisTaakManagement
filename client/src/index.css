@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(240, 10%, 3.9%);
+  --muted: hsl(240, 4.8%, 95.9%);
+  --muted-foreground: hsl(240, 3.7%, 60%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 3.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 3.9%);
+  --border: hsl(240, 5.9%, 90%);
+  --input: hsl(240, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(240, 4.8%, 95.9%);
+  --secondary-foreground: hsl(240, 5.9%, 10%);
+  --accent: hsl(240, 4.8%, 95.9%);
+  --accent-foreground: hsl(240, 5.9%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 10%, 3.9%);
+  --radius: 0.5rem;
+  
+  /* Custom Microsoft and Priority Colors */
+  --ms-blue: hsl(207, 90%, 54%);
+  --ms-blue-dark: hsl(207, 90%, 45%);
+  --priority-urgent: hsl(0, 84%, 60%);
+  --priority-normal: hsl(30, 100%, 50%);
+  --priority-low: hsl(120, 61%, 34%);
+  --neutral-dark: hsl(240, 6%, 20%);
+  --neutral-medium: hsl(240, 5%, 37%);
+  --neutral-light: hsl(240, 9%, 95%);
+  
+  /* Chart colors */
+  --chart-1: hsl(207, 90%, 54%);
+  --chart-2: hsl(30, 100%, 50%);
+  --chart-3: hsl(120, 61%, 34%);
+  --chart-4: hsl(0, 84%, 60%);
+  --chart-5: hsl(240, 6%, 20%);
+  
+  /* Sidebar colors */
+  --sidebar-background: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(240, 5.9%, 10%);
+  --sidebar-primary: hsl(207, 90%, 54%);
+  --sidebar-primary-foreground: hsl(210, 40%, 98%);
+  --sidebar-accent: hsl(240, 4.8%, 95.9%);
+  --sidebar-accent-foreground: hsl(240, 5.9%, 10%);
+  --sidebar-border: hsl(240, 5.9%, 90%);
+  --sidebar-ring: hsl(240, 10%, 3.9%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  
+  /* Custom colors for dark mode */
+  --ms-blue: hsl(207, 90%, 54%);
+  --ms-blue-dark: hsl(207, 90%, 45%);
+  --priority-urgent: hsl(0, 84%, 60%);
+  --priority-normal: hsl(30, 100%, 50%);
+  --priority-low: hsl(120, 61%, 50%);
+  --neutral-dark: hsl(0, 0%, 98%);
+  --neutral-medium: hsl(240, 5%, 64.9%);
+  --neutral-light: hsl(240, 10%, 3.9%);
+  
+  --sidebar-background: hsl(240, 10%, 3.9%);
+  --sidebar-foreground: hsl(0, 0%, 98%);
+  --sidebar-primary: hsl(207, 90%, 54%);
+  --sidebar-primary-foreground: hsl(210, 40%, 98%);
+  --sidebar-accent: hsl(240, 3.7%, 15.9%);
+  --sidebar-accent-foreground: hsl(0, 0%, 98%);
+  --sidebar-border: hsl(240, 3.7%, 15.9%);
+  --sidebar-ring: hsl(240, 4.9%, 83.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+@layer utilities {
+  .ms-blue {
+    @apply bg-[hsl(207,90%,54%)] text-white;
+  }
+  
+  .ms-blue:hover {
+    @apply bg-[hsl(207,90%,45%)];
+  }
+  
+  .text-ms-blue {
+    @apply text-[hsl(207,90%,54%)];
+  }
+  
+  .text-ms-blue-dark {
+    @apply text-[hsl(207,90%,45%)];
+  }
+  
+  .bg-ms-blue {
+    @apply bg-[hsl(207,90%,54%)];
+  }
+  
+  .bg-ms-blue-dark {
+    @apply bg-[hsl(207,90%,45%)];
+  }
+  
+  .text-neutral-dark {
+    @apply text-[hsl(240,6%,20%)] dark:text-[hsl(0,0%,98%)];
+  }
+  
+  .text-neutral-medium {
+    @apply text-[hsl(240,5%,37%)] dark:text-[hsl(240,5%,64.9%)];
+  }
+  
+  .bg-neutral-light {
+    @apply bg-[hsl(240,9%,95%)] dark:bg-[hsl(240,10%,3.9%)];
+  }
+  
+  .bg-priority-urgent {
+    @apply bg-[hsl(0,84%,60%)];
+  }
+  
+  .bg-priority-normal {
+    @apply bg-[hsl(30,100%,50%)];
+  }
+  
+  .bg-priority-low {
+    @apply bg-[hsl(120,61%,34%)] dark:bg-[hsl(120,61%,50%)];
+  }
+}
