@@ -11,9 +11,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'nijhuis-activity-manager-secret-key',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Allow non-HTTPS in development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }

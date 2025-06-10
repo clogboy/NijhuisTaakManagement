@@ -171,9 +171,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-6 py-6">
+    <div className="flex-1 overflow-y-auto p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card>
@@ -425,7 +423,6 @@ export default function Dashboard() {
         </Card>
           </div>
         </div>
-      </main>
 
       {/* Filter Panel */}
       {isFilterPanelOpen && (

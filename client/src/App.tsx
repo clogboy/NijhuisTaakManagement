@@ -19,7 +19,14 @@ import AppLayout from "@/components/layout/AppLayout";
 function AuthenticatedApp() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/">
+        <AppLayout
+          title="Dashboard"
+          subtitle="Activity overview and quick access"
+        >
+          <Dashboard />
+        </AppLayout>
+      </Route>
       <Route path="/activities">
         <AppLayout
           title="Activities"
