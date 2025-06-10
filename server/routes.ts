@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema } from "@shared/schema";
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
+import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { z } from "zod";
 
 const loginUserSchema = z.object({
@@ -581,6 +582,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Schedule preview error:", error);
       res.status(500).json({ message: "Failed to generate schedule preview" });
+    }
+  });
+
+  // Microsoft Calendar integration routes
+  app.get("/api/calendar/events", requireAuth, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      const start = startDate ? new Date(startDate) : new Date();
+      const end = endDate ? new Date(endDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      
+      const events = await microsoftCalendarService.getCalendarEvents(req.user.id, start, end);
+      res.json(events);
+    } catch (error) {
+      console.error("Get calendar events error:", error);
+      res.status(500).json({ message: "Failed to fetch calendar events" });
+    }
+  });
+
+  app.post("/api/calendar/check-conflicts", requireAuth, async (req: any, res) => {
+    try {
+      const { timeBlocks } = req.body;
+      const result = await microsoftCalendarService.checkCalendarConflicts(req.user.id, timeBlocks);
+      res.json(result);
+    } catch (error) {
+      console.error("Check calendar conflicts error:", error);
+      res.status(500).json({ message: "Failed to check calendar conflicts" });
+    }
+  });
+
+  app.post("/api/calendar/sync", requireAuth, async (req: any, res) => {
+    try {
+      const { timeBlockIds } = req.body;
+      const result = await microsoftCalendarService.syncTimeBlocksToCalendar(req.user.id, timeBlockIds);
+      res.json(result);
+    } catch (error) {
+      console.error("Calendar sync error:", error);
+      res.status(500).json({ message: "Failed to sync with calendar" });
+    }
+  });
+
+  app.get("/api/calendar/available-slots", requireAuth, async (req: any, res) => {
+    try {
+      const { date, workingHours } = req.query;
+      const targetDate = date ? new Date(date) : new Date();
+      const hours = workingHours ? JSON.parse(workingHours) : { start: "09:00", end: "17:00" };
+      
+      const slots = await microsoftCalendarService.getAvailableSlots(req.user.id, targetDate, hours);
+      res.json(slots);
+    } catch (error) {
+      console.error("Get available slots error:", error);
+      res.status(500).json({ message: "Failed to get available time slots" });
     }
   });
 

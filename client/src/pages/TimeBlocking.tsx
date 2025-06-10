@@ -64,14 +64,12 @@ export default function TimeBlocking() {
   // Schedule preview mutation
   const previewMutation = useMutation({
     mutationFn: async (params: { activityIds: number[]; date: Date; options: SmartScheduleOptions }) => {
-      return apiRequest("/api/schedule-preview", {
-        method: "POST",
-        body: JSON.stringify({
-          activityIds: params.activityIds,
-          date: params.date.toISOString(),
-          options: params.options
-        }),
-      }) as Promise<ScheduleResult>;
+      const response = await apiRequest("/api/schedule-preview", "POST", {
+        activityIds: params.activityIds,
+        date: params.date.toISOString(),
+        options: params.options
+      });
+      return response as ScheduleResult;
     },
     onSuccess: (result) => {
       setPreviewResult(result);
@@ -293,8 +291,9 @@ export default function TimeBlocking() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Available Activities */}
         <Card>
           <CardHeader>
@@ -431,95 +430,95 @@ export default function TimeBlocking() {
         </Card>
         </div>
 
-      {/* Schedule Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Schedule Preview</DialogTitle>
-          </DialogHeader>
-          
-          {previewResult && (
-            <div className="space-y-4">
-              {/* Scheduled Blocks */}
-              {previewResult.scheduledBlocks.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Scheduled Activities</h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {previewResult.scheduledBlocks
-                      .filter(block => block.blockType === 'task')
-                      .map((block, index) => (
-                        <div key={index} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{block.title}</span>
-                            <span className="text-sm text-gray-600">
-                              {formatTime(block.startTime)} - {formatTime(block.endTime)}
-                            </span>
+        {/* Schedule Preview Dialog */}
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Schedule Preview</DialogTitle>
+            </DialogHeader>
+            
+            {previewResult && (
+              <div className="space-y-4">
+                {/* Scheduled Blocks */}
+                {previewResult.scheduledBlocks.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Scheduled Activities</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {previewResult.scheduledBlocks
+                        .filter(block => block.blockType === 'task')
+                        .map((block, index) => (
+                          <div key={index} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">{block.title}</span>
+                              <span className="text-sm text-gray-600">
+                                {formatTime(block.startTime)} - {formatTime(block.endTime)}
+                              </span>
+                            </div>
                           </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Unscheduled Activities */}
+                {previewResult.unscheduledActivities.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2 text-amber-600">Unscheduled Activities</h4>
+                    <div className="space-y-1">
+                      {previewResult.unscheduledActivities.map((activity) => (
+                        <div key={activity.id} className="text-sm text-gray-600 dark:text-gray-400">
+                          • {activity.title}
                         </div>
                       ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Unscheduled Activities */}
-              {previewResult.unscheduledActivities.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-amber-600">Unscheduled Activities</h4>
-                  <div className="space-y-1">
-                    {previewResult.unscheduledActivities.map((activity) => (
-                      <div key={activity.id} className="text-sm text-gray-600 dark:text-gray-400">
-                        • {activity.title}
-                      </div>
-                    ))}
+                {/* Conflicts */}
+                {previewResult.conflicts.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2 text-red-600">Conflicts</h4>
+                    <div className="space-y-1">
+                      {previewResult.conflicts.map((conflict, index) => (
+                        <div key={index} className="text-sm text-red-600">
+                          • {conflict}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Conflicts */}
-              {previewResult.conflicts.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-red-600">Conflicts</h4>
-                  <div className="space-y-1">
-                    {previewResult.conflicts.map((conflict, index) => (
-                      <div key={index} className="text-sm text-red-600">
-                        • {conflict}
-                      </div>
-                    ))}
+                {/* Suggestions */}
+                {previewResult.suggestions.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2 text-blue-600">Suggestions</h4>
+                    <div className="space-y-1">
+                      {previewResult.suggestions.map((suggestion, index) => (
+                        <div key={index} className="text-sm text-gray-600 dark:text-gray-400">
+                          • {suggestion}
+                        </div>
+                      ))}
+                    </div>
                   </div>
+                )}
+
+                <Separator />
+
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowPreview(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleConfirmSchedule}
+                    disabled={scheduleMutation.isPending}
+                  >
+                    {scheduleMutation.isPending ? "Scheduling..." : "Confirm Schedule"}
+                  </Button>
                 </div>
-              )}
-
-              {/* Suggestions */}
-              {previewResult.suggestions.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 text-blue-600">Suggestions</h4>
-                  <div className="space-y-1">
-                    {previewResult.suggestions.map((suggestion, index) => (
-                      <div key={index} className="text-sm text-gray-600 dark:text-gray-400">
-                        • {suggestion}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <Separator />
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowPreview(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleConfirmSchedule}
-                  disabled={scheduleMutation.isPending}
-                >
-                  {scheduleMutation.isPending ? "Scheduling..." : "Confirm Schedule"}
-                </Button>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
