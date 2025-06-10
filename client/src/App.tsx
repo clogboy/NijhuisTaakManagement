@@ -12,6 +12,7 @@ import Activities from "@/pages/Activities";
 import Contacts from "@/pages/Contacts";
 import QuickWins from "@/pages/QuickWins";
 import Roadblocks from "@/pages/Roadblocks";
+import Agenda from "@/pages/Agenda";
 import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -39,6 +40,7 @@ function AuthenticatedApp() {
       </Route>
       <Route path="/quickwins" component={QuickWins} />
       <Route path="/roadblocks" component={Roadblocks} />
+      <Route path="/agenda" component={Agenda} />
       <Route path="/reports">
         <AppLayout
           title="Reports"
