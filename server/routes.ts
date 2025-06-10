@@ -642,6 +642,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile and settings routes
+  app.put("/api/users/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Ensure users can only update their own profile (or admin can update any)
+      if (userId !== req.user.id && req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, req.body);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+
+  app.get("/api/export", requireAuth, async (req: any, res) => {
+    try {
+      const isAdmin = req.user.role === 'admin';
+      
+      // Get all user data for export
+      const [activities, contacts, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks] = await Promise.all([
+        storage.getActivities(req.user.id, isAdmin),
+        storage.getContacts(req.user.id),
+        storage.getQuickWins(req.user.id),
+        storage.getRoadblocks(req.user.id, isAdmin),
+        storage.getWeeklyEthos(req.user.id),
+        storage.getDailyAgendas(req.user.id),
+        storage.getTimeBlocks(req.user.id)
+      ]);
+
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        user: {
+          id: req.user.id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role
+        },
+        data: {
+          activities,
+          contacts,
+          quickWins,
+          roadblocks,
+          weeklyEthos,
+          dailyAgendas,
+          timeBlocks
+        },
+        metadata: {
+          totalActivities: activities.length,
+          totalContacts: contacts.length,
+          totalQuickWins: quickWins.length,
+          totalRoadblocks: roadblocks.length,
+          totalTimeBlocks: timeBlocks.length
+        }
+      };
+
+      res.json(exportData);
+    } catch (error) {
+      console.error("Export data error:", error);
+      res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
   // Health check endpoint for Fly.io
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
