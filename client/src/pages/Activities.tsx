@@ -155,6 +155,19 @@ export default function Activities() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
+                        setSelectedActivity(activity);
+                        setIsTaskDetailModalOpen(true);
+                      }}
+                      className="text-ms-blue hover:text-ms-blue-dark"
+                      title="View Details"
+                    >
+                      <Eye size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleEditActivity(activity);
                       }}
                       className="text-ms-blue hover:text-ms-blue-dark"
@@ -324,6 +337,14 @@ export default function Activities() {
         onOpenChange={setIsEditActivityModalOpen}
         activity={selectedActivity}
       />
+
+      {selectedActivity && (
+        <TaskDetailModal
+          activity={selectedActivity}
+          isOpen={isTaskDetailModalOpen}
+          onClose={() => setIsTaskDetailModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
