@@ -13,6 +13,7 @@ import Contacts from "@/pages/Contacts";
 import QuickWins from "@/pages/QuickWins";
 import Roadblocks from "@/pages/Roadblocks";
 import Agenda from "@/pages/Agenda";
+import TimeBlocking from "@/pages/TimeBlocking";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
@@ -50,6 +51,7 @@ function AuthenticatedApp() {
       <Route path="/quickwins" component={QuickWins} />
       <Route path="/roadblocks" component={Roadblocks} />
       <Route path="/agenda" component={Agenda} />
+      <Route path="/timeblocking" component={TimeBlocking} />
       <Route path="/reports">
         <AppLayout
           title="Reports"

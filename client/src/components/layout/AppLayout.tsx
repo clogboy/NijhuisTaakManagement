@@ -21,7 +21,8 @@ import {
   Calendar,
   AlertTriangle,
   Pin,
-  PinOff
+  PinOff,
+  Clock
 } from "lucide-react";
 import {
   DropdownMenu,
