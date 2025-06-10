@@ -97,10 +97,10 @@ export default function Roadblocks() {
         </div>
 
         {/* Info Banner */}
-        <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+        <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div>
                 <h3 className="font-medium text-blue-800 dark:text-blue-200">
                   Roadblocks are now Task-Specific

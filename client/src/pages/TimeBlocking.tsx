@@ -475,7 +475,7 @@ export default function TimeBlocking() {
                     .map((event: any) => (
                       <div
                         key={event.id}
-                        className="p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200"
+                        className="p-3 rounded-lg border bg-red-50 dark:bg-red-900/20 border-red-200"
                       >
                         <div className="flex items-center justify-between">
                           <div>

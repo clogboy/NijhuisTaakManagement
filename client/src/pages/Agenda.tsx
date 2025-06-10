@@ -257,17 +257,17 @@ export default function Agenda() {
 
                 {/* Today's Ethos */}
                 {getTodayEthos() && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Target size={16} className="text-blue-600" />
-                      <span className="font-medium text-blue-800">Today's Ethos</span>
+                      <Target size={16} className="text-red-600" />
+                      <span className="font-medium text-red-800">Today's Ethos</span>
                     </div>
-                    <p className="text-blue-700 font-medium">{getTodayEthos()?.ethos}</p>
-                    <p className="text-blue-600 text-sm mt-1">{getTodayEthos()?.description}</p>
+                    <p className="text-red-700 font-medium">{getTodayEthos()?.ethos}</p>
+                    <p className="text-red-600 text-sm mt-1">{getTodayEthos()?.description}</p>
                     {getTodayEthos()?.focusAreas && getTodayEthos()?.focusAreas.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {getTodayEthos()?.focusAreas.map((area: string) => (
-                          <Badge key={area} variant="secondary" className="bg-blue-100 text-blue-800">
+                          <Badge key={area} variant="secondary" className="bg-red-100 text-red-800">
                             {area}
                           </Badge>
                         ))}

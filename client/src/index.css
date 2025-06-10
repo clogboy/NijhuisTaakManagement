@@ -107,27 +107,27 @@
 
 @layer utilities {
   .ms-blue {
-    @apply bg-[hsl(207,90%,54%)] text-white;
+    @apply bg-[hsl(0,73%,51%)] text-white;
   }
   
   .ms-blue:hover {
-    @apply bg-[hsl(207,90%,45%)];
+    @apply bg-[hsl(0,73%,45%)];
   }
   
   .text-ms-blue {
-    @apply text-[hsl(207,90%,54%)];
+    @apply text-[hsl(0,73%,51%)];
   }
   
   .text-ms-blue-dark {
-    @apply text-[hsl(207,90%,45%)];
+    @apply text-[hsl(0,73%,45%)];
   }
   
   .bg-ms-blue {
-    @apply bg-[hsl(207,90%,54%)];
+    @apply bg-[hsl(0,73%,51%)];
   }
   
   .bg-ms-blue-dark {
-    @apply bg-[hsl(207,90%,45%)];
+    @apply bg-[hsl(0,73%,45%)];
   }
   
   .text-neutral-dark {
