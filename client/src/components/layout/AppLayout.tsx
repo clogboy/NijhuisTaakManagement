@@ -56,10 +56,21 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const [location] = useLocation();
   const queryClient = useQueryClient();
+  const { data: userPreferences } = useQuery<any>({
+    queryKey: ["/api/user/preferences"],
+  });
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
+
+  // Sync sidebar state with user preferences when preferences load
+  useEffect(() => {
+    if (userPreferences && userPreferences.compactSidebar !== undefined) {
+      setIsSidebarCollapsed(userPreferences.compactSidebar);
+    }
+  }, [userPreferences]);
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isSidebarCollapsed));

@@ -113,6 +113,11 @@ export default function Settings() {
     const newPreferences = { ...preferences, [key]: value };
     setPreferences(newPreferences);
     
+    // Update localStorage for immediate sidebar response
+    if (key === 'compactSidebar') {
+      localStorage.setItem('sidebar-collapsed', JSON.stringify(value));
+    }
+    
     // Debounced save to server
     setTimeout(() => {
       updatePreferencesMutation.mutate({ [key]: value });
