@@ -126,11 +126,11 @@ export default function AppLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-sm border-r border-gray-200 flex flex-col transition-all duration-300`}>
+      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-sidebar-background shadow-sm border-r border-sidebar-border flex flex-col transition-all duration-300`}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
             {!isSidebarCollapsed && (
               <div className="flex items-center space-x-3">
@@ -138,8 +138,8 @@ export default function AppLayout({
                   <FolderOpen className="text-white" size={16} />
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-neutral-dark">Dossier Manager</h1>
-                  <p className="text-xs text-neutral-medium">Activity Management</p>
+                  <h1 className="text-lg font-semibold text-sidebar-foreground">Dossier Manager</h1>
+                  <p className="text-xs text-muted-foreground">Activity Management</p>
                 </div>
               </div>
             )}
@@ -147,7 +147,7 @@ export default function AppLayout({
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-1 h-8 w-8 hover:bg-gray-100 ml-auto"
+              className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
             >
               {isSidebarCollapsed ? <Pin size={16} /> : <PinOff size={16} />}
             </Button>
@@ -168,8 +168,8 @@ export default function AppLayout({
                   <Link href={item.path}>
                     <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                       isActive 
-                        ? "text-white bg-ms-blue" 
-                        : "text-neutral-medium hover:text-neutral-dark hover:bg-gray-100"
+                        ? "text-sidebar-primary-foreground bg-sidebar-primary" 
+                        : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
                     }`}
                     title={isSidebarCollapsed ? item.label : undefined}>
                       <Icon size={16} className={isSidebarCollapsed ? "" : "mr-3"} />
@@ -188,11 +188,11 @@ export default function AppLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <header className="bg-background shadow-sm border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-neutral-dark">{title}</h2>
-              <p className="text-sm text-neutral-medium">{subtitle}</p>
+              <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
+              <p className="text-sm text-muted-foreground">{subtitle}</p>
             </div>
             <div className="flex items-center space-x-3">
               {showFilterButton && (
