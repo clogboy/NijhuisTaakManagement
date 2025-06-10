@@ -2,7 +2,57 @@ import OpenAI from "openai";
 import { Activity, WeeklyEthos } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let usingBackupKey = false;
+
+// Automatic key switching function
+async function getWorkingOpenAI(): Promise<OpenAI> {
+  try {
+    // Test current key with a simple request
+    await openai.models.list();
+    return openai;
+  } catch (error: any) {
+    // Check if it's a quota/auth error
+    if (error?.status === 429 || error?.status === 401 || error?.status === 403) {
+      if (!usingBackupKey && process.env.OPENAI_API_KEY_BACKUP) {
+        console.log('Primary OpenAI key failed, switching to backup key');
+        openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY_BACKUP });
+        usingBackupKey = true;
+        
+        // Test backup key
+        try {
+          await openai.models.list();
+          console.log('Successfully switched to backup OpenAI key');
+          return openai;
+        } catch (backupError) {
+          console.error('Backup OpenAI key also failed:', backupError);
+          throw new Error('Both primary and backup OpenAI keys are unavailable');
+        }
+      } else if (usingBackupKey && process.env.OPENAI_API_KEY) {
+        // Try switching back to primary key
+        console.log('Backup key failed, trying primary key again');
+        openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        usingBackupKey = false;
+        
+        try {
+          await openai.models.list();
+          console.log('Successfully switched back to primary OpenAI key');
+          return openai;
+        } catch (primaryError) {
+          // Switch back to backup if available
+          if (process.env.OPENAI_API_KEY_BACKUP) {
+            openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY_BACKUP });
+            usingBackupKey = true;
+          }
+          throw new Error('Both OpenAI keys are currently unavailable');
+        }
+      } else {
+        throw new Error('OpenAI API key quota exceeded and no backup key available');
+      }
+    }
+    throw error;
+  }
+}
 
 interface EisenhowerMatrix {
   urgentImportant: Activity[];
@@ -67,7 +117,8 @@ Return a JSON object with this exact structure:
 }
 `;
 
-    const response = await openai.chat.completions.create({
+    const workingOpenAI = await getWorkingOpenAI();
+    const response = await workingOpenAI.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
@@ -151,7 +202,8 @@ Return JSON with this structure:
 }
 `;
 
-    const response = await openai.chat.completions.create({
+    const workingOpenAI = await getWorkingOpenAI();
+    const response = await workingOpenAI.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
@@ -254,7 +306,8 @@ Provide insights on:
 Keep response concise and actionable.
 `;
 
-    const response = await openai.chat.completions.create({
+    const workingOpenAI = await getWorkingOpenAI();
+    const response = await workingOpenAI.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
