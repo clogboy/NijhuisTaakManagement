@@ -120,14 +120,15 @@ export default function Activities() {
   }
 
   return (
-    <div className="flex-1 flex overflow-hidden">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
       {/* Activities List */}
-      <div className="w-1/2 border-r border-gray-200 overflow-y-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-neutral-dark">Activities</h2>
+      <div className="w-full md:w-1/2 border-r-0 md:border-r border-gray-200 overflow-y-auto p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
+          <h2 className="text-lg md:text-xl font-semibold text-neutral-dark">Activities</h2>
           <Button
             onClick={() => setIsNewActivityModalOpen(true)}
-            className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+            className="bg-ms-blue hover:bg-ms-blue-dark text-white w-full sm:w-auto"
+            size="sm"
           >
             <Plus size={16} className="mr-2" />
             New Activity
@@ -223,7 +224,7 @@ export default function Activities() {
       </div>
 
       {/* Activity Details & Logs */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 border-t md:border-t-0 border-gray-200">
         {selectedActivity ? (
           <div className="space-y-6">
             <div>

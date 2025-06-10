@@ -339,10 +339,10 @@ export default function AppLayout({
         {/* Main Content */}
         <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-auto">
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <AIKeyWarning />
             </div>
-            <div className="px-6 pb-6">
+            <div className="px-4 md:px-6 pb-4 md:pb-6">
               {children}
             </div>
           </div>

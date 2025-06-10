@@ -118,6 +118,67 @@
     @apply text-[hsl(0,73%,51%)];
   }
   
+  /* Mobile-first responsive utilities */
+  @media (max-width: 768px) {
+    .mobile-compact {
+      padding: 0.75rem !important;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem !important;
+    }
+    
+    .mobile-grid-1 {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .mobile-hidden {
+      display: none !important;
+    }
+    
+    .mobile-full-width {
+      width: 100% !important;
+    }
+    
+    .mobile-stack {
+      flex-direction: column !important;
+    }
+    
+    .mobile-center {
+      text-align: center !important;
+    }
+    
+    /* Card adjustments for mobile */
+    .card {
+      margin: 0.5rem 0 !important;
+      padding: 1rem !important;
+    }
+    
+    /* Table responsiveness */
+    .table-responsive {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    
+    /* Button adjustments */
+    .btn-mobile {
+      padding: 0.5rem !important;
+      font-size: 0.875rem !important;
+    }
+    
+    /* Form adjustments */
+    .form-mobile {
+      margin-bottom: 1rem !important;
+    }
+    
+    .form-mobile input,
+    .form-mobile select,
+    .form-mobile textarea {
+      font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+  }
+  
   .text-ms-blue-dark {
     @apply text-[hsl(0,73%,45%)];
   }

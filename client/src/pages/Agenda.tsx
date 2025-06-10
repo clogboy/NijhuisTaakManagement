@@ -306,14 +306,14 @@ export default function Agenda() {
 
                 {/* Scheduler Trigger Panel */}
                 <div className="border-t pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <h4 className="font-medium text-gray-900 dark:text-white">Daily Scheduler</h4>
-                      <p className="text-sm text-gray-500">Trigger automated agenda generation and task scheduling</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Trigger automated agenda generation and task scheduling</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {schedulerStatus && (
-                        <Badge variant={schedulerStatus.isRunning ? "default" : "secondary"}>
+                        <Badge variant={schedulerStatus.isRunning ? "default" : "secondary"} className="text-xs">
                           {schedulerStatus.isRunning ? "Active" : "Inactive"}
                         </Badge>
                       )}
@@ -322,9 +322,9 @@ export default function Agenda() {
                         variant="outline"
                         onClick={() => triggerSchedulerMutation.mutate()}
                         disabled={triggerSchedulerMutation.isPending || isOnCooldown}
-                        className={isOnCooldown ? "opacity-50" : ""}
+                        className={`${isOnCooldown ? "opacity-50" : ""} text-xs sm:text-sm`}
                       >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${triggerSchedulerMutation.isPending ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${triggerSchedulerMutation.isPending ? 'animate-spin' : ''}`} />
                         {triggerSchedulerMutation.isPending 
                           ? "Running..." 
                           : isOnCooldown 
