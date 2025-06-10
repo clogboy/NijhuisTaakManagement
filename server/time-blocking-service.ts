@@ -41,10 +41,14 @@ export class TimeBlockingService {
   async generateSmartSchedule(
     userId: number, 
     date: Date, 
-    activities: Activity[], 
+    activityIds: number[], 
     options?: Partial<SmartScheduleOptions>
   ): Promise<ScheduleResult> {
     const opts = { ...this.defaultOptions, ...options };
+    
+    // Get activities by IDs
+    const allActivities = await storage.getActivities(userId, false);
+    const activities = allActivities.filter(activity => activityIds.includes(activity.id));
     
     // Get existing time blocks for the day
     const startOfDay = new Date(date);
@@ -60,8 +64,8 @@ export class TimeBlockingService {
     // Sort activities by priority and deadline
     const prioritizedActivities = this.prioritizeActivities(activities);
     
-    // Schedule activities into available slots
-    const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId);
+    // Schedule activities into available slots (preview mode)
+    const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId, false);
     
     return result;
   }
@@ -157,7 +161,8 @@ export class TimeBlockingService {
     activities: Activity[], 
     availableSlots: TimeSlot[], 
     options: SmartScheduleOptions,
-    userId: number
+    userId: number,
+    saveToDatabase: boolean = true
   ): ScheduleResult {
     const scheduledBlocks: TimeBlock[] = [];
     const unscheduledActivities: Activity[] = [];
@@ -318,26 +323,41 @@ export class TimeBlockingService {
    */
   async autoScheduleActivities(
     userId: number,
-    activityIds: number[],
     date: Date,
+    activityIds: number[],
     options?: Partial<SmartScheduleOptions>
   ): Promise<ScheduleResult> {
-    // Get activities to schedule
-    const activities: Activity[] = [];
-    for (const id of activityIds) {
-      const activity = await storage.getActivity(id);
-      if (activity) {
-        activities.push(activity);
-      }
-    }
-
-    // Generate smart schedule
-    const result = await this.generateSmartSchedule(userId, date, activities, options);
-
+    const opts = { ...this.defaultOptions, ...options };
+    
+    // Get activities by IDs
+    const allActivities = await storage.getActivities(userId, false);
+    const activities = allActivities.filter(activity => activityIds.includes(activity.id));
+    
+    // Get existing time blocks for the day
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const existingBlocks = await storage.getTimeBlocks(userId, startOfDay, endOfDay);
+    
+    // Generate available time slots
+    const availableSlots = this.generateAvailableSlots(date, existingBlocks, opts);
+    
+    // Sort activities by priority and deadline
+    const prioritizedActivities = this.prioritizeActivities(activities);
+    
+    // Schedule activities into available slots and save to database
+    const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId, true);
+    
     // Save scheduled blocks to database
     for (const block of result.scheduledBlocks) {
       await storage.createTimeBlock({
-        ...block,
+        title: block.title,
+        description: block.description,
+        activityId: block.activityId,
+        startTime: block.startTime,
+        endTime: block.endTime,
         createdBy: userId
       });
     }
