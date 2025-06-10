@@ -200,17 +200,15 @@ export default function Settings() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 p-6 pb-4">
-        <div className="flex items-center justify-between">
+    <div className="flex-1 overflow-y-auto">
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
           <Badge variant="outline" className="text-xs">
             User ID: {user?.user.id}
           </Badge>
         </div>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Information */}
           <Card>
