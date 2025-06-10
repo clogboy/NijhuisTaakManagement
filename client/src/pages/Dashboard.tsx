@@ -634,7 +634,6 @@ export default function Dashboard() {
       <NewActivityModal
         open={isNewActivityModalOpen}
         onOpenChange={setIsNewActivityModalOpen}
-        contacts={contacts}
       />
 
       {selectedActivity && (
@@ -642,7 +641,6 @@ export default function Dashboard() {
           activity={selectedActivity}
           open={isEditActivityModalOpen}
           onOpenChange={setIsEditActivityModalOpen}
-          contacts={contacts}
         />
       )}
 

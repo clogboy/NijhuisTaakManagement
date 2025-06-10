@@ -251,15 +251,16 @@ export default function Agenda() {
   return (
     <AppLayout title="AI Agenda" subtitle="Intelligent time management with Eisenhower matrix">
       <div className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 mx-4 md:mx-0">
-            <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>
-            <TabsTrigger value="eisenhower" className="text-xs sm:text-sm">Eisenhower Matrix</TabsTrigger>
-            <TabsTrigger value="ethos" className="text-xs sm:text-sm">Weekly Ethos</TabsTrigger>
-          </TabsList>
+        <div className="p-4 sm:p-6">
+          <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>
+              <TabsTrigger value="eisenhower" className="text-xs sm:text-sm">Eisenhower Matrix</TabsTrigger>
+              <TabsTrigger value="ethos" className="text-xs sm:text-sm">Weekly Ethos</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="today" className="space-y-4 md:space-y-6 px-4 md:px-0">
-            {/* Date and Controls */}
+            <TabsContent value="today" className="space-y-4 md:space-y-6">
+              {/* Date and Controls */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -430,7 +431,7 @@ export default function Agenda() {
             )}
           </TabsContent>
 
-          <TabsContent value="eisenhower" className="space-y-4 md:space-y-6 px-4 md:px-0">
+          <TabsContent value="eisenhower" className="space-y-4 md:space-y-6">
             {eisenhowerMatrix && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 {Object.entries(eisenhowerMatrix).map(([quadrant, quadrantActivities]) => (
@@ -490,7 +491,7 @@ export default function Agenda() {
             )}
           </TabsContent>
 
-          <TabsContent value="ethos" className="space-y-4 md:space-y-6 px-4 md:px-0">
+          <TabsContent value="ethos" className="space-y-4 md:space-y-6">
             {/* Create New Ethos */}
             <Card>
               <CardHeader>
@@ -609,6 +610,7 @@ export default function Agenda() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </AppLayout>
   );
