@@ -157,6 +157,73 @@ Return a JSON object with this exact structure:
 
   } catch (error) {
     console.error('Error categorizing activities:', error);
+    
+    // Check if this is a quota error that should trigger key switching
+    if ((error as any)?.status === 429 || (error as any)?.status === 401 || (error as any)?.status === 403) {
+      try {
+        // Force key switching by trying again
+        const workingOpenAI = await getWorkingOpenAI();
+        const retryPrompt = `
+You are a productivity expert using the Eisenhower Matrix to categorize tasks. Analyze these activities and categorize them into four quadrants:
+
+1. Urgent & Important (Do First)
+2. Important but Not Urgent (Schedule)
+3. Urgent but Not Important (Delegate if possible)
+4. Neither Urgent nor Important (Eliminate if possible)
+
+Context: ${ethosContext}
+
+Activities to categorize:
+${JSON.stringify(activitiesData, null, 2)}
+
+Consider:
+- Due dates (closer = more urgent)
+- Priority levels (urgent, normal, low)
+- Status tags and current status
+- Alignment with today's ethos and focus areas
+
+Return a JSON object with this exact structure:
+{
+  "urgentImportant": [activity_ids],
+  "importantNotUrgent": [activity_ids], 
+  "urgentNotImportant": [activity_ids],
+  "neitherUrgentNorImportant": [activity_ids],
+  "reasoning": "Brief explanation of categorization logic"
+}
+`;
+        
+        const response = await workingOpenAI.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a productivity expert specializing in the Eisenhower Matrix for task prioritization. Always respond with valid JSON."
+            },
+            {
+              role: "user",
+              content: retryPrompt
+            }
+          ],
+          response_format: { type: "json_object" },
+        });
+
+        const result = JSON.parse(response.choices[0].message.content || '{}');
+        
+        // Map activity IDs back to full activity objects
+        const getActivitiesByIds = (ids: number[]) => 
+          activities.filter(activity => ids.includes(activity.id));
+
+        return {
+          urgentImportant: getActivitiesByIds(result.urgentImportant || []),
+          importantNotUrgent: getActivitiesByIds(result.importantNotUrgent || []),
+          urgentNotImportant: getActivitiesByIds(result.urgentNotImportant || []),
+          neitherUrgentNorImportant: getActivitiesByIds(result.neitherUrgentNorImportant || [])
+        };
+      } catch (retryError) {
+        console.error('Retry with backup key also failed:', retryError);
+      }
+    }
+    
     // Fallback to simple categorization
     return simpleEisenhowerCategorization(activities);
   }
