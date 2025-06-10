@@ -473,7 +473,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                                 </Badge>
                                 <Badge variant="outline">{roadblock.status}</Badge>
                                 <span className="text-xs text-muted-foreground">
-                                  {format(new Date(roadblock.reportedDate), "PP")}
+                                  {roadblock.reportedDate ? format(new Date(roadblock.reportedDate), "PP") : "No date"}
                                 </span>
                               </div>
                             </div>

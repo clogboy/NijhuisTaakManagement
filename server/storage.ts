@@ -139,10 +139,7 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(activities).orderBy(desc(activities.createdAt));
     } else {
       return await db.select().from(activities)
-        .where(or(
-          eq(activities.createdBy, userId),
-          sql`${userId} = ANY(${activities.assignedUsers})`
-        ))
+        .where(eq(activities.createdBy, userId))
         .orderBy(desc(activities.createdAt));
     }
   }
@@ -272,10 +269,7 @@ export class DatabaseStorage implements IStorage {
     const urgentActivities = await db.select().from(activities).where(
       and(
         eq(activities.priority, 'urgent'),
-        !isAdmin ? or(
-          eq(activities.createdBy, userId),
-          sql`${userId} = ANY(${activities.assignedUsers})`
-        ) : undefined
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
     );
 
@@ -284,10 +278,7 @@ export class DatabaseStorage implements IStorage {
       and(
         sql`${activities.dueDate} <= ${weekFromNow}`,
         sql`${activities.dueDate} >= ${now}`,
-        !isAdmin ? or(
-          eq(activities.createdBy, userId),
-          sql`${userId} = ANY(${activities.assignedUsers})`
-        ) : undefined
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
     );
 
