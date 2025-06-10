@@ -161,7 +161,8 @@ export default function AppLayout({
           }` : 
           `${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`
         } 
-        bg-sidebar-background shadow-sm border-r border-sidebar-border flex flex-col
+        shadow-lg border-r border-sidebar-border flex flex-col
+        ${isMobile ? 'bg-white dark:bg-gray-900' : 'bg-sidebar-background'}
       `}>
         {/* Header */}
         <div className="p-4 border-b border-sidebar-border">
