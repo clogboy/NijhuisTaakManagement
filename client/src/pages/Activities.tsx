@@ -128,7 +128,7 @@ export default function Activities() {
           <h2 className="text-lg md:text-xl font-semibold text-neutral-dark">Activities</h2>
           <Button
             onClick={() => setIsNewActivityModalOpen(true)}
-            className="bg-ms-blue hover:bg-ms-blue-dark text-white w-full sm:w-auto"
+            className="bg-ms-blue hover:bg-ms-blue-dark text-white w-full sm:w-auto micro-button-press micro-ripple micro-hover-lift"
             size="sm"
           >
             <Plus size={16} className="mr-2" />
@@ -140,7 +140,7 @@ export default function Activities() {
           {activities?.map((activity) => (
             <Card
               key={activity.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${
+              className={`cursor-pointer micro-card micro-button-press micro-fadeIn ${
                 selectedActivity?.id === activity.id ? "ring-2 ring-ms-blue" : ""
               }`}
               onClick={() => setSelectedActivity(activity)}

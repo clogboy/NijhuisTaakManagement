@@ -248,7 +248,7 @@ export default function Dashboard() {
                     <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark">
+                <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark micro-button-press micro-hover-lift">
                   Manage →
                 </Button>
               </div>
@@ -279,7 +279,7 @@ export default function Dashboard() {
                   <Button
                     variant="outline"
                     onClick={() => setIsFilterPanelOpen(true)}
-                    className="text-neutral-dark border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+                    className="text-neutral-dark border-gray-300 hover:bg-gray-50 w-full sm:w-auto micro-button-press micro-ripple"
                     size="sm"
                   >
                     <Filter size={16} className="mr-2" />
@@ -293,7 +293,7 @@ export default function Dashboard() {
             {filteredActivities?.map((activity) => (
               <Card 
                 key={activity.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer micro-card micro-button-press micro-slideIn"
                 onClick={() => {
                   setSelectedActivity(activity);
                   setIsTaskDetailModalOpen(true);

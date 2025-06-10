@@ -79,7 +79,7 @@ export default function Contacts() {
             onClick={handleSendEmailToAll}
             variant="outline"
             disabled={!filteredContacts?.length}
-            className="text-neutral-dark border-gray-300 hover:bg-gray-50"
+            className="text-neutral-dark border-gray-300 hover:bg-gray-50 micro-button-press micro-ripple"
             size="sm"
           >
             <Mail size={16} className="mr-2" />
@@ -87,7 +87,7 @@ export default function Contacts() {
           </Button>
           <Button
             onClick={() => setIsNewContactModalOpen(true)}
-            className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+            className="bg-ms-blue hover:bg-ms-blue-dark text-white micro-button-press micro-ripple micro-hover-lift"
             size="sm"
           >
             <Plus size={16} className="mr-2" />
@@ -112,7 +112,7 @@ export default function Contacts() {
       {/* Contacts Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {filteredContacts?.map((contact) => (
-          <Card key={contact.id} className="hover:shadow-md transition-shadow">
+          <Card key={contact.id} className="micro-card micro-fadeIn">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -129,7 +129,7 @@ export default function Contacts() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSendEmail([contact])}
-                    className="text-ms-blue hover:text-ms-blue-dark"
+                    className="text-ms-blue hover:text-ms-blue-dark micro-button-press micro-scaleIn"
                   >
                     <Mail size={16} />
                   </Button>
@@ -137,7 +137,7 @@ export default function Contacts() {
                     variant="ghost"
                     size="sm"
                     onClick={() => deleteContactMutation.mutate(contact.id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-700 micro-button-press micro-scaleIn"
                   >
                     <Trash2 size={16} />
                   </Button>
