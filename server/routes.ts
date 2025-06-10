@@ -837,25 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Smart schedule endpoint
-  app.post("/api/smart-schedule", requireAuth, async (req, res) => {
-    try {
-      const { activityIds, date, options } = req.body;
-      const userId = (req as any).user.id;
-      
-      const result = await timeBlockingService.autoScheduleActivities(
-        userId,
-        new Date(date),
-        activityIds,
-        options
-      );
-      
-      res.json(result);
-    } catch (error) {
-      console.error("Smart schedule error:", error);
-      res.status(500).json({ message: "Failed to create smart schedule" });
-    }
-  });
+
 
   // Health check endpoint for Fly.io
   app.get("/api/health", (req, res) => {
