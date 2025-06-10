@@ -114,7 +114,7 @@ export default function Activities() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-blue"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-blue micro-spinner"></div>
       </div>
     );
   }

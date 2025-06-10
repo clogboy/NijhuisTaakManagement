@@ -212,7 +212,7 @@ export default function TimeBlocking() {
           
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="micro-button-press micro-ripple">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
@@ -331,7 +331,7 @@ export default function TimeBlocking() {
                   availableActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800"
+                      className="flex items-start space-x-3 p-3 rounded-lg border micro-card micro-button-press micro-fadeIn"
                     >
                       <Checkbox
                         checked={selectedActivities.includes(activity.id)}
@@ -363,7 +363,7 @@ export default function TimeBlocking() {
                 <Button
                   onClick={handlePreviewSchedule}
                   disabled={previewMutation.isPending}
-                  className="w-full"
+                  className="w-full micro-button-press micro-ripple micro-hover-lift"
                 >
                   <Calendar className="h-4 w-4 mr-2" />
                   Preview Schedule ({selectedActivities.length} activities)

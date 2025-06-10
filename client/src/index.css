@@ -143,6 +143,16 @@
   80%, 100% { content: '...'; }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 /* Card interactions */
 .micro-card {
   transition: all 0.2s ease;
@@ -210,6 +220,46 @@
 .micro-ripple:active::before {
   width: 300px;
   height: 300px;
+}
+
+/* Enhanced loading states */
+.micro-spinner {
+  animation: spin 1s linear infinite;
+}
+
+.micro-bounce {
+  animation: bounce 2s infinite;
+}
+
+.micro-loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Success states */
+.micro-success-flash {
+  animation: successFlash 0.6s ease-out;
+}
+
+@keyframes successFlash {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(34, 197, 94, 0.1); }
+  100% { background-color: transparent; }
+}
+
+/* Toast-like notifications */
+.micro-notification-slide {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 .dark {

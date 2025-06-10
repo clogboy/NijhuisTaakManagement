@@ -129,7 +129,7 @@ export default function QuickWins() {
                 {quickWinsByStatus.pending.map((quickWin) => {
                   const linkedActivity = activityMap[quickWin.linkedActivityId];
                   return (
-                    <Card key={quickWin.id} className="hover:shadow-md transition-shadow">
+                    <Card key={quickWin.id} className="micro-card micro-fadeIn">
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
