@@ -11,8 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useTranslation } from "@/lib/translations";
+
 import {
   User as UserIcon,
   Clock,
@@ -52,31 +51,20 @@ export default function Settings() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { theme, language, setTheme, setLanguage, resetToSystem } = useTheme();
-  const t = useTranslation(language);
 
   const [preferences, setPreferences] = useState<UserPreferences>({
     workingHours: { start: "09:00", end: "17:00" },
     timezone: "Europe/Amsterdam",
-    language: language || "en",
+    language: "en",
     emailNotifications: true,
     pushNotifications: true,
     weeklyDigest: true,
     calendarSync: false,
     autoTimeBlocks: false,
-    darkMode: theme === 'dark',
+    darkMode: false,
     compactSidebar: false,
     aiSuggestions: true,
   });
-
-  // Sync preferences with theme context changes
-  useEffect(() => {
-    setPreferences(prev => ({
-      ...prev,
-      language: language || "en",
-      darkMode: theme === 'dark'
-    }));
-  }, [theme, language]);
 
   const [profileData, setProfileData] = useState({
     bio: "",
@@ -85,70 +73,9 @@ export default function Settings() {
     phone: "",
   });
 
-  // Load preferences from localStorage on mount with system defaults
-  useEffect(() => {
-    const savedPreferences = localStorage.getItem('userPreferences');
-    
-    // Detect system preferences
-    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const systemLanguage = navigator.language.startsWith('nl') ? 'nl' : 'en';
-    
-    if (savedPreferences) {
-      const parsed = JSON.parse(savedPreferences);
-      setPreferences(parsed);
-      
-      // Apply dark mode immediately
-      if (parsed.darkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    } else {
-      // Use system defaults for first-time users
-      const systemDefaults = {
-        ...preferences,
-        darkMode: systemDarkMode,
-        language: systemLanguage,
-      };
-      setPreferences(systemDefaults);
-      
-      // Apply system dark mode
-      if (systemDarkMode) {
-        document.documentElement.classList.add('dark');
-      }
-      
-      // Save system defaults
-      localStorage.setItem('userPreferences', JSON.stringify(systemDefaults));
-    }
-  }, []);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only auto-update if user hasn't manually set a preference
-      const savedPreferences = localStorage.getItem('userPreferences');
-      if (!savedPreferences) {
-        const newPreferences = { ...preferences, darkMode: e.matches };
-        setPreferences(newPreferences);
-        localStorage.setItem('userPreferences', JSON.stringify(newPreferences));
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [preferences]);
-
   // Save preferences to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('userPreferences', JSON.stringify(preferences));
-    
-    // Apply dark mode changes immediately
-    if (preferences.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
   }, [preferences]);
 
   const updatePreferencesMutation = useMutation({
@@ -190,24 +117,7 @@ export default function Settings() {
     }, 500);
   };
 
-  const handleResetToSystem = () => {
-    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const systemLanguage = navigator.language.startsWith('nl') ? 'nl' : 'en';
-    
-    const systemDefaults = {
-      ...preferences,
-      darkMode: systemDarkMode,
-      language: systemLanguage,
-    };
-    
-    setPreferences(systemDefaults);
-    localStorage.setItem('userPreferences', JSON.stringify(systemDefaults));
-    
-    toast({
-      title: "Settings reset",
-      description: "Your preferences have been reset to match your system settings.",
-    });
-  };
+
 
   const handleExportData = () => {
     // Export user data logic
@@ -229,7 +139,7 @@ export default function Settings() {
     <div className="h-full flex flex-col">
       <div className="flex-shrink-0 p-6 pb-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t('settings')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
           <Badge variant="outline" className="text-xs">
             User ID: {user?.user.id}
           </Badge>
@@ -444,32 +354,15 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Appearance & Interface */}
+          {/* Interface Preferences */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette className="h-5 w-5" />
-                Appearance & Interface
+                Interface Preferences
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{t('darkMode')}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Switch between light and dark themes
-                    {window.matchMedia('(prefers-color-scheme: dark)').matches ? ' (System: Dark)' : ' (System: Light)'}
-                  </p>
-                </div>
-                <Switch 
-                  checked={theme === 'dark'}
-                  onCheckedChange={(checked) => {
-                    const newTheme = checked ? 'dark' : 'light';
-                    setTheme(newTheme);
-                    handlePreferenceChange('darkMode', checked);
-                  }}
-                />
-              </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Compact sidebar</p>
@@ -481,33 +374,6 @@ export default function Settings() {
                     handlePreferenceChange('compactSidebar', checked)
                   }
                 />
-              </div>
-              <div>
-                <Label htmlFor="language">{t('language')}</Label>
-                <Select value={language} onValueChange={(value) => 
-                  setLanguage(value as 'en' | 'nl')
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">
-                      English {navigator.language.startsWith('en') ? '(System)' : ''}
-                    </SelectItem>
-                    <SelectItem value="nl">
-                      Dutch {navigator.language.startsWith('nl') ? '(System)' : ''}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={resetToSystem}
-                  className="w-full"
-                >
-                  {t('resetToSystem')}
-                </Button>
               </div>
             </CardContent>
           </Card>
