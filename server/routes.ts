@@ -463,6 +463,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI key status endpoint
+  app.get("/api/ai-key-status", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const { getKeyStatus } = await import("./ai-service");
+      const status = getKeyStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting AI key status:", error);
+      res.status(500).json({ message: "Failed to get AI key status" });
+    }
+  });
+
   app.get("/api/eisenhower", async (req, res) => {
     try {
       if (!req.session.userId) {

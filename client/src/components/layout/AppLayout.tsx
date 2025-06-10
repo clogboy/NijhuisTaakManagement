@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { apiRequest } from "@/lib/queryClient";
 import { User } from "@shared/schema";
+import { AIKeyWarning } from "@/components/ui/ai-key-warning";
 
 interface AppLayoutProps {
   children: React.ReactNode;

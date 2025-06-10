@@ -5,6 +5,15 @@ import { Activity, WeeklyEthos } from "@shared/schema";
 let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 let usingBackupKey = false;
 
+// Function to get current key status
+export function getKeyStatus() {
+  return {
+    usingBackupKey,
+    hasBackupKey: !!process.env.OPENAI_API_KEY_BACKUP,
+    hasPrimaryKey: !!process.env.OPENAI_API_KEY
+  };
+}
+
 // Automatic key switching function
 async function getWorkingOpenAI(): Promise<OpenAI> {
   try {
