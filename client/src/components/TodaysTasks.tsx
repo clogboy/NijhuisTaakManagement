@@ -59,24 +59,16 @@ export default function TodaysTasks() {
   }
 
   return (
-    <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => window.location.href = "/agenda"}
-    >
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-lg">
           <div className="flex items-center">
             <Calendar className="mr-2 h-5 w-5 text-ms-blue" />
             Today's Tasks
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="text-xs">
-              {todaysTasks.length} tasks
-            </Badge>
-            <Button variant="ghost" size="sm" className="text-neutral-medium hover:text-neutral-dark">
-              View Agenda →
-            </Button>
-          </div>
+          <Badge variant="secondary" className="text-xs">
+            {todaysTasks.length} tasks
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
