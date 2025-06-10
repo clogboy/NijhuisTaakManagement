@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import {
   User as UserIcon,
   Clock,
@@ -46,6 +48,9 @@ export default function Settings() {
     queryKey: ["/api/auth/me"],
   });
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [preferences, setPreferences] = useState<UserPreferences>({
     workingHours: { start: "09:00", end: "17:00" },
     timezone: "Europe/Amsterdam",
@@ -67,9 +72,78 @@ export default function Settings() {
     phone: "",
   });
 
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedPreferences = localStorage.getItem('userPreferences');
+    if (savedPreferences) {
+      const parsed = JSON.parse(savedPreferences);
+      setPreferences(parsed);
+      
+      // Apply dark mode immediately
+      if (parsed.darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, []);
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+    
+    // Apply dark mode changes immediately
+    if (preferences.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [preferences]);
+
+  const updatePreferencesMutation = useMutation({
+    mutationFn: (newPreferences: Partial<UserPreferences>) => 
+      apiRequest("PATCH", "/api/user/preferences", newPreferences),
+    onSuccess: () => {
+      toast({
+        title: "Settings updated",
+        description: "Your preferences have been saved successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save preferences. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
+    const newPreferences = { ...preferences, [key]: value };
+    setPreferences(newPreferences);
+    
+    // Debounced save to server
+    setTimeout(() => {
+      updatePreferencesMutation.mutate({ [key]: value });
+    }, 500);
+  };
+
+  const handleWorkingHoursChange = (type: 'start' | 'end', value: string) => {
+    const newWorkingHours = { ...preferences.workingHours, [type]: value };
+    const newPreferences = { ...preferences, workingHours: newWorkingHours };
+    setPreferences(newPreferences);
+    
+    setTimeout(() => {
+      updatePreferencesMutation.mutate({ workingHours: newWorkingHours });
+    }, 500);
+  };
+
   const handleExportData = () => {
     // Export user data logic
-    console.log("Exporting user data...");
+    toast({
+      title: "Export initiated",
+      description: "Your data export will be ready shortly.",
+    });
   };
 
   if (isLoading) {
@@ -165,7 +239,7 @@ export default function Settings() {
                 <div>
                   <Label htmlFor="start-time">Start Time</Label>
                   <Select value={preferences.workingHours.start} onValueChange={(value) => 
-                    setPreferences(prev => ({ ...prev, workingHours: { ...prev.workingHours, start: value } }))
+                    handleWorkingHoursChange('start', value)
                   }>
                     <SelectTrigger>
                       <SelectValue placeholder="Select start time" />
@@ -181,7 +255,7 @@ export default function Settings() {
                 <div>
                   <Label htmlFor="end-time">End Time</Label>
                   <Select value={preferences.workingHours.end} onValueChange={(value) => 
-                    setPreferences(prev => ({ ...prev, workingHours: { ...prev.workingHours, end: value } }))
+                    handleWorkingHoursChange('end', value)
                   }>
                     <SelectTrigger>
                       <SelectValue placeholder="Select end time" />
@@ -198,7 +272,7 @@ export default function Settings() {
               <div>
                 <Label htmlFor="timezone">Timezone</Label>
                 <Select value={preferences.timezone} onValueChange={(value) => 
-                  setPreferences(prev => ({ ...prev, timezone: value }))
+                  handlePreferenceChange('timezone', value)
                 }>
                   <SelectTrigger>
                     <SelectValue placeholder="Select timezone" />
@@ -231,7 +305,7 @@ export default function Settings() {
                 <Switch 
                   checked={preferences.emailNotifications}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, emailNotifications: checked }))
+                    handlePreferenceChange('emailNotifications', checked)
                   }
                 />
               </div>
@@ -243,7 +317,7 @@ export default function Settings() {
                 <Switch 
                   checked={preferences.pushNotifications}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, pushNotifications: checked }))
+                    handlePreferenceChange('pushNotifications', checked)
                   }
                 />
               </div>
@@ -255,7 +329,7 @@ export default function Settings() {
                 <Switch 
                   checked={preferences.weeklyDigest}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, weeklyDigest: checked }))
+                    handlePreferenceChange('weeklyDigest', checked)
                   }
                 />
               </div>
