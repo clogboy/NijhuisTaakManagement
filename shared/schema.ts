@@ -38,9 +38,8 @@ export const activities = pgTable("activities", {
   statusTags: text("status_tags").array(),
   estimatedDuration: integer("estimated_duration"), // in minutes
   dueDate: timestamp("due_date"),
-  assignedTo: integer("assigned_to").references(() => contacts.id),
+  participants: integer("participants").array(), // array of contact IDs
   createdBy: integer("created_by").notNull().references(() => users.id),
-  assignedUsers: integer("assigned_users").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
