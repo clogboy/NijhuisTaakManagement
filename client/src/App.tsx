@@ -13,6 +13,8 @@ import Contacts from "@/pages/Contacts";
 import QuickWins from "@/pages/QuickWins";
 import Roadblocks from "@/pages/Roadblocks";
 import Agenda from "@/pages/Agenda";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -63,6 +65,22 @@ function AuthenticatedApp() {
               </p>
             </div>
           </div>
+        </AppLayout>
+      </Route>
+      <Route path="/profile">
+        <AppLayout
+          title="Profile"
+          subtitle="Account information and settings"
+        >
+          <Profile />
+        </AppLayout>
+      </Route>
+      <Route path="/settings">
+        <AppLayout
+          title="Settings"
+          subtitle="Configure your preferences"
+        >
+          <Settings />
         </AppLayout>
       </Route>
       <Route component={NotFound} />
