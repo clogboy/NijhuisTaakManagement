@@ -107,6 +107,48 @@ export const insertRoadblockSchema = createInsertSchema(roadblocks).omit({
   updatedAt: true,
 });
 
+export const weeklyEthos = pgTable("weekly_ethos", {
+  id: serial("id").primaryKey(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0 = Sunday, 1 = Monday, etc.
+  ethos: text("ethos").notNull(),
+  description: text("description"),
+  focusAreas: text("focus_areas").array(), // Areas of focus for this day
+  maxTaskSwitches: integer("max_task_switches").notNull().default(3),
+  preferredWorkBlocks: integer("preferred_work_blocks").notNull().default(2), // Number of focused work blocks
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const dailyAgendas = pgTable("daily_agendas", {
+  id: serial("id").primaryKey(),
+  date: timestamp("date").notNull(),
+  eisenhowerQuadrant: text("eisenhower_quadrant").notNull(), // urgent_important, important_not_urgent, urgent_not_important, neither
+  scheduledActivities: integer("scheduled_activities").array().notNull().default([]),
+  aiSuggestions: text("ai_suggestions"),
+  taskSwitchCount: integer("task_switch_count").notNull().default(0),
+  maxTaskSwitches: integer("max_task_switches").notNull().default(3),
+  isGenerated: boolean("is_generated").notNull().default(false),
+  generatedAt: timestamp("generated_at"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertWeeklyEthosSchema = createInsertSchema(weeklyEthos).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDailyAgendaSchema = createInsertSchema(dailyAgendas).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -125,3 +167,9 @@ export type InsertQuickWin = z.infer<typeof insertQuickWinSchema>;
 
 export type Roadblock = typeof roadblocks.$inferSelect;
 export type InsertRoadblock = z.infer<typeof insertRoadblockSchema>;
+
+export type WeeklyEthos = typeof weeklyEthos.$inferSelect;
+export type InsertWeeklyEthos = z.infer<typeof insertWeeklyEthosSchema>;
+
+export type DailyAgenda = typeof dailyAgendas.$inferSelect;
+export type InsertDailyAgenda = z.infer<typeof insertDailyAgendaSchema>;

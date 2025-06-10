@@ -1,4 +1,4 @@
-import { users, contacts, activities, activityLogs, quickWins, roadblocks, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock } from "@shared/schema";
+import { users, contacts, activities, activityLogs, quickWins, roadblocks, weeklyEthos, dailyAgendas, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
@@ -46,6 +46,20 @@ export interface IStorage {
     completedCount: number;
     activeContacts: number;
   }>;
+
+  // Weekly Ethos
+  getWeeklyEthos(userId: number): Promise<WeeklyEthos[]>;
+  getWeeklyEthosByDay(userId: number, dayOfWeek: number): Promise<WeeklyEthos | undefined>;
+  createWeeklyEthos(ethos: InsertWeeklyEthos & { createdBy: number }): Promise<WeeklyEthos>;
+  updateWeeklyEthos(id: number, ethos: Partial<InsertWeeklyEthos>): Promise<WeeklyEthos>;
+  deleteWeeklyEthos(id: number): Promise<void>;
+
+  // Daily Agendas
+  getDailyAgendas(userId: number, startDate?: Date, endDate?: Date): Promise<DailyAgenda[]>;
+  getDailyAgenda(userId: number, date: Date): Promise<DailyAgenda | undefined>;
+  createDailyAgenda(agenda: InsertDailyAgenda & { createdBy: number }): Promise<DailyAgenda>;
+  updateDailyAgenda(id: number, agenda: Partial<InsertDailyAgenda>): Promise<DailyAgenda>;
+  deleteDailyAgenda(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
