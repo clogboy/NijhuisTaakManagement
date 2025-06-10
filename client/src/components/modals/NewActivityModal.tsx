@@ -106,6 +106,8 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
         description: "Activity created successfully",
       });
       form.reset();
+      setStatusTags([]);
+      setNewTag("");
       onOpenChange(false);
     },
     onError: (error: any) => {
@@ -182,12 +184,57 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                       placeholder="Describe the activity..." 
                       rows={3}
                       {...field} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Status Tags */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-neutral-dark">
+                Status Tags
+              </label>
+              
+              {/* Current Tags */}
+              {statusTags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {statusTags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X size={12} />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
+              {/* Add New Tag */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add status tag..."
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addTag}
+                  disabled={!newTag.trim()}
+                >
+                  Add Tag
+                </Button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField

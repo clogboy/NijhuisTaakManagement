@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,11 +28,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
-import { insertRoadblockSchema, Activity } from "@shared/schema";
+import { insertRoadblockSchema } from "@shared/schema";
+import { Activity } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = insertRoadblockSchema.extend({
-  reportedDate: z.string().min(1, "Reported date is required"),
+  reportedDate: z.string().optional(),
 });
 
 interface NewRoadblockModalProps {
@@ -57,8 +59,6 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
       status: "open",
       linkedActivityId: linkedActivityId || undefined,
       reportedDate: new Date().toISOString().split('T')[0],
-      resolvedDate: undefined,
-      resolution: "",
     },
   });
 
@@ -66,8 +66,8 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
     mutationFn: (data: z.infer<typeof formSchema>) => {
       const roadblockData = {
         ...data,
-        reportedDate: new Date(data.reportedDate),
-        resolvedDate: data.resolvedDate ? new Date(data.resolvedDate) : null,
+        reportedDate: data.reportedDate ? new Date(data.reportedDate) : new Date(),
+        resolvedDate: null,
       };
       return apiRequest("POST", "/api/roadblocks", roadblockData);
     },
@@ -83,7 +83,7 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create roadblock",
+        description: error.message || "Failed to report roadblock",
         variant: "destructive",
       });
     },
@@ -95,30 +95,47 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-neutral-dark">
-            Report New Roadblock
-          </DialogTitle>
+          <DialogTitle>Report Roadblock</DialogTitle>
         </DialogHeader>
-
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Roadblock Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter roadblock title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Brief description of the issue..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Detailed Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Provide more details about the roadblock..." 
+                      rows={4}
+                      {...field} 
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="severity"
@@ -142,40 +159,24 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe the roadblock and its impact..." 
-                      rows={4}
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="linkedActivityId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Linked Activity</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value?.toString()}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                      defaultValue={field.value?.toString()}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select activity..." />
+                          <SelectValue placeholder="Select activity (optional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="">No linked activity</SelectItem>
                         {activities?.map((activity) => (
                           <SelectItem key={activity.id} value={activity.id.toString()}>
                             {activity.title}
@@ -187,32 +188,32 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="reportedDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reported Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-              <Button 
-                type="button" 
-                variant="outline" 
+            <FormField
+              control={form.control}
+              name="reportedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reported Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-3">
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={createRoadblockMutation.isPending}
                 className="bg-red-500 hover:bg-red-600 text-white"
               >
