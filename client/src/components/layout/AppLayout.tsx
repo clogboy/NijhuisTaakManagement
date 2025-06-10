@@ -271,7 +271,14 @@ export default function AppLayout({
 
         {/* Main Content */}
         <main className="flex-1 overflow-hidden">
-          {children}
+          <div className="h-full overflow-auto">
+            <div className="p-6">
+              <AIKeyWarning />
+            </div>
+            <div className="px-6 pb-6">
+              {children}
+            </div>
+          </div>
         </main>
       </div>
     </div>
