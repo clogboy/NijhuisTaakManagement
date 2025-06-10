@@ -430,9 +430,9 @@ export default function Agenda() {
             )}
           </TabsContent>
 
-          <TabsContent value="eisenhower" className="space-y-6">
+          <TabsContent value="eisenhower" className="space-y-4 md:space-y-6">
             {eisenhowerMatrix && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 {Object.entries(eisenhowerMatrix).map(([quadrant, quadrantActivities]) => (
                   <Card key={quadrant} className={`border-2 ${getQuadrantColor(quadrant)}`}>
                     <CardHeader className="pb-3">

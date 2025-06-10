@@ -67,26 +67,28 @@ export default function Contacts() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
+    <div className="flex-1 overflow-y-auto p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-neutral-dark">Contacts</h2>
-          <p className="text-sm text-neutral-medium">Manage your contact database</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg md:text-2xl font-semibold text-neutral-dark">Contacts</h2>
+          <p className="text-xs md:text-sm text-neutral-medium">Manage your contact database</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Button
             onClick={handleSendEmailToAll}
             variant="outline"
             disabled={!filteredContacts?.length}
             className="text-neutral-dark border-gray-300 hover:bg-gray-50"
+            size="sm"
           >
             <Mail size={16} className="mr-2" />
-            Email All ({filteredContacts?.length || 0})
+            <span className="hidden sm:inline">Email All</span> ({filteredContacts?.length || 0})
           </Button>
           <Button
             onClick={() => setIsNewContactModalOpen(true)}
             className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+            size="sm"
           >
             <Plus size={16} className="mr-2" />
             New Contact
@@ -95,8 +97,8 @@ export default function Contacts() {
       </div>
 
       {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      <div className="mb-4 md:mb-6">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-medium" size={16} />
           <Input
             placeholder="Search contacts..."
@@ -108,7 +110,7 @@ export default function Contacts() {
       </div>
 
       {/* Contacts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {filteredContacts?.map((contact) => (
           <Card key={contact.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
