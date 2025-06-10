@@ -54,11 +54,19 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const taskComments = pgTable("task_comments", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
+  comment: text("comment").notNull(),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const quickWins = pgTable("quick_wins", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  linkedActivityId: integer("linked_activity_id").references(() => activities.id),
+  linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -69,7 +77,7 @@ export const roadblocks = pgTable("roadblocks", {
   description: text("description").notNull(),
   severity: text("severity").notNull().default("medium"), // 'low', 'medium', 'high', 'critical'
   status: text("status").notNull().default("open"), // 'open', 'in_progress', 'resolved'
-  linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id),
+  linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   reportedDate: timestamp("reported_date").notNull(),
   resolvedDate: timestamp("resolved_date"),
   resolution: text("resolution"),
@@ -98,6 +106,12 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+});
+
+export const insertTaskCommentSchema = createInsertSchema(taskComments).omit({
   id: true,
   createdBy: true,
   createdAt: true,
@@ -170,6 +184,9 @@ export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type TaskComment = typeof taskComments.$inferSelect;
+export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
 
 export type QuickWin = typeof quickWins.$inferSelect;
 export type InsertQuickWin = z.infer<typeof insertQuickWinSchema>;
