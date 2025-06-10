@@ -74,6 +74,15 @@ export default function Settings() {
   useEffect(() => {
     if (serverPreferences) {
       setPreferences(serverPreferences);
+      
+      // Apply dark mode immediately when preferences load
+      if (serverPreferences.darkMode !== undefined) {
+        if (serverPreferences.darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
     }
   }, [serverPreferences]);
 
@@ -113,9 +122,18 @@ export default function Settings() {
     const newPreferences = { ...preferences, [key]: value };
     setPreferences(newPreferences);
     
-    // Update localStorage for immediate sidebar response
+    // Apply immediate UI changes
     if (key === 'compactSidebar') {
       localStorage.setItem('sidebar-collapsed', JSON.stringify(value));
+    }
+    
+    if (key === 'darkMode') {
+      // Apply dark mode immediately to document
+      if (value) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
     
     // Debounced save to server
@@ -381,6 +399,18 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Dark mode</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Use dark theme across the application</p>
+                </div>
+                <Switch 
+                  checked={preferences.darkMode}
+                  onCheckedChange={(checked) => 
+                    handlePreferenceChange('darkMode', checked)
+                  }
+                />
+              </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Compact sidebar</p>

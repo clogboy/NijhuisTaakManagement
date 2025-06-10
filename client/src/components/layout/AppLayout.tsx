@@ -65,10 +65,20 @@ export default function AppLayout({
     return saved ? JSON.parse(saved) : false;
   });
 
-  // Sync sidebar state with user preferences when preferences load
+  // Sync sidebar state and theme with user preferences when preferences load
   useEffect(() => {
-    if (userPreferences && userPreferences.compactSidebar !== undefined) {
-      setIsSidebarCollapsed(userPreferences.compactSidebar);
+    if (userPreferences) {
+      if (userPreferences.compactSidebar !== undefined) {
+        setIsSidebarCollapsed(userPreferences.compactSidebar);
+      }
+      
+      if (userPreferences.darkMode !== undefined) {
+        if (userPreferences.darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
     }
   }, [userPreferences]);
 
