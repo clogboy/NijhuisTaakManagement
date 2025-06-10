@@ -102,10 +102,10 @@ export default function Roadblocks() {
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div>
-                <h3 className="font-medium text-blue-800 dark:text-blue-200">
+                <h3 className="font-medium text-red-800 dark:text-red-200">
                   Roadblocks are now Task-Specific
                 </h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                   Roadblocks are now managed within individual tasks. This dashboard shows all roadblocks across your tasks. 
                   To report new roadblocks, go to Activities and open any task's detail view.
                 </p>
