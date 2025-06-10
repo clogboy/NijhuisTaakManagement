@@ -28,13 +28,19 @@ export interface IStorage {
   getActivityLogs(activityId: number): Promise<ActivityLog[]>;
   createActivityLog(log: InsertActivityLog & { createdBy: number }): Promise<ActivityLog>;
 
-  // Quick Wins
+  // Task Comments
+  getTaskComments(activityId: number): Promise<TaskComment[]>;
+  createTaskComment(comment: InsertTaskComment & { createdBy: number }): Promise<TaskComment>;
+
+  // Quick Wins (linked to activities)
   getQuickWins(userId: number): Promise<QuickWin[]>;
+  getQuickWinsByActivity(activityId: number): Promise<QuickWin[]>;
   createQuickWin(quickWin: InsertQuickWin & { createdBy: number }): Promise<QuickWin>;
   deleteQuickWin(id: number): Promise<void>;
 
-  // Roadblocks
+  // Roadblocks (linked to activities)
   getRoadblocks(userId: number, isAdmin: boolean): Promise<Roadblock[]>;
+  getRoadblocksByActivity(activityId: number): Promise<Roadblock[]>;
   getRoadblock(id: number): Promise<Roadblock | undefined>;
   createRoadblock(roadblock: InsertRoadblock & { createdBy: number }): Promise<Roadblock>;
   updateRoadblock(id: number, roadblock: Partial<InsertRoadblock>): Promise<Roadblock>;
@@ -177,9 +183,29 @@ export class DatabaseStorage implements IStorage {
     return newLog;
   }
 
+  async getTaskComments(activityId: number): Promise<TaskComment[]> {
+    return await db.select()
+      .from(taskComments)
+      .where(eq(taskComments.activityId, activityId))
+      .orderBy(taskComments.createdAt);
+  }
+
+  async createTaskComment(comment: InsertTaskComment & { createdBy: number }): Promise<TaskComment> {
+    const [newComment] = await db.insert(taskComments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
   async getQuickWins(userId: number): Promise<QuickWin[]> {
     return await db.select().from(quickWins)
       .where(eq(quickWins.createdBy, userId))
+      .orderBy(desc(quickWins.createdAt));
+  }
+
+  async getQuickWinsByActivity(activityId: number): Promise<QuickWin[]> {
+    return await db.select().from(quickWins)
+      .where(eq(quickWins.linkedActivityId, activityId))
       .orderBy(desc(quickWins.createdAt));
   }
 
@@ -200,6 +226,12 @@ export class DatabaseStorage implements IStorage {
         .where(eq(roadblocks.createdBy, userId))
         .orderBy(desc(roadblocks.reportedDate));
     }
+  }
+
+  async getRoadblocksByActivity(activityId: number): Promise<Roadblock[]> {
+    return await db.select().from(roadblocks)
+      .where(eq(roadblocks.linkedActivityId, activityId))
+      .orderBy(desc(roadblocks.reportedDate));
   }
 
   async getRoadblock(id: number): Promise<Roadblock | undefined> {
