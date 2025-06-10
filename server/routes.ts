@@ -643,6 +643,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User preferences routes
+  app.get("/api/user/preferences", requireAuth, async (req: any, res) => {
+    try {
+      let userPrefs = await storage.getUserPreferences(req.user.id);
+      
+      if (!userPrefs) {
+        // Create default preferences if none exist
+        const defaultPrefs = {
+          workingHours: { start: "09:00", end: "17:00" },
+          timezone: "Europe/Amsterdam",
+          language: "en",
+          emailNotifications: true,
+          pushNotifications: true,
+          weeklyDigest: true,
+          calendarSync: false,
+          autoTimeBlocks: false,
+          darkMode: false,
+          compactSidebar: false,
+          aiSuggestions: true,
+        };
+        
+        userPrefs = await storage.createUserPreferences({
+          ...defaultPrefs,
+          createdBy: req.user.id,
+        });
+      }
+      
+      res.json(userPrefs);
+    } catch (error) {
+      console.error("Get preferences error:", error);
+      res.status(500).json({ message: "Failed to fetch preferences" });
+    }
+  });
+
+  app.patch("/api/user/preferences", requireAuth, async (req: any, res) => {
+    try {
+      const updatedPrefs = await storage.updateUserPreferences(req.user.id, req.body);
+      res.json(updatedPrefs);
+    } catch (error) {
+      console.error("Update preferences error:", error);
+      res.status(500).json({ message: "Failed to update preferences" });
+    }
+  });
+
   // User profile and settings routes
   app.put("/api/users/:id", requireAuth, async (req: any, res) => {
     try {

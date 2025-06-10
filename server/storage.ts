@@ -69,6 +69,11 @@ export interface IStorage {
   updateTimeBlock(id: number, timeBlock: Partial<InsertTimeBlock>): Promise<TimeBlock>;
   deleteTimeBlock(id: number): Promise<void>;
   getTimeBlocksForActivity(activityId: number): Promise<TimeBlock[]>;
+
+  // User Preferences
+  getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
+  createUserPreferences(preferences: InsertUserPreferences & { createdBy: number }): Promise<UserPreferences>;
+  updateUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>): Promise<UserPreferences>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -388,6 +393,28 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(timeBlocks)
       .where(eq(timeBlocks.activityId, activityId))
       .orderBy(timeBlocks.startTime);
+  }
+
+  // User Preferences methods
+  async getUserPreferences(userId: number): Promise<UserPreferences | undefined> {
+    const [userPrefs] = await db.select().from(userPreferences)
+      .where(eq(userPreferences.createdBy, userId));
+    return userPrefs || undefined;
+  }
+
+  async createUserPreferences(preferences: InsertUserPreferences & { createdBy: number }): Promise<UserPreferences> {
+    const [newPrefs] = await db.insert(userPreferences)
+      .values(preferences)
+      .returning();
+    return newPrefs;
+  }
+
+  async updateUserPreferences(userId: number, preferencesUpdate: Partial<InsertUserPreferences>): Promise<UserPreferences> {
+    const [updatedPrefs] = await db.update(userPreferences)
+      .set({ ...preferencesUpdate, updatedAt: new Date() })
+      .where(eq(userPreferences.createdBy, userId))
+      .returning();
+    return updatedPrefs;
   }
 }
 

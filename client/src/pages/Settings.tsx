@@ -49,6 +49,10 @@ export default function Settings() {
     queryKey: ["/api/auth/me"],
   });
 
+  const { data: serverPreferences } = useQuery<UserPreferences>({
+    queryKey: ["/api/user/preferences"],
+  });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,6 +70,13 @@ export default function Settings() {
     aiSuggestions: true,
   });
 
+  // Load preferences from server when available
+  useEffect(() => {
+    if (serverPreferences) {
+      setPreferences(serverPreferences);
+    }
+  }, [serverPreferences]);
+
   const [profileData, setProfileData] = useState({
     bio: "",
     department: "",
@@ -82,6 +93,8 @@ export default function Settings() {
     mutationFn: (newPreferences: Partial<UserPreferences>) => 
       apiRequest("PATCH", "/api/user/preferences", newPreferences),
     onSuccess: () => {
+      // Invalidate and refetch preferences
+      queryClient.invalidateQueries({ queryKey: ["/api/user/preferences"] });
       toast({
         title: "Settings updated",
         description: "Your preferences have been saved successfully.",
