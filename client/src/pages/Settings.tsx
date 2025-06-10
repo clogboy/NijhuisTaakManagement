@@ -72,9 +72,14 @@ export default function Settings() {
     phone: "",
   });
 
-  // Load preferences from localStorage on mount
+  // Load preferences from localStorage on mount with system defaults
   useEffect(() => {
     const savedPreferences = localStorage.getItem('userPreferences');
+    
+    // Detect system preferences
+    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const systemLanguage = navigator.language.startsWith('nl') ? 'nl' : 'en';
+    
     if (savedPreferences) {
       const parsed = JSON.parse(savedPreferences);
       setPreferences(parsed);
@@ -85,8 +90,41 @@ export default function Settings() {
       } else {
         document.documentElement.classList.remove('dark');
       }
+    } else {
+      // Use system defaults for first-time users
+      const systemDefaults = {
+        ...preferences,
+        darkMode: systemDarkMode,
+        language: systemLanguage,
+      };
+      setPreferences(systemDefaults);
+      
+      // Apply system dark mode
+      if (systemDarkMode) {
+        document.documentElement.classList.add('dark');
+      }
+      
+      // Save system defaults
+      localStorage.setItem('userPreferences', JSON.stringify(systemDefaults));
     }
   }, []);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only auto-update if user hasn't manually set a preference
+      const savedPreferences = localStorage.getItem('userPreferences');
+      if (!savedPreferences) {
+        const newPreferences = { ...preferences, darkMode: e.matches };
+        setPreferences(newPreferences);
+        localStorage.setItem('userPreferences', JSON.stringify(newPreferences));
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [preferences]);
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {
@@ -136,6 +174,25 @@ export default function Settings() {
     setTimeout(() => {
       updatePreferencesMutation.mutate({ workingHours: newWorkingHours });
     }, 500);
+  };
+
+  const handleResetToSystem = () => {
+    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const systemLanguage = navigator.language.startsWith('nl') ? 'nl' : 'en';
+    
+    const systemDefaults = {
+      ...preferences,
+      darkMode: systemDarkMode,
+      language: systemLanguage,
+    };
+    
+    setPreferences(systemDefaults);
+    localStorage.setItem('userPreferences', JSON.stringify(systemDefaults));
+    
+    toast({
+      title: "Settings reset",
+      description: "Your preferences have been reset to match your system settings.",
+    });
   };
 
   const handleExportData = () => {
@@ -385,12 +442,15 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Dark mode</p>
-                  <p className="text-sm text-gray-500">Switch between light and dark themes</p>
+                  <p className="text-sm text-gray-500">
+                    Switch between light and dark themes
+                    {window.matchMedia('(prefers-color-scheme: dark)').matches ? ' (System: Dark)' : ' (System: Light)'}
+                  </p>
                 </div>
                 <Switch 
                   checked={preferences.darkMode}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, darkMode: checked }))
+                    handlePreferenceChange('darkMode', checked)
                   }
                 />
               </div>
@@ -402,23 +462,36 @@ export default function Settings() {
                 <Switch 
                   checked={preferences.compactSidebar}
                   onCheckedChange={(checked) => 
-                    setPreferences(prev => ({ ...prev, compactSidebar: checked }))
+                    handlePreferenceChange('compactSidebar', checked)
                   }
                 />
               </div>
               <div>
                 <Label htmlFor="language">Interface Language</Label>
                 <Select value={preferences.language} onValueChange={(value) => 
-                  setPreferences(prev => ({ ...prev, language: value }))
+                  handlePreferenceChange('language', value)
                 }>
                   <SelectTrigger>
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="nl">Dutch</SelectItem>
+                    <SelectItem value="en">
+                      English {navigator.language.startsWith('en') ? '(System)' : ''}
+                    </SelectItem>
+                    <SelectItem value="nl">
+                      Dutch {navigator.language.startsWith('nl') ? '(System)' : ''}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleResetToSystem}
+                  className="w-full"
+                >
+                  Reset to System Preferences
+                </Button>
               </div>
             </CardContent>
           </Card>
