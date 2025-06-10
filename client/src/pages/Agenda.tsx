@@ -250,15 +250,15 @@ export default function Agenda() {
 
   return (
     <AppLayout title="AI Agenda" subtitle="Intelligent time management with Eisenhower matrix">
-      <div className="flex-1 overflow-y-auto p-6">
-        <Tabs defaultValue="today" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="today">Today's Agenda</TabsTrigger>
-            <TabsTrigger value="eisenhower">Eisenhower Matrix</TabsTrigger>
-            <TabsTrigger value="ethos">Weekly Ethos</TabsTrigger>
+      <div className="flex-1 overflow-y-auto">
+        <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 mx-4 md:mx-0">
+            <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>
+            <TabsTrigger value="eisenhower" className="text-xs sm:text-sm">Eisenhower Matrix</TabsTrigger>
+            <TabsTrigger value="ethos" className="text-xs sm:text-sm">Weekly Ethos</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="today" className="space-y-6">
+          <TabsContent value="today" className="space-y-4 md:space-y-6 px-4 md:px-0">
             {/* Date and Controls */}
             <Card>
               <CardHeader>
@@ -430,7 +430,7 @@ export default function Agenda() {
             )}
           </TabsContent>
 
-          <TabsContent value="eisenhower" className="space-y-4 md:space-y-6">
+          <TabsContent value="eisenhower" className="space-y-4 md:space-y-6 px-4 md:px-0">
             {eisenhowerMatrix && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 {Object.entries(eisenhowerMatrix).map(([quadrant, quadrantActivities]) => (

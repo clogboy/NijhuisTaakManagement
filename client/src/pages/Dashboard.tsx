@@ -178,52 +178,52 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+    <div className="flex-1 overflow-y-auto">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-3 sm:p-6">
+            <CardContent className="p-2 sm:p-4 lg:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="text-white" size={12} />
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="text-white" size={10} />
                   </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium">Urgent Activities</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
+                <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Urgent</p>
+                  <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-3 sm:p-6">
+            <CardContent className="p-2 sm:p-4 lg:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <Clock className="text-white" size={12} />
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <Clock className="text-white" size={10} />
                   </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium">Due This Week</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
+                <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Due Week</p>
+                  <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-3 sm:p-6">
+            <CardContent className="p-2 sm:p-4 lg:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="text-white" size={12} />
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="text-white" size={10} />
                   </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium">Completed</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
+                <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Done</p>
+                  <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -233,17 +233,17 @@ export default function Dashboard() {
             className="cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => window.location.href = "/contacts"}
           >
-            <CardContent className="p-3 sm:p-6">
+            <CardContent className="p-2 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-ms-blue rounded-lg flex items-center justify-center">
-                      <Users className="text-white" size={12} />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-ms-blue rounded-lg flex items-center justify-center">
+                      <Users className="text-white" size={10} />
                     </div>
                   </div>
-                  <div className="ml-2 sm:ml-4">
-                    <p className="text-xs sm:text-sm font-medium text-neutral-medium">Active Contacts</p>
-                    <p className="text-lg sm:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
+                  <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Contacts</p>
+                    <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark">
