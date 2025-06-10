@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckSquare, Clock, Calendar, ArrowRight } from "lucide-react";
 import { Activity } from "@shared/schema";
+import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import { format } from "date-fns";
 
 export default function TodaysTasks() {
+  const [selectedTask, setSelectedTask] = useState<Activity | null>(null);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const today = new Date();
   const todayString = format(today, "yyyy-MM-dd");
 
@@ -85,7 +89,11 @@ export default function TodaysTasks() {
             {todaysTasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors cursor-pointer"
+                onClick={() => {
+                  setSelectedTask(task);
+                  setIsTaskDetailModalOpen(true);
+                }}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
@@ -118,7 +126,10 @@ export default function TodaysTasks() {
                   variant="ghost"
                   size="sm"
                   className="ml-2 h-8 w-8 p-0"
-                  onClick={() => window.location.href = `/activities`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `/activities`;
+                  }}
                 >
                   <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -141,6 +152,14 @@ export default function TodaysTasks() {
           </div>
         )}
       </CardContent>
+      
+      {selectedTask && (
+        <TaskDetailModal
+          activity={selectedTask}
+          isOpen={isTaskDetailModalOpen}
+          onClose={() => setIsTaskDetailModalOpen(false)}
+        />
+      )}
     </Card>
   );
 }

@@ -24,9 +24,10 @@
   --ring: hsl(240, 10%, 3.9%);
   --radius: 0.5rem;
   
-  /* Custom Microsoft and Priority Colors */
-  --ms-blue: hsl(207, 90%, 54%);
-  --ms-blue-dark: hsl(207, 90%, 45%);
+  /* Nijhuis Brand Colors */
+  --nijhuis-red: hsl(0, 73%, 51%);
+  --nijhuis-red-dark: hsl(0, 73%, 41%);
+  --nijhuis-red-light: hsl(0, 73%, 96%);
   --priority-urgent: hsl(0, 84%, 60%);
   --priority-normal: hsl(30, 100%, 50%);
   --priority-low: hsl(120, 61%, 34%);

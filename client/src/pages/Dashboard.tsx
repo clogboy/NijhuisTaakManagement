@@ -559,6 +559,14 @@ export default function Dashboard() {
           contacts={contacts}
         />
       )}
+
+      {selectedActivity && (
+        <TaskDetailModal
+          activity={selectedActivity}
+          isOpen={isTaskDetailModalOpen}
+          onClose={() => setIsTaskDetailModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
