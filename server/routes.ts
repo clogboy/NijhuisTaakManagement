@@ -6,6 +6,7 @@ import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-se
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { z } from "zod";
+import "./types";
 
 const loginUserSchema = z.object({
   email: z.string().email(),

@@ -180,7 +180,8 @@ export default function Settings() {
   };
 
   const handleWorkingHoursChange = (type: 'start' | 'end', value: string) => {
-    const newWorkingHours = { ...preferences.workingHours, [type]: value };
+    const currentWorkingHours = preferences.workingHours || { start: "09:00", end: "17:00" };
+    const newWorkingHours = { ...currentWorkingHours, [type]: value };
     const newPreferences = { ...preferences, workingHours: newWorkingHours };
     setPreferences(newPreferences);
     
@@ -462,9 +463,11 @@ export default function Settings() {
                 </div>
                 <Switch 
                   checked={theme === 'dark'}
-                  onCheckedChange={(checked) => 
-                    setTheme(checked ? 'dark' : 'light')
-                  }
+                  onCheckedChange={(checked) => {
+                    const newTheme = checked ? 'dark' : 'light';
+                    setTheme(newTheme);
+                    handlePreferenceChange('darkMode', checked);
+                  }}
                 />
               </div>
               <div className="flex items-center justify-between">
