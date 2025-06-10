@@ -345,6 +345,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Task Comments routes
+  app.get("/api/activities/:id/comments", requireAuth, async (req: any, res) => {
+    try {
+      const comments = await storage.getTaskComments(parseInt(req.params.id));
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching task comments:", error);
+      res.status(500).json({ message: "Failed to fetch task comments" });
+    }
+  });
+
+  app.post("/api/task-comments", requireAuth, async (req: any, res) => {
+    try {
+      const { activityId, comment } = req.body;
+      const newComment = await storage.createTaskComment({
+        activityId,
+        comment,
+        createdBy: req.user.id,
+      });
+      res.json(newComment);
+    } catch (error) {
+      console.error("Error creating task comment:", error);
+      res.status(500).json({ message: "Failed to create task comment" });
+    }
+  });
+
+  // Activity-specific Quick Wins routes
+  app.get("/api/activities/:id/quickwins", requireAuth, async (req: any, res) => {
+    try {
+      const quickWins = await storage.getQuickWinsByActivity(parseInt(req.params.id));
+      res.json(quickWins);
+    } catch (error) {
+      console.error("Error fetching activity quick wins:", error);
+      res.status(500).json({ message: "Failed to fetch activity quick wins" });
+    }
+  });
+
+  // Activity-specific Roadblocks routes
+  app.get("/api/activities/:id/roadblocks", requireAuth, async (req: any, res) => {
+    try {
+      const roadblocks = await storage.getRoadblocksByActivity(parseInt(req.params.id));
+      res.json(roadblocks);
+    } catch (error) {
+      console.error("Error fetching activity roadblocks:", error);
+      res.status(500).json({ message: "Failed to fetch activity roadblocks" });
+    }
+  });
+
   // Email route (placeholder for Microsoft Graph integration)
   app.post("/api/send-email", requireAuth, async (req: any, res) => {
     try {

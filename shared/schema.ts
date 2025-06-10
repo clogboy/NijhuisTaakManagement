@@ -66,6 +66,9 @@ export const quickWins = pgTable("quick_wins", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
+  impact: text("impact").notNull().default("medium"), // 'low', 'medium', 'high'
+  effort: text("effort").notNull().default("medium"), // 'low', 'medium', 'high'
+  status: text("status").notNull().default("pending"), // 'pending', 'completed'
   linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -77,6 +80,7 @@ export const roadblocks = pgTable("roadblocks", {
   description: text("description").notNull(),
   severity: text("severity").notNull().default("medium"), // 'low', 'medium', 'high', 'critical'
   status: text("status").notNull().default("open"), // 'open', 'in_progress', 'resolved'
+  assignedTo: text("assigned_to"),
   linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   reportedDate: timestamp("reported_date").notNull(),
   resolvedDate: timestamp("resolved_date"),

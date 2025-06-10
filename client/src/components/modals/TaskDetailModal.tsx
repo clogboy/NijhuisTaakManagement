@@ -52,15 +52,15 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
   const [newQuickWin, setNewQuickWin] = useState({
     title: "",
     description: "",
-    impact: "medium" as const,
-    effort: "medium" as const,
+    impact: "medium" as "low" | "medium" | "high",
+    effort: "medium" as "low" | "medium" | "high",
   });
   
   // Roadblock state
   const [newRoadblock, setNewRoadblock] = useState({
     title: "",
     description: "",
-    severity: "medium" as const,
+    severity: "medium" as "low" | "medium" | "high" | "critical",
     assignedTo: "",
   });
 

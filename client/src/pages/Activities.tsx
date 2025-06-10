@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Plus, Edit } from "lucide-react";
+import { Trash2, Plus, Edit, Eye } from "lucide-react";
 import { Activity, ActivityLog } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import NewActivityModal from "@/components/modals/NewActivityModal";
 import EditActivityModal from "@/components/modals/EditActivityModal";
+import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 
 export default function Activities() {
   const { toast } = useToast();
@@ -19,6 +20,7 @@ export default function Activities() {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [logEntry, setLogEntry] = useState("");
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
 
