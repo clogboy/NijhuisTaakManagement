@@ -31,7 +31,7 @@ import {
   CheckCircle2,
   X
 } from "lucide-react";
-import { Activity, TaskComment, QuickWin, Roadblock } from "@shared/schema";
+import { Activity, TaskComment, QuickWin, Roadblock, Contact } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -79,6 +79,12 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
   // Fetch task roadblocks
   const { data: roadblocks = [] } = useQuery<Roadblock[]>({
     queryKey: ["/api/activities", activity.id, "roadblocks"],
+    enabled: isOpen,
+  });
+
+  // Fetch contacts for participants
+  const { data: contacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/contacts"],
     enabled: isOpen,
   });
 
@@ -214,10 +220,14 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
           </div>
 
           <Tabs defaultValue="comments" className="flex-1">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="comments" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 Comments ({comments.length})
+              </TabsTrigger>
+              <TabsTrigger value="participants" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Participants ({activity.participants?.length || 0})
               </TabsTrigger>
               <TabsTrigger value="quickwins" className="flex items-center gap-2">
                 <Trophy className="h-4 w-4" />
@@ -278,6 +288,59 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                   )}
                 </div>
               </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="participants" className="flex-1 space-y-4">
+              {activity.participants && activity.participants.length > 0 ? (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {activity.participants.map((participantId) => {
+                      const participant = contacts?.find(c => c.id === participantId);
+                      if (!participant) return null;
+                      
+                      return (
+                        <Card key={participantId}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                  <User className="h-4 w-4 text-primary-foreground" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">{participant.name}</p>
+                                  <p className="text-sm text-muted-foreground">{participant.email}</p>
+                                  {participant.phone && (
+                                    <p className="text-sm text-muted-foreground">{participant.phone}</p>
+                                  )}
+                                  {participant.company && (
+                                    <p className="text-sm text-muted-foreground">{participant.company}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  // Open email modal for this participant
+                                  window.open(`mailto:${participant.email}?subject=Task Update: ${activity.title}&body=Hi ${participant.name},%0D%0A%0D%0AI wanted to update you on the task "${activity.title}".%0D%0A%0D%0AStatus: ${activity.status}%0D%0A${activity.dueDate ? `Due Date: ${format(new Date(activity.dueDate), "PPP")}%0D%0A` : ''}%0D%0ABest regards`);
+                                }}
+                              >
+                                Send Update
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No participants assigned to this task</p>
+                  <p className="text-sm mt-1">Edit the task to add participants</p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="quickwins" className="flex-1 space-y-4">
