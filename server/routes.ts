@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create admin user if doesn't exist
           user = await storage.createUser({
             email,
-            name: "Bas Weinreder",
+            name: "Bram Weinreder",
             role: "admin",
             microsoftId: null,
           });

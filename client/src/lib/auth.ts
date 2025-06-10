@@ -32,7 +32,7 @@ export const mockMicrosoftLogin = async (): Promise<{
   // For now, return mock data for b.weinreder@nijhuis.nl
   return {
     email: "b.weinreder@nijhuis.nl",
-    name: "B. Weinreder",
+    name: "Bram Weinreder",
     microsoftId: "mock-microsoft-id-123",
   };
 };
