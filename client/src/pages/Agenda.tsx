@@ -490,7 +490,7 @@ export default function Agenda() {
             )}
           </TabsContent>
 
-          <TabsContent value="ethos" className="space-y-6">
+          <TabsContent value="ethos" className="space-y-4 md:space-y-6 px-4 md:px-0">
             {/* Create New Ethos */}
             <Card>
               <CardHeader>
