@@ -1,4 +1,4 @@
-import { users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences } from "@shared/schema";
+import { users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
@@ -80,6 +80,16 @@ export interface IStorage {
   getUserPreferences(userId: number): Promise<any | undefined>;
   createUserPreferences(preferences: any & { createdBy: number }): Promise<any>;
   updateUserPreferences(userId: number, preferences: any): Promise<any>;
+
+  // Mood Tracking
+  getMoodEntries(userId: number, limit?: number): Promise<MoodEntry[]>;
+  getLatestMoodEntry(userId: number): Promise<MoodEntry | undefined>;
+  createMoodEntry(entry: InsertMoodEntry & { userId: number }): Promise<MoodEntry>;
+  getMoodReminders(userId: number): Promise<MoodReminder[]>;
+  createMoodReminder(reminder: InsertMoodReminder & { userId: number }): Promise<MoodReminder>;
+  updateMoodReminder(id: number, reminder: Partial<InsertMoodReminder>): Promise<MoodReminder>;
+  deleteMoodReminder(id: number): Promise<void>;
+  getMoodBasedTaskSuggestions(userId: number, currentMood: string, energy: number, focus: number): Promise<Activity[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -455,6 +465,99 @@ export class DatabaseStorage implements IStorage {
         createdBy: userId 
       });
     }
+  }
+
+  // Mood Tracking Methods
+  async getMoodEntries(userId: number, limit: number = 30): Promise<MoodEntry[]> {
+    return await db.select()
+      .from(moodEntries)
+      .where(eq(moodEntries.userId, userId))
+      .orderBy(desc(moodEntries.createdAt))
+      .limit(limit);
+  }
+
+  async getLatestMoodEntry(userId: number): Promise<MoodEntry | undefined> {
+    const [entry] = await db.select()
+      .from(moodEntries)
+      .where(eq(moodEntries.userId, userId))
+      .orderBy(desc(moodEntries.createdAt))
+      .limit(1);
+    return entry || undefined;
+  }
+
+  async createMoodEntry(entry: InsertMoodEntry & { userId: number }): Promise<MoodEntry> {
+    const [newEntry] = await db.insert(moodEntries).values(entry).returning();
+    return newEntry;
+  }
+
+  async getMoodReminders(userId: number): Promise<MoodReminder[]> {
+    return await db.select()
+      .from(moodReminders)
+      .where(and(eq(moodReminders.userId, userId), eq(moodReminders.isActive, true)))
+      .orderBy(moodReminders.createdAt);
+  }
+
+  async createMoodReminder(reminder: InsertMoodReminder & { userId: number }): Promise<MoodReminder> {
+    const [newReminder] = await db.insert(moodReminders).values(reminder).returning();
+    return newReminder;
+  }
+
+  async updateMoodReminder(id: number, reminderUpdate: Partial<InsertMoodReminder>): Promise<MoodReminder> {
+    const [updatedReminder] = await db.update(moodReminders)
+      .set(reminderUpdate)
+      .where(eq(moodReminders.id, id))
+      .returning();
+    return updatedReminder;
+  }
+
+  async deleteMoodReminder(id: number): Promise<void> {
+    await db.delete(moodReminders).where(eq(moodReminders.id, id));
+  }
+
+  async getMoodBasedTaskSuggestions(userId: number, currentMood: string, energy: number, focus: number): Promise<Activity[]> {
+    // Determine task complexity and type based on mood and energy/focus levels
+    let priorityFilter: string[] = [];
+    let statusFilter: string[] = ['planned', 'in_progress'];
+
+    if (energy >= 4 && focus >= 4) {
+      // High energy and focus - suggest urgent/complex tasks
+      priorityFilter = ['urgent', 'normal'];
+    } else if (energy >= 3 || focus >= 3) {
+      // Medium energy/focus - suggest normal priority tasks
+      priorityFilter = ['normal'];
+    } else {
+      // Low energy/focus - suggest low priority, simple tasks
+      priorityFilter = ['low', 'normal'];
+    }
+
+    // Mood-specific adjustments
+    if (currentMood === 'stressed' || currentMood === 'overwhelmed') {
+      // For stressed moods, prefer simpler, shorter tasks
+      priorityFilter = ['low'];
+    } else if (currentMood === 'creative') {
+      // For creative moods, include all tasks but prioritize by type
+      priorityFilter = ['urgent', 'normal', 'low'];
+    }
+
+    const baseQuery = db.select()
+      .from(activities)
+      .where(and(
+        or(eq(activities.createdBy, userId)),
+        inArray(activities.priority, priorityFilter),
+        inArray(activities.status, statusFilter)
+      ))
+      .orderBy(
+        // Prioritize by urgency first, then by estimated duration (shorter for low energy)
+        sql`CASE 
+          WHEN ${activities.priority} = 'urgent' THEN 1
+          WHEN ${activities.priority} = 'normal' THEN 2
+          ELSE 3
+        END`,
+        activities.estimatedDuration || sql`60`
+      )
+      .limit(10);
+
+    return await baseQuery;
   }
 }
 

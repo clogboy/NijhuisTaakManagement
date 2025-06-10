@@ -262,36 +262,29 @@ export default function Dashboard() {
           
           <div className="lg:col-span-2">
             <Card>
-              <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-neutral-dark">Recent Activities</h3>
-              <div className="flex items-center space-x-2">
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="priority">Sort by Priority</SelectItem>
-                    <SelectItem value="dueDate">Sort by Due Date</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsFilterPanelOpen(true)}
-                  className="text-neutral-dark border-gray-300 hover:bg-gray-50"
-                >
-                  <Filter size={16} className="mr-2" />
-                  Filters
-                </Button>
-                <Button
-                  onClick={() => setIsNewActivityModalOpen(true)}
-                  className="bg-ms-blue hover:bg-ms-blue-dark text-white"
-                >
-                  New Activity
-                </Button>
+              <div className="px-4 md:px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-neutral-dark mb-3">Recent Activities</h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full sm:w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="priority">Sort by Priority</SelectItem>
+                      <SelectItem value="dueDate">Sort by Due Date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsFilterPanelOpen(true)}
+                    className="text-neutral-dark border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+                    size="sm"
+                  >
+                    <Filter size={16} className="mr-2" />
+                    Filters
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
 
           {/* Mobile Card Layout */}
           <div className="block md:hidden space-y-3">

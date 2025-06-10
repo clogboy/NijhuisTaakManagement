@@ -19,6 +19,28 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const moodEntries = pgTable("mood_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  mood: text("mood").notNull(), // 'energetic', 'focused', 'calm', 'stressed', 'tired', 'creative', 'overwhelmed'
+  energy: integer("energy").notNull(), // 1-5 scale
+  focus: integer("focus").notNull(), // 1-5 scale
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const moodReminders = pgTable("mood_reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  reminderType: text("reminder_type").notNull(), // 'break', 'hydration', 'stretch', 'mindfulness', 'task_switch'
+  triggerMood: text("trigger_mood"), // optional: specific mood that triggers this reminder
+  isActive: boolean("is_active").notNull().default(true),
+  lastShown: timestamp("last_shown"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const contacts = pgTable("contacts", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -202,6 +224,24 @@ export type InsertWeeklyEthos = z.infer<typeof insertWeeklyEthosSchema>;
 
 export type DailyAgenda = typeof dailyAgendas.$inferSelect;
 export type InsertDailyAgenda = z.infer<typeof insertDailyAgendaSchema>;
+
+export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
+export const insertMoodReminderSchema = createInsertSchema(moodReminders).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
+export type MoodEntry = typeof moodEntries.$inferSelect;
+export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
+
+export type MoodReminder = typeof moodReminders.$inferSelect;
+export type InsertMoodReminder = z.infer<typeof insertMoodReminderSchema>;
 
 export const timeBlocks = pgTable("time_blocks", {
   id: serial("id").primaryKey(),
