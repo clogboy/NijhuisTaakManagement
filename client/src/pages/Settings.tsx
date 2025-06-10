@@ -146,8 +146,8 @@ export default function Settings() {
   }
 
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-4xl mx-auto h-full overflow-y-auto">
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
           <Badge variant="outline" className="text-xs">
