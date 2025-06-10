@@ -223,21 +223,29 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
 
           <Tabs defaultValue="comments" className="flex-1">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-              <TabsTrigger value="comments" className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Comments ({comments.length})
+              <TabsTrigger value="comments" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Comments</span>
+                <span className="sm:hidden">Chat</span>
+                ({comments.length})
               </TabsTrigger>
-              <TabsTrigger value="participants" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Participants ({activity.participants?.length || 0})
+              <TabsTrigger value="participants" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Participants</span>
+                <span className="sm:hidden">People</span>
+                ({activity.participants?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="quickwins" className="flex items-center gap-2">
-                <Trophy className="h-4 w-4" />
-                Linked Quick Wins ({quickWins.length})
+              <TabsTrigger value="quickwins" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Quick Wins</span>
+                <span className="sm:hidden">Wins</span>
+                ({quickWins.length})
               </TabsTrigger>
-              <TabsTrigger value="roadblocks" className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Linked Roadblocks ({roadblocks.length})
+              <TabsTrigger value="roadblocks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Roadblocks</span>
+                <span className="sm:hidden">Issues</span>
+                ({roadblocks.length})
               </TabsTrigger>
             </TabsList>
 

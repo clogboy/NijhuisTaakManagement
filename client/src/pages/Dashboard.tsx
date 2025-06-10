@@ -333,12 +333,12 @@ export default function Dashboard() {
                         )}
                         {activity.participants && activity.participants.length > 0 && (
                           <div className="flex items-center gap-1">
-                            <User size={12} />
+                            <Users size={12} />
                             <span>{activity.participants.length}</span>
                           </div>
                         )}
                       </div>
-                      <Badge className={getStatusBadgeColor(activity.status)} size="sm">
+                      <Badge className={getStatusBadgeColor(activity.status)}>
                         {activity.status.replace("_", " ")}
                       </Badge>
                     </div>

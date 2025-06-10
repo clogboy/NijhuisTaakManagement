@@ -125,16 +125,16 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-screen w-[95vw] sm:w-full overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-neutral-dark">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-neutral-dark">
             Create New Activity
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <FormField
                 control={form.control}
                 name="title"
