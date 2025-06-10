@@ -214,9 +214,9 @@ export default function AppLayout({
                 <li key={item.path}>
                   <Link href={item.path}>
                     <div 
-                      className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                      className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer micro-nav-item micro-button-press ${
                         isActive 
-                          ? "text-sidebar-primary-foreground bg-sidebar-primary" 
+                          ? "text-sidebar-primary-foreground bg-sidebar-primary active" 
                           : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
                       }`}
                       title={isSidebarCollapsed ? item.label : undefined}
@@ -251,7 +251,7 @@ export default function AppLayout({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsMobileMenuOpen(true)}
-                  className="p-2 h-8 w-8 hover:bg-gray-100"
+                  className="p-2 h-8 w-8 hover:bg-gray-100 micro-button-press micro-scaleIn"
                 >
                   <Menu size={16} />
                 </Button>
@@ -266,7 +266,7 @@ export default function AppLayout({
                 <Button
                   variant="outline"
                   onClick={onOpenFilterPanel}
-                  className="text-neutral-dark border-gray-300 hover:bg-gray-50"
+                  className="text-neutral-dark border-gray-300 hover:bg-gray-50 micro-button-press micro-ripple"
                   size={isMobile ? "sm" : "default"}
                 >
                   <Filter size={16} className={isMobile ? "" : "mr-2"} />
@@ -276,7 +276,7 @@ export default function AppLayout({
               {showCreateButton && (
                 <Button
                   onClick={onCreateActivity}
-                  className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+                  className="bg-ms-blue hover:bg-ms-blue-dark text-white micro-button-press micro-ripple micro-hover-lift"
                   size={isMobile ? "sm" : "default"}
                 >
                   <Plus size={16} className={isMobile ? "" : "mr-2"} />

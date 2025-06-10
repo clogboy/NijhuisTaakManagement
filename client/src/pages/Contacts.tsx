@@ -104,7 +104,7 @@ export default function Contacts() {
             placeholder="Search contacts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 micro-focus-ring"
           />
         </div>
       </div>
