@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -28,29 +26,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { insertActivitySchema } from "@shared/schema";
-import { Contact } from "@shared/schema";
+import { insertRoadblockSchema, Activity } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
-const formSchema = insertActivitySchema.extend({
-  dueDate: z.string().optional(),
+const formSchema = insertRoadblockSchema.extend({
+  reportedDate: z.string().min(1, "Reported date is required"),
 });
 
-interface NewActivityModalProps {
+interface NewRoadblockModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  linkedActivityId?: number;
 }
 
-export default function NewActivityModal({ open, onOpenChange }: NewActivityModalProps) {
+export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId }: NewRoadblockModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [statusTags, setStatusTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
 
-  const { data: contacts } = useQuery<Contact[]>({
-    queryKey: ["/api/contacts"],
+  const { data: activities } = useQuery<Activity[]>({
+    queryKey: ["/api/activities"],
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -58,52 +53,29 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
     defaultValues: {
       title: "",
       description: "",
-      priority: "normal",
-      status: "planned",
-      statusTags: [],
-      dueDate: "",
-      assignedTo: undefined,
-      assignedUsers: [],
+      severity: "medium",
+      status: "open",
+      linkedActivityId: linkedActivityId || undefined,
+      reportedDate: new Date().toISOString().split('T')[0],
+      resolvedDate: undefined,
+      resolution: "",
     },
   });
 
-  const addTag = () => {
-    if (newTag.trim() && !statusTags.includes(newTag.trim())) {
-      const updatedTags = [...statusTags, newTag.trim()];
-      setStatusTags(updatedTags);
-      form.setValue("statusTags", updatedTags);
-      setNewTag("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    const updatedTags = statusTags.filter(tag => tag !== tagToRemove);
-    setStatusTags(updatedTags);
-    form.setValue("statusTags", updatedTags);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addTag();
-    }
-  };
-
-  const createActivityMutation = useMutation({
+  const createRoadblockMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
-      const activityData = {
+      const roadblockData = {
         ...data,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        statusTags: statusTags,
+        reportedDate: new Date(data.reportedDate),
+        resolvedDate: data.resolvedDate ? new Date(data.resolvedDate) : null,
       };
-      return apiRequest("POST", "/api/activities", activityData);
+      return apiRequest("POST", "/api/roadblocks", roadblockData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
       toast({
         title: "Success",
-        description: "Activity created successfully",
+        description: "Roadblock reported successfully",
       });
       form.reset();
       onOpenChange(false);
@@ -111,14 +83,14 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create activity",
+        description: error.message || "Failed to create roadblock",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    createActivityMutation.mutate(data);
+    createRoadblockMutation.mutate(data);
   };
 
   return (
@@ -126,7 +98,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
       <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-neutral-dark">
-            Create New Activity
+            Report New Roadblock
           </DialogTitle>
         </DialogHeader>
 
@@ -138,9 +110,9 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Activity Title</FormLabel>
+                    <FormLabel>Roadblock Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter activity title" {...field} />
+                      <Input placeholder="Enter roadblock title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,20 +121,21 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
 
               <FormField
                 control={form.control}
-                name="priority"
+                name="severity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>Severity</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder="Select severity" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -179,8 +152,8 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the activity..." 
-                      rows={3}
+                      placeholder="Describe the roadblock and its impact..." 
+                      rows={4}
                       {...field} 
                     />
                   </FormControl>
@@ -192,13 +165,24 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="linkedActivityId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
+                    <FormLabel>Linked Activity</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select activity..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {activities?.map((activity) => (
+                          <SelectItem key={activity.id} value={activity.id.toString()}>
+                            {activity.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -206,24 +190,13 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
 
               <FormField
                 control={form.control}
-                name="assignedTo"
+                name="reportedDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Contact</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select contact..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {contacts?.map((contact) => (
-                          <SelectItem key={contact.id} value={contact.id.toString()}>
-                            {contact.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Reported Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -240,10 +213,10 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
               </Button>
               <Button 
                 type="submit" 
-                disabled={createActivityMutation.isPending}
-                className="bg-ms-blue hover:bg-ms-blue-dark text-white"
+                disabled={createRoadblockMutation.isPending}
+                className="bg-red-500 hover:bg-red-600 text-white"
               >
-                {createActivityMutation.isPending ? "Creating..." : "Create Activity"}
+                {createRoadblockMutation.isPending ? "Reporting..." : "Report Roadblock"}
               </Button>
             </div>
           </form>
