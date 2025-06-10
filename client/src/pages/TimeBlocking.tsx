@@ -174,9 +174,10 @@ export default function TimeBlocking() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
             Time Blocking
           </h1>
@@ -292,9 +293,8 @@ export default function TimeBlocking() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Available Activities */}
         <Card>
           <CardHeader>
@@ -429,7 +429,7 @@ export default function TimeBlocking() {
             </ScrollArea>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
       {/* Schedule Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
@@ -520,6 +520,7 @@ export default function TimeBlocking() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
