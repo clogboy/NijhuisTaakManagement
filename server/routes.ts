@@ -646,10 +646,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completed
       );
 
+      // If completing a task, mark the underlying activity/subtask as completed
+      if (completed) {
+        if (activity) {
+          await storage.updateActivity(activityId, { 
+            status: 'completed'
+          });
+        } else if (subtask) {
+          await storage.updateSubtask(activityId, {
+            status: 'completed',
+            completedDate: new Date()
+          });
+        }
+      } else {
+        // If uncompleting, revert to active status
+        if (activity) {
+          await storage.updateActivity(activityId, { 
+            status: 'active'
+          });
+        } else if (subtask) {
+          await storage.updateSubtask(activityId, {
+            status: 'active',
+            completedDate: null
+          });
+        }
+      }
+
       res.json({ success: true, activityId, taskDate, completed, result });
     } catch (error) {
       console.error("Error updating task completion:", error);
       res.status(500).json({ error: "Failed to update task completion" });
+    }
+  });
+
+  // Manual progress update endpoint
+  app.patch("/api/activities/:id/progress", requireAuth, async (req: any, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const { progress } = req.body;
+
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return res.status(400).json({ error: "Progress must be a number between 0 and 100" });
+      }
+
+      const activity = await storage.getActivity(activityId);
+      if (!activity) {
+        return res.status(404).json({ error: "Activity not found" });
+      }
+
+      if (activity.createdBy !== req.user.id) {
+        return res.status(403).json({ error: "Not authorized to update this activity" });
+      }
+
+      // Update activity with new progress
+      const updatedActivity = await storage.updateActivity(activityId, {
+        progress: progress,
+        status: progress === 100 ? 'completed' : (progress === 0 ? 'active' : 'in_progress'),
+        completedDate: progress === 100 ? new Date() : null
+      });
+
+      res.json({ success: true, activity: updatedActivity });
+    } catch (error) {
+      console.error("Error updating activity progress:", error);
+      res.status(500).json({ error: "Failed to update progress" });
+    }
+  });
+
+  app.patch("/api/subtasks/:id/progress", requireAuth, async (req: any, res) => {
+    try {
+      const subtaskId = parseInt(req.params.id);
+      const { progress } = req.body;
+
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return res.status(400).json({ error: "Progress must be a number between 0 and 100" });
+      }
+
+      const subtask = await storage.getSubtask(subtaskId);
+      if (!subtask) {
+        return res.status(404).json({ error: "Subtask not found" });
+      }
+
+      const userEmail = req.user.email;
+      if (!subtask.participants.includes(userEmail)) {
+        return res.status(403).json({ error: "Not authorized to update this subtask" });
+      }
+
+      // Update subtask with new progress
+      const updatedSubtask = await storage.updateSubtask(subtaskId, {
+        progress: progress,
+        status: progress === 100 ? 'completed' : (progress === 0 ? 'active' : 'in_progress'),
+        completedDate: progress === 100 ? new Date() : null
+      });
+
+      res.json({ success: true, subtask: updatedSubtask });
+    } catch (error) {
+      console.error("Error updating subtask progress:", error);
+      res.status(500).json({ error: "Failed to update progress" });
     }
   });
 
