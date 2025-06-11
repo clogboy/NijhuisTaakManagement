@@ -80,14 +80,14 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
       queryClient.invalidateQueries({ queryKey: ["/api/activities", activity.id, "comments"] });
       setNewComment("");
       toast({
-        title: "Comment Added",
-        description: "Your comment has been added successfully",
+        title: "Opmerking toegevoegd",
+        description: "Je opmerking is succesvol toegevoegd",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to add comment",
+        title: "Fout",
+        description: error.message || "Kon opmerking niet toevoegen",
         variant: "destructive",
       });
     },
@@ -113,14 +113,14 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
         dueDate: "",
       });
       toast({
-        title: "Subtask Added",
-        description: "Subtask has been added to this activity",
+        title: "Subtaak toegevoegd",
+        description: "Subtaak is toegevoegd aan deze activiteit",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to add subtask",
+        title: "Fout",
+        description: error.message || "Kon subtaak niet toevoegen",
         variant: "destructive",
       });
     },
