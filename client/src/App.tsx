@@ -16,6 +16,7 @@ import Roadblocks from "@/pages/Roadblocks";
 import Subtasks from "@/pages/Subtasks";
 import Agenda from "@/pages/Agenda";
 import TimeBlocking from "@/pages/TimeBlocking";
+import Calendar from "@/pages/Calendar";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Integrations from "@/pages/Integrations";

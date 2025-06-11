@@ -5,6 +5,7 @@ import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, ins
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
+import { calendarService } from "./calendar-service";
 import { dailyScheduler } from "./scheduler";
 import { z } from "zod";
 import "./types";

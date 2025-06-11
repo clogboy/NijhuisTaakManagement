@@ -86,27 +86,27 @@ export default function Calendar() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch activities with deadlines
-  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
+  // Fetch all calendar events (includes activities, time blocks, Microsoft events)
+  const { data: calendarEvents = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['/api/calendar/events'],
+  });
+
+  // Fetch activities for dropdown
+  const { data: activities = [] } = useQuery({
     queryKey: ['/api/activities'],
   });
 
-  // Fetch time blocks
-  const { data: timeBlocks = [], isLoading: timeBlocksLoading } = useQuery({
-    queryKey: ['/api/time-blocks'],
-  });
-
-  // Fetch Microsoft Calendar events
-  const { data: microsoftEvents = [], isLoading: microsoftLoading } = useQuery({
-    queryKey: ['/api/calendar/microsoft/events'],
-    retry: false,
+  // Fetch calendar insights
+  const { data: insights } = useQuery({
+    queryKey: ['/api/calendar/insights'],
   });
 
   // Sync with Microsoft Calendar
   const syncMicrosoftMutation = useMutation({
     mutationFn: () => apiRequest('/api/calendar/microsoft/sync', { method: 'POST' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/calendar/microsoft/events'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/events'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/insights'] });
       toast({
         title: "Calendar gesynchroniseerd",
         description: "Microsoft Calendar succesvol gesynchroniseerd",
@@ -128,6 +128,8 @@ export default function Calendar() {
       body: data,
     }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/events'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/insights'] });
       queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
       setIsCreateDialogOpen(false);
       resetNewEvent();
@@ -145,6 +147,8 @@ export default function Calendar() {
       body: data,
     }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/events'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/insights'] });
       queryClient.invalidateQueries({ queryKey: ['/api/time-blocks'] });
       setIsCreateDialogOpen(false);
       resetNewEvent();
@@ -167,56 +171,23 @@ export default function Calendar() {
     });
   };
 
-  // Convert data to calendar events
-  const calendarEvents: CalendarEvent[] = [
-    // Activity deadlines
-    ...activities
-      .filter((activity: Activity) => activity.deadline)
-      .map((activity: Activity) => ({
-        id: `deadline-${activity.id}`,
-        title: `📅 ${activity.title}`,
-        start: new Date(activity.deadline!),
-        end: new Date(activity.deadline!),
-        resource: {
-          type: 'deadline' as const,
-          activityId: activity.id,
-          status: activity.status,
-          priority: activity.priority,
-          description: activity.description,
-          isEditable: true,
-        },
-      })),
-
-    // Time blocks
-    ...timeBlocks.map((block: TimeBlock) => ({
-      id: `block-${block.id}`,
-      title: `⏰ ${block.title}`,
-      start: new Date(block.startTime),
-      end: new Date(block.endTime),
-      resource: {
-        type: 'time_block' as const,
-        activityId: block.activityId,
-        status: block.status,
-        description: block.description,
-        isEditable: true,
-      },
-    })),
-
-    // Microsoft Calendar events
-    ...microsoftEvents.map((event: any) => ({
-      id: `microsoft-${event.id}`,
-      title: `🔗 ${event.subject}`,
-      start: new Date(event.start.dateTime),
-      end: new Date(event.end.dateTime),
-      resource: {
-        type: 'microsoft' as const,
-        participants: event.attendees?.map((a: any) => a.emailAddress.address) || [],
-        location: event.location?.displayName,
-        description: event.body?.content,
-        isEditable: false,
-      },
-    })),
-  ];
+  // Convert calendar events to react-big-calendar format
+  const formattedEvents: CalendarEvent[] = calendarEvents.map((event: any) => ({
+    id: event.id,
+    title: event.title,
+    start: new Date(event.start),
+    end: new Date(event.end),
+    resource: {
+      type: event.type,
+      activityId: event.activityId,
+      status: event.status,
+      priority: event.priority,
+      description: event.description,
+      location: event.location,
+      participants: event.participants,
+      isEditable: event.isEditable,
+    },
+  }));
 
   const handleSelectEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -278,7 +249,7 @@ export default function Calendar() {
     };
   };
 
-  const isLoading = activitiesLoading || timeBlocksLoading || microsoftLoading;
+  const isLoading = eventsLoading;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -323,30 +294,53 @@ export default function Calendar() {
                   </div>
                 </div>
               ) : (
-                <Calendar
-                  localizer={localizer}
-                  events={calendarEvents}
-                  startAccessor="start"
-                  endAccessor="end"
-                  style={{ height: 600 }}
-                  onSelectEvent={handleSelectEvent}
-                  onSelectSlot={handleSelectSlot}
-                  selectable
-                  view={view}
-                  onView={setView}
-                  date={selectedDate}
-                  onNavigate={setSelectedDate}
-                  eventPropGetter={eventStyleGetter}
-                  messages={{
-                    month: 'Maand',
-                    week: 'Week',
-                    day: 'Dag',
-                    today: 'Vandaag',
-                    previous: 'Vorige',
-                    next: 'Volgende',
-                    showMore: (count) => `+${count} meer`,
-                  }}
-                />
+                <div>
+                  {insights && (
+                    <div className="mb-4 grid grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{insights.totalEvents}</div>
+                        <div className="text-sm text-muted-foreground">Total Events</div>
+                      </div>
+                      <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">{insights.upcomingDeadlines}</div>
+                        <div className="text-sm text-muted-foreground">Upcoming Deadlines</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{insights.scheduledHours}h</div>
+                        <div className="text-sm text-muted-foreground">Scheduled Hours</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">{insights.conflicts}</div>
+                        <div className="text-sm text-muted-foreground">Conflicts</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Calendar
+                    localizer={localizer}
+                    events={formattedEvents}
+                    startAccessor="start"
+                    endAccessor="end"
+                    style={{ height: 600 }}
+                    onSelectEvent={handleSelectEvent}
+                    onSelectSlot={handleSelectSlot}
+                    selectable
+                    view={view}
+                    onView={setView}
+                    date={selectedDate}
+                    onNavigate={setSelectedDate}
+                    eventPropGetter={eventStyleGetter}
+                    messages={{
+                      month: 'Maand',
+                      week: 'Week',
+                      day: 'Dag',
+                      today: 'Vandaag',
+                      previous: 'Vorige',
+                      next: 'Volgende',
+                      showMore: (count) => `+${count} meer`,
+                    }}
+                  />
+                </div>
               )}
             </CardContent>
           </Card>
