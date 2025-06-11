@@ -268,9 +268,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuickWins(userId: number): Promise<QuickWin[]> {
-    return await db.select().from(quickWins)
-      .where(eq(quickWins.createdBy, userId))
-      .orderBy(desc(quickWins.createdAt));
+    // Return recent subtasks marked as quick wins from the unified workflow
+    const recentSubtasks = await db.select().from(subtasks)
+      .where(and(
+        eq(subtasks.createdBy, userId),
+        eq(subtasks.type, 'quick_win')
+      ))
+      .orderBy(desc(subtasks.createdAt))
+      .limit(10);
+
+    // Convert to QuickWin format for compatibility
+    return recentSubtasks.map(subtask => ({
+      id: subtask.id,
+      title: subtask.title,
+      description: subtask.description || '',
+      impact: 'medium',
+      effort: 'low',
+      linkedActivityId: subtask.linkedActivityId,
+      completedAt: subtask.completedDate,
+      createdAt: subtask.createdAt,
+      createdBy: subtask.createdBy,
+      status: subtask.status
+    }));
   }
 
   async getQuickWinsByActivity(activityId: number): Promise<QuickWin[]> {
@@ -280,12 +299,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuickWin(quickWin: InsertQuickWin & { createdBy: number }): Promise<QuickWin> {
-    const [newQuickWin] = await db.insert(quickWins).values(quickWin).returning();
-    return newQuickWin;
+    // Create as a subtask with type 'quick_win' in the unified workflow
+    const subtaskData = {
+      title: quickWin.title,
+      description: quickWin.description,
+      type: 'quick_win',
+      status: 'active',
+      priority: 'low',
+      linkedActivityId: quickWin.linkedActivityId,
+      createdBy: quickWin.createdBy,
+    };
+    
+    const [newSubtask] = await db.insert(subtasks).values(subtaskData).returning();
+    
+    // Return in QuickWin format for compatibility
+    return {
+      id: newSubtask.id,
+      title: newSubtask.title,
+      description: newSubtask.description || '',
+      impact: 'medium',
+      effort: 'low',
+      linkedActivityId: newSubtask.linkedActivityId,
+      createdAt: newSubtask.createdAt,
+      createdBy: newSubtask.createdBy,
+      status: newSubtask.status
+    };
   }
 
   async deleteQuickWin(id: number): Promise<void> {
-    await db.delete(quickWins).where(eq(quickWins.id, id));
+    // Delete from subtasks table instead of deprecated quickWins table
+    await db.delete(subtasks).where(eq(subtasks.id, id));
   }
 
   async getRoadblocks(userId: number, isAdmin: boolean): Promise<Roadblock[]> {
@@ -733,12 +776,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any> {
-    // Verify the activity or subtask exists before creating completion
+    // Verify the activity exists before creating completion
     const activity = await this.getActivity(activityId);
-    const subtask = activity ? null : await this.getSubtask(activityId);
     
-    if (!activity && !subtask) {
-      throw new Error(`Cannot create task completion: Activity/Subtask ${activityId} does not exist`);
+    if (!activity) {
+      // Check if it's a subtask - if so, update the subtask status instead
+      const subtask = await this.getSubtask(activityId);
+      if (subtask) {
+        // Update subtask completion status
+        await this.updateSubtask(activityId, { 
+          status: completed ? 'completed' : 'active',
+          completedDate: completed ? new Date() : null 
+        });
+        
+        // Return a mock completion object for consistency
+        return {
+          id: activityId,
+          userId,
+          activityId,
+          taskDate: new Date(taskDate),
+          completed,
+          completedAt: completed ? new Date() : null
+        };
+      }
+      
+      console.warn(`Skipping task completion for non-existent activity/subtask: ${activityId}`);
+      return null;
     }
 
     const existingCompletion = await db.select().from(dailyTaskCompletions).where(
@@ -760,7 +823,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updated;
     } else {
-      // Create new completion
+      // Create new completion only for valid activities
       const [created] = await db.insert(dailyTaskCompletions)
         .values({
           userId,
