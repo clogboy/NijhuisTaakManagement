@@ -126,9 +126,9 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Activity Title</FormLabel>
+                    <FormLabel>{t('activities.formTitle')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter activity title" {...field} />
+                      <Input placeholder={t('forms.enterText')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,17 +140,17 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>{t('activities.formPriority')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder={t('forms.selectOption')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="low">{t('activities.priorityLow')}</SelectItem>
+                        <SelectItem value="normal">{t('activities.priorityNormal')}</SelectItem>
+                        <SelectItem value="urgent">{t('activities.priorityUrgent')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -164,7 +164,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('activities.formDescription')}</FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder={t('forms.enterText')}
@@ -184,17 +184,17 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>{t('activities.formStatus')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder={t('forms.selectOption')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="planned">Planned</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="planned">{t('activities.statusPlanned')}</SelectItem>
+                        <SelectItem value="in_progress">{t('activities.statusInProgress')}</SelectItem>
+                        <SelectItem value="completed">{t('activities.statusCompleted')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -207,7 +207,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>{t('activities.formDueDate')}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -254,14 +254,14 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+{t('activities.cancel')}
               </Button>
               <Button 
                 type="submit" 
                 disabled={updateActivityMutation.isPending}
                 className="bg-ms-blue hover:bg-ms-blue-dark text-white"
               >
-                {updateActivityMutation.isPending ? "Updating..." : "Update Activity"}
+{updateActivityMutation.isPending ? t('common.loading') : t('activities.update')}
               </Button>
             </div>
           </form>

@@ -25,6 +25,7 @@ import { X } from "lucide-react";
 import { Contact } from "@shared/schema";
 import { sendEmail } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 
 const formSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
@@ -39,6 +40,7 @@ interface EmailModalProps {
 
 export default function EmailModal({ open, onOpenChange, contacts }: EmailModalProps) {
   const { toast } = useToast();
+  const { t } = useTranslations();
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
