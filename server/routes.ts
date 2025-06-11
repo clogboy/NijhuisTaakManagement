@@ -357,6 +357,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subtasks routes (unified Quick Wins and Roadblocks)
+  app.get("/api/subtasks", requireAuth, async (req: any, res) => {
+    try {
+      const subtasks = await storage.getSubtasks(req.user.id);
+      res.json(subtasks);
+    } catch (error) {
+      console.error("Get subtasks error:", error);
+      res.status(500).json({ message: "Failed to fetch subtasks" });
+    }
+  });
+
+  app.get("/api/activities/:id/subtasks", requireAuth, async (req: any, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const subtasks = await storage.getSubtasksByActivity(activityId);
+      res.json(subtasks);
+    } catch (error) {
+      console.error("Get activity subtasks error:", error);
+      res.status(500).json({ message: "Failed to fetch activity subtasks" });
+    }
+  });
+
+  app.post("/api/subtasks", requireAuth, async (req: any, res) => {
+    try {
+      const subtaskData = insertSubtaskSchema.parse(req.body);
+      const subtask = await storage.createSubtask({
+        ...subtaskData,
+        createdBy: req.user.id,
+      });
+      res.json(subtask);
+    } catch (error) {
+      console.error("Create subtask error:", error);
+      res.status(400).json({ message: "Invalid subtask data" });
+    }
+  });
+
+  app.put("/api/subtasks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const subtaskId = parseInt(req.params.id);
+      const subtaskData = insertSubtaskSchema.partial().parse(req.body);
+      const subtask = await storage.updateSubtask(subtaskId, subtaskData);
+      res.json(subtask);
+    } catch (error) {
+      console.error("Update subtask error:", error);
+      res.status(400).json({ message: "Invalid subtask data" });
+    }
+  });
+
+  app.delete("/api/subtasks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const subtaskId = parseInt(req.params.id);
+      await storage.deleteSubtask(subtaskId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete subtask error:", error);
+      res.status(500).json({ message: "Failed to delete subtask" });
+    }
+  });
+
   // Task Comments routes
   app.get("/api/activities/:id/comments", requireAuth, async (req: any, res) => {
     try {

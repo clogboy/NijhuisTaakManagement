@@ -46,6 +46,15 @@ export interface IStorage {
   updateRoadblock(id: number, roadblock: Partial<InsertRoadblock>): Promise<Roadblock>;
   deleteRoadblock(id: number): Promise<void>;
 
+  // Subtasks (replacement for Quick Wins and Roadblocks)
+  getSubtasks(userId: number): Promise<Subtask[]>;
+  getSubtasksByActivity(activityId: number): Promise<Subtask[]>;
+  getSubtasksByParticipant(participantEmail: string): Promise<Subtask[]>;
+  getSubtask(id: number): Promise<Subtask | undefined>;
+  createSubtask(subtask: InsertSubtask & { createdBy: number }): Promise<Subtask>;
+  updateSubtask(id: number, subtask: Partial<InsertSubtask>): Promise<Subtask>;
+  deleteSubtask(id: number): Promise<void>;
+
   // Stats
   getActivityStats(userId: number, isAdmin: boolean): Promise<{
     urgentCount: number;
@@ -160,8 +169,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createActivity(activity: InsertActivity & { createdBy: number }): Promise<Activity> {
+    // Ensure the author is always included as a participant
+    const authorUser = await this.getUser(activity.createdBy);
+    const authorEmail = authorUser?.email || '';
+    
+    const participants = activity.participants || [];
+    if (authorEmail && !participants.includes(authorEmail)) {
+      participants.unshift(authorEmail); // Add author at the beginning
+    }
+
     const [newActivity] = await db.insert(activities).values({
       ...activity,
+      participants,
       updatedAt: new Date(),
     }).returning();
     return newActivity;
@@ -558,6 +577,65 @@ export class DatabaseStorage implements IStorage {
       .limit(10);
 
     return await baseQuery;
+  }
+
+  // Subtasks methods
+  async getSubtasks(userId: number): Promise<Subtask[]> {
+    // Get subtasks for activities the user created or is a participant in
+    const userActivities = await this.getActivities(userId, false);
+    const activityIds = userActivities.map(a => a.id);
+    
+    if (activityIds.length === 0) return [];
+    
+    return await db.select().from(subtasks)
+      .where(inArray(subtasks.linkedActivityId, activityIds))
+      .orderBy(desc(subtasks.createdAt));
+  }
+
+  async getSubtasksByActivity(activityId: number): Promise<Subtask[]> {
+    return await db.select().from(subtasks)
+      .where(eq(subtasks.linkedActivityId, activityId))
+      .orderBy(desc(subtasks.createdAt));
+  }
+
+  async getSubtasksByParticipant(participantEmail: string): Promise<Subtask[]> {
+    return await db.select().from(subtasks)
+      .where(sql`${participantEmail} = ANY(${subtasks.participants})`)
+      .orderBy(desc(subtasks.createdAt));
+  }
+
+  async getSubtask(id: number): Promise<Subtask | undefined> {
+    const [subtask] = await db.select().from(subtasks).where(eq(subtasks.id, id));
+    return subtask || undefined;
+  }
+
+  async createSubtask(subtask: InsertSubtask & { createdBy: number }): Promise<Subtask> {
+    // Ensure the author is always included as a participant
+    const authorUser = await this.getUser(subtask.createdBy);
+    const authorEmail = authorUser?.email || '';
+    
+    const participants = subtask.participants || [];
+    if (authorEmail && !participants.includes(authorEmail)) {
+      participants.unshift(authorEmail); // Add author at the beginning
+    }
+
+    const [newSubtask] = await db.insert(subtasks).values({
+      ...subtask,
+      participants
+    }).returning();
+    return newSubtask;
+  }
+
+  async updateSubtask(id: number, subtaskUpdate: Partial<InsertSubtask>): Promise<Subtask> {
+    const [updatedSubtask] = await db.update(subtasks)
+      .set({ ...subtaskUpdate, updatedAt: new Date() })
+      .where(eq(subtasks.id, id))
+      .returning();
+    return updatedSubtask;
+  }
+
+  async deleteSubtask(id: number): Promise<void> {
+    await db.delete(subtasks).where(eq(subtasks.id, id));
   }
 }
 
