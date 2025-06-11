@@ -88,6 +88,14 @@ function AuthenticatedApp() {
           <Settings />
         </AppLayout>
       </Route>
+      <Route path="/integrations">
+        <AppLayout
+          title="Integrations"
+          subtitle="Connect external tools"
+        >
+          <Integrations />
+        </AppLayout>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

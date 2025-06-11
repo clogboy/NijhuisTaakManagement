@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -297,6 +297,102 @@ export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 
 export type MoodReminder = typeof moodReminders.$inferSelect;
 export type InsertMoodReminder = z.infer<typeof insertMoodReminderSchema>;
+
+// Teams Integration Tables
+export const teamsBoards = pgTable("teams_boards", {
+  id: serial("id").primaryKey(),
+  boardId: text("board_id").notNull().unique(), // Teams/Planner board ID
+  title: text("title").notNull(),
+  description: text("description"),
+  teamId: text("team_id").notNull(), // Teams team ID
+  channelId: text("channel_id"), // Teams channel ID
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+export const teamsCards = pgTable("teams_cards", {
+  id: serial("id").primaryKey(),
+  cardId: text("card_id").notNull().unique(), // Teams/Planner task ID
+  boardId: integer("board_id").references(() => teamsBoards.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTo: text("assigned_to").array(), // Array of user emails
+  priority: text("priority").default("normal"), // low, normal, high
+  status: text("status").default("not_started"), // not_started, in_progress, completed
+  dueDate: text("due_date"), // Using text for date storage
+  labels: text("labels").array(),
+  bucketName: text("bucket_name"), // Planner bucket name
+  linkedActivityId: integer("linked_activity_id").references(() => activities.id),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// BimCollab Integration Tables
+export const bimcollabProjects = pgTable("bimcollab_projects", {
+  id: serial("id").primaryKey(),
+  projectId: text("project_id").notNull().unique(), // BimCollab project ID
+  name: text("name").notNull(),
+  description: text("description"),
+  serverUrl: text("server_url").notNull(), // BimCollab server URL
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+export const bimcollabIssues = pgTable("bimcollab_issues", {
+  id: serial("id").primaryKey(),
+  issueId: text("issue_id").notNull().unique(), // BimCollab issue ID
+  projectId: integer("project_id").references(() => bimcollabProjects.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").default("open"), // open, in_progress, resolved, closed
+  priority: text("priority").default("normal"), // low, normal, high, critical
+  issueType: text("issue_type"), // clash, design, coordination, etc.
+  assignedTo: text("assigned_to").array(), // Array of user emails
+  reporter: text("reporter"), // Who reported the issue
+  dueDate: text("due_date"), // Using text for date storage
+  modelElement: text("model_element"), // Reference to BIM element
+  coordinates: json("coordinates"), // 3D coordinates in model
+  screenshots: text("screenshots").array(), // URLs to issue screenshots
+  linkedRoadblockId: integer("linked_roadblock_id").references(() => roadblocks.id),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Integration Settings
+export const integrationSettings = pgTable("integration_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  integrationType: text("integration_type").notNull(), // "teams", "bimcollab"
+  settings: json("settings").notNull(), // JSON blob for integration-specific settings
+  isEnabled: boolean("is_enabled").default(true),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Schema exports for Teams
+export const insertTeamsBoardSchema = createInsertSchema(teamsBoards);
+export type InsertTeamsBoard = z.infer<typeof insertTeamsBoardSchema>;
+export type TeamsBoard = typeof teamsBoards.$inferSelect;
+
+export const insertTeamsCardSchema = createInsertSchema(teamsCards);
+export type InsertTeamsCard = z.infer<typeof insertTeamsCardSchema>;
+export type TeamsCard = typeof teamsCards.$inferSelect;
+
+// Schema exports for BimCollab
+export const insertBimcollabProjectSchema = createInsertSchema(bimcollabProjects);
+export type InsertBimcollabProject = z.infer<typeof insertBimcollabProjectSchema>;
+export type BimcollabProject = typeof bimcollabProjects.$inferSelect;
+
+export const insertBimcollabIssueSchema = createInsertSchema(bimcollabIssues);
+export type InsertBimcollabIssue = z.infer<typeof insertBimcollabIssueSchema>;
+export type BimcollabIssue = typeof bimcollabIssues.$inferSelect;
+
+// Schema exports for Integration Settings
+export const insertIntegrationSettingsSchema = createInsertSchema(integrationSettings);
+export type InsertIntegrationSettings = z.infer<typeof insertIntegrationSettingsSchema>;
+export type IntegrationSettings = typeof integrationSettings.$inferSelect;
 
 export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvitations).omit({
   id: true,
