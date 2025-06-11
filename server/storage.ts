@@ -100,6 +100,10 @@ export interface IStorage {
   createUserPreferences(preferences: any & { createdBy: number }): Promise<any>;
   updateUserPreferences(userId: number, preferences: any): Promise<any>;
 
+  // Daily Task Completions
+  getDailyTaskCompletions(userId: number, date?: string): Promise<any[]>;
+  createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any>;
+
   // Mood Tracking
   getMoodEntries(userId: number, limit?: number): Promise<MoodEntry[]>;
   getLatestMoodEntry(userId: number): Promise<MoodEntry | undefined>;
@@ -698,6 +702,52 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedSubtask;
+  }
+
+  // Daily task completion methods
+  async getDailyTaskCompletions(userId: number, date?: string): Promise<any[]> {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    const results = await db.select().from(dailyTaskCompletions).where(
+      and(
+        eq(dailyTaskCompletions.userId, userId),
+        eq(dailyTaskCompletions.taskDate, new Date(targetDate))
+      )
+    );
+    return results;
+  }
+
+  async createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any> {
+    const existingCompletion = await db.select().from(dailyTaskCompletions).where(
+      and(
+        eq(dailyTaskCompletions.userId, userId),
+        eq(dailyTaskCompletions.activityId, activityId),
+        eq(dailyTaskCompletions.taskDate, new Date(taskDate))
+      )
+    );
+
+    if (existingCompletion.length > 0) {
+      // Update existing completion
+      const [updated] = await db.update(dailyTaskCompletions)
+        .set({ 
+          completed, 
+          completedAt: completed ? new Date() : null 
+        })
+        .where(eq(dailyTaskCompletions.id, existingCompletion[0].id))
+        .returning();
+      return updated;
+    } else {
+      // Create new completion
+      const [created] = await db.insert(dailyTaskCompletions)
+        .values({
+          userId,
+          activityId,
+          taskDate: new Date(taskDate),
+          completed,
+          completedAt: completed ? new Date() : null
+        })
+        .returning();
+      return created;
+    }
   }
 }
 
