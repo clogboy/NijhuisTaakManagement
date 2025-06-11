@@ -8,8 +8,9 @@ let connectionString: string;
 let supabaseUrl: string | undefined;
 let supabaseKey: string | undefined;
 
+// Force Supabase connection if credentials are available
 if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_DB_PASSWORD) {
-  // Use Supabase
+  // Use Supabase - override any existing DATABASE_URL
   supabaseUrl = process.env.SUPABASE_URL;
   supabaseKey = process.env.SUPABASE_ANON_KEY;
   
@@ -19,10 +20,11 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUP
     throw new Error("Invalid SUPABASE_URL format");
   }
   
-  // Use Supabase's PostgreSQL connection format
+  // Use Supabase's PostgreSQL connection format with direct connection
   const dbPassword = process.env.SUPABASE_DB_PASSWORD;
-  connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
-  console.log(`Using Supabase PostgreSQL connection for project: ${projectRef}`);
+  connectionString = `postgresql://postgres:${dbPassword}@db.${projectRef}.supabase.co:5432/postgres`;
+  console.log(`Forcing Supabase PostgreSQL connection for project: ${projectRef}`);
+  console.log(`Connection string: postgresql://postgres:***@db.${projectRef}.supabase.co:5432/postgres`);
 } else if (process.env.DATABASE_URL) {
   // Fallback to existing DATABASE_URL
   connectionString = process.env.DATABASE_URL;
@@ -37,7 +39,7 @@ export const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl,
 // Create PostgreSQL connection for Drizzle
 const client = postgres(connectionString, { 
   max: 1,
-  ssl: true
+  ssl: { rejectUnauthorized: false }
 });
 
 export const db = drizzle(client, { schema });
