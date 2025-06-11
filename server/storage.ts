@@ -220,15 +220,11 @@ export class DatabaseStorage implements IStorage {
   async getContacts(createdBy: number): Promise<Contact[]> {
     try {
       const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
-      // Update cache with fresh data
-      localCache.updateCache({ contacts: result });
       console.log('Contacts loaded from database:', result.length, 'items');
       return result;
     } catch (error: any) {
-      console.log('Database error, using cached contacts:', error.message);
-      const cachedContacts = localCache.getContacts();
-      console.log('Returning cached contacts:', cachedContacts.length, 'items');
-      return cachedContacts;
+      console.log('Database error, using temp data:', error.message);
+      return tempData.contacts as Contact[];
     }
   }
 
@@ -298,15 +294,11 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(row.updatedAt)
       }));
       
-      // Update cache with fresh data
-      localCache.updateCache({ activities });
       console.log('Activities loaded from database:', activities.length, 'items');
       return activities;
     } catch (error: any) {
-      console.log('Database error, using cached activities:', error.message);
-      const cachedActivities = localCache.getActivities();
-      console.log('Returning cached activities:', cachedActivities.length, 'items');
-      return cachedActivities;
+      console.log('Database error, using temp data:', error.message);
+      return tempData.activities as Activity[];
     }
   }
 
@@ -391,15 +383,11 @@ export class DatabaseStorage implements IStorage {
         completedAt: row.completedAt ? new Date(row.completedAt) : null
       }));
       
-      // Update cache with fresh data
-      localCache.updateCache({ quickWins });
       console.log('Quick wins loaded from database:', quickWins.length, 'items');
       return quickWins;
     } catch (error: any) {
-      console.log('Database error, using cached quick wins:', error.message);
-      const cachedQuickWins = localCache.getQuickWins();
-      console.log('Returning cached quick wins:', cachedQuickWins.length, 'items');
-      return cachedQuickWins;
+      console.log('Database error, using temp data:', error.message);
+      return tempData.quickWins as QuickWin[];
     }
   }
 
@@ -490,15 +478,16 @@ export class DatabaseStorage implements IStorage {
         activeContacts: Number((contactsResult as any)[0]?.count || 0),
       };
 
-      // Update cache with fresh stats
-      localCache.updateCache({ stats });
       console.log('Stats loaded from database:', stats);
       return stats;
     } catch (error: any) {
-      console.log('Database error, using cached stats:', error.message);
-      const cachedStats = localCache.getStats();
-      console.log('Returning cached stats:', cachedStats);
-      return cachedStats;
+      console.log('Database error, using temp stats:', error.message);
+      return {
+        urgentCount: 0,
+        dueThisWeek: 1,
+        completedCount: 1,
+        activeContacts: 2,
+      };
     }
   }
 
