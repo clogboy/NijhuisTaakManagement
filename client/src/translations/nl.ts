@@ -147,8 +147,9 @@ export const nlTranslations = {
     adjustSearch: "Probeer je zoekcriteria aan te passen"
   },
   roadblocks: {
-    title: "Wegversperringen Dashboard",
+    title: "Wegversperringen Dashboard", 
     description: "Bekijk wegversperringen gekoppeld aan je taken. Om nieuwe wegversperringen te rapporteren, open een taak en gebruik het Wegversperringen tabblad.",
+    searchPlaceholder: "Zoek wegversperringen...",
     addNew: "Nieuwe roadblock toevoegen",
     noRoadblocksFound: "Geen roadblocks gevonden",
     createFirst: "Voeg je eerste roadblock toe om te beginnen",
@@ -174,15 +175,13 @@ export const nlTranslations = {
     deleteSuccess: "Roadblock succesvol verwijderd",
     createSuccess: "Roadblock succesvol aangemaakt",
     updateSuccess: "Roadblock succesvol bijgewerkt",
-    description: "Beschrijving",
     category: "Categorie",
     relatedActivity: "Gerelateerde activiteit",
     resolved: "Opgelost",
     open: "Open",
     inProgress: "In behandeling",
     taskSpecific: "Wegversperringen zijn nu taakspecifiek",
-    taskSpecificDescription: "Wegversperringen worden nu beheerd binnen individuele taken. Dit dashboard toont alle wegversperringen van je taken. Om nieuwe wegversperringen te rapporteren, ga naar Activiteiten en open de detailweergave van een taak.",
-    searchPlaceholder: "Zoek wegversperringen..."
+    taskSpecificDescription: "Wegversperringen worden nu beheerd binnen individuele taken. Dit dashboard toont alle wegversperringen van je taken. Om nieuwe wegversperringen te rapporteren, ga naar Activiteiten en open de detailweergave van een taak."
   },
   profile: {
     title: "Profiel",
