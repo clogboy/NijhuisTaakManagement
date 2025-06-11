@@ -106,7 +106,8 @@ export class PerformanceMonitor {
 
   getAllMetrics(): Record<string, PerformanceMetrics | null> {
     const result: Record<string, PerformanceMetrics | null> = {};
-    for (const operation of this.metrics.keys()) {
+    const operationKeys = Array.from(this.metrics.keys());
+    for (const operation of operationKeys) {
       result[operation] = this.getAverageMetrics(operation);
     }
     return result;

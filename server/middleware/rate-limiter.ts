@@ -59,12 +59,12 @@ export class RateLimiter {
 
       // Track successful requests if not skipping them
       const originalSend = res.send;
-      res.send = function(body) {
+      res.send = function(body: any) {
         if (!this.options.skipSuccessfulRequests || res.statusCode >= 400) {
           record.count++;
         }
         return originalSend.call(res, body);
-      }.bind(this);
+      };
 
       record.count++;
       next();
@@ -78,7 +78,8 @@ export class RateLimiter {
 
   private cleanup(): void {
     const now = Date.now();
-    for (const [key, record] of this.requests.entries()) {
+    const entries = Array.from(this.requests.entries());
+    for (const [key, record] of entries) {
       if (now > record.resetTime) {
         this.requests.delete(key);
       }

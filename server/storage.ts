@@ -714,6 +714,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any> {
+    // Verify the activity or subtask exists before creating completion
+    const activity = await this.getActivity(activityId);
+    const subtask = activity ? null : await this.getSubtask(activityId);
+    
+    if (!activity && !subtask) {
+      throw new Error(`Cannot create task completion: Activity/Subtask ${activityId} does not exist`);
+    }
+
     const existingCompletion = await db.select().from(dailyTaskCompletions).where(
       and(
         eq(dailyTaskCompletions.userId, userId),

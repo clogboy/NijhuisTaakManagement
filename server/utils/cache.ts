@@ -21,7 +21,9 @@ export class Cache<T> {
     // Remove oldest items if cache is full
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
 
     this.cache.set(key, { value, expires });
@@ -62,7 +64,8 @@ export class Cache<T> {
   // Remove expired items
   private cleanup(): void {
     const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
+    const entries = Array.from(this.cache.entries());
+    for (const [key, item] of entries) {
       if (now > item.expires) {
         this.cache.delete(key);
       }
@@ -78,11 +81,12 @@ export class Cache<T> {
   } {
     this.cleanup();
     
+    const entries = Array.from(this.cache.entries());
     return {
       size: this.cache.size,
       maxSize: this.maxSize,
       hitRate: 0, // Would need hit/miss tracking
-      memoryUsage: JSON.stringify([...this.cache.entries()]).length
+      memoryUsage: JSON.stringify(entries).length
     };
   }
 }
