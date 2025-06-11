@@ -271,10 +271,10 @@ export default function Activities() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark mb-2">
-                    Log Entry
+{t('activities.logEntry')}
                   </label>
                   <Textarea
-                    placeholder="Enter your log entry..."
+                    placeholder={t('forms.enterText')}
                     value={logEntry}
                     onChange={(e) => setLogEntry(e.target.value)}
                     rows={3}
@@ -285,7 +285,7 @@ export default function Activities() {
                   disabled={!logEntry.trim() || addLogMutation.isPending}
                   className="bg-ms-blue hover:bg-ms-blue-dark text-white"
                 >
-                  {addLogMutation.isPending ? "Adding..." : "Add Entry"}
+{addLogMutation.isPending ? t('common.loading') : t('activities.addLogEntry')}
                 </Button>
               </CardContent>
             </Card>
@@ -293,7 +293,7 @@ export default function Activities() {
             {/* Activity Logs */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Activity Log</CardTitle>
+                <CardTitle className="text-lg">{t('activities.activityLogs')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -313,7 +313,7 @@ export default function Activities() {
 
                   {!activityLogs?.length && (
                     <p className="text-neutral-medium text-center py-4">
-                      No log entries yet. Add your first entry above.
+{t('activities.noLogsYet')}
                     </p>
                   )}
                 </div>

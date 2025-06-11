@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiRequest } from "@/lib/queryClient";
 import { Activity, TimeBlock } from "@shared/schema";
 import { format, startOfDay, endOfDay, addDays, isSameDay, parseISO } from "date-fns";
+import { useTranslations } from "@/hooks/useTranslations";
 
 interface SmartScheduleOptions {
   workingHours: {
@@ -34,6 +35,7 @@ interface ScheduleResult {
 }
 
 export default function TimeBlocking() {
+  const { t } = useTranslations();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedActivities, setSelectedActivities] = useState<number[]>([]);
   const [scheduleOptions, setScheduleOptions] = useState<SmartScheduleOptions>({
@@ -195,10 +197,10 @@ export default function TimeBlocking() {
         <div className="flex items-center justify-between">
           <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Time Blocking
+            {t('timeBlocking.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Schedule your activities with smart time management
+Plan je activiteiten met slimme tijdbeheer
           </p>
         </div>
         
