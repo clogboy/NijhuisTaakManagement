@@ -58,6 +58,10 @@ export default function Subtasks() {
     queryKey: ["/api/auth/me"],
   });
 
+  const { data: taskCompletions = [] } = useQuery<Array<{activityId: number, completed: boolean}>>({
+    queryKey: ["/api/daily-task-completions"],
+  });
+
   const updateParticipantTypeMutation = useMutation({
     mutationFn: async ({ subtaskId, participantEmail, taskType }: { 
       subtaskId: number; 
@@ -95,6 +99,12 @@ export default function Subtasks() {
     acc[contact.email] = contact;
     return acc;
   }, {} as Record<string, Contact>) || {};
+
+  // Create completion status map for sync with Today's Tasks
+  const completionMap = taskCompletions.reduce((acc, completion: any) => {
+    acc[completion.activityId] = completion.completed;
+    return acc;
+  }, {} as Record<number, boolean>);
 
   // Filter subtasks based on search and type
   const filteredSubtasks = (subtasks || []).filter(subtask => {
@@ -201,6 +211,7 @@ export default function Subtasks() {
     const linkedActivity = activityMap[subtask.linkedActivityId];
     const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
                      subtask.status !== "completed" && subtask.status !== "resolved";
+    const isCompletedDaily = completionMap[subtask.id] || false;
 
     return (
       <Card key={subtask.id} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
@@ -216,11 +227,11 @@ export default function Subtasks() {
                   disabled={updateSubtaskMutation.isPending}
                 >
                   <CheckCircle className={`h-4 w-4 ${
-                    subtask.status === "completed" || subtask.status === "resolved" 
+                    subtask.status === "completed" || subtask.status === "resolved" || isCompletedDaily
                       ? "text-green-600" : "text-gray-400"
                   }`} />
                 </Button>
-                <span className={subtask.status === "completed" || subtask.status === "resolved" ? "line-through text-gray-500" : ""}>
+                <span className={subtask.status === "completed" || subtask.status === "resolved" || isCompletedDaily ? "line-through text-gray-500" : ""}>
                   {subtask.title}
                 </span>
               </CardTitle>
