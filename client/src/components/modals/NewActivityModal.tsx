@@ -98,7 +98,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         statusTags: statusTags,
       };
-      return apiRequest("POST", "/api/activities", activityData);
+      return apiRequest("/api/activities", "POST", activityData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });

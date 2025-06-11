@@ -57,7 +57,7 @@ export default function NewQuickWinModal({ open, onOpenChange, linkedActivityId 
 
   const createQuickWinMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
-      return apiRequest("POST", "/api/quickwins", data);
+      return apiRequest("/api/quickwins", "POST", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/quickwins"] });

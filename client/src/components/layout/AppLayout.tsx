@@ -112,7 +112,7 @@ export default function AppLayout({
   });
 
   const logoutMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/auth/logout"),
+    mutationFn: () => apiRequest("/api/auth/logout", "POST"),
     onSuccess: () => {
       queryClient.clear();
       window.location.href = "/login";

@@ -45,7 +45,7 @@ export default function NewContactModal({ open, onOpenChange }: NewContactModalP
 
   const createContactMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
-      return apiRequest("POST", "/api/contacts", data);
+      return apiRequest("/api/contacts", "POST", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });

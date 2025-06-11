@@ -85,7 +85,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
       };
-      return apiRequest("PUT", `/api/activities/${activity.id}`, activityData);
+      return apiRequest(`/api/activities/${activity.id}`, "PUT", activityData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
