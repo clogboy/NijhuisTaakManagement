@@ -41,6 +41,32 @@ export const moodReminders = pgTable("mood_reminders", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const workspaceInvitations = pgTable("workspace_invitations", {
+  id: serial("id").primaryKey(),
+  inviterId: integer("inviter_id").notNull().references(() => users.id),
+  inviteeEmail: text("invitee_email").notNull(),
+  inviteeName: text("invitee_name"),
+  accessLevel: text("access_level").notNull().default("read_only"), // "read_only", "collaborator", "admin"
+  status: text("status").notNull().default("pending"), // "pending", "accepted", "declined", "expired"
+  inviteToken: text("invite_token").notNull().unique(),
+  message: text("message"),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const workspaceAccess = pgTable("workspace_access", {
+  id: serial("id").primaryKey(),
+  ownerId: integer("owner_id").notNull().references(() => users.id),
+  guestId: integer("guest_id").notNull().references(() => users.id),
+  accessLevel: text("access_level").notNull().default("read_only"),
+  grantedAt: timestamp("granted_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  invitationId: integer("invitation_id").references(() => workspaceInvitations.id),
+});
+
 export const contacts = pgTable("contacts", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
