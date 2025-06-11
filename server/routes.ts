@@ -243,11 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn("[API] Supabase deletion failed, falling back to local storage:", supabaseError);
         
         // Fallback to local storage
-        const success = await storage.deleteContact(contactId);
-        if (!success) {
-          res.status(404).json({ message: "Contact not found" });
-          return;
-        }
+        await storage.deleteContact(contactId);
         console.log(`[API] Deleted contact from local storage: ${contactId}`);
         res.json({ message: "Contact deleted successfully" });
       }
@@ -255,6 +251,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("[API] Error deleting contact:", error);
       res.status(500).json({ 
         message: "Failed to delete contact",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Supabase health check endpoints
+  app.get("/api/supabase/health", async (_req, res) => {
+    try {
+      const healthCheck = await supabaseService.healthCheck();
+      res.json(healthCheck);
+    } catch (error) {
+      console.error("[API] Supabase health check error:", error);
+      res.status(500).json({
+        status: 'unhealthy',
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/supabase/status", async (_req, res) => {
+    try {
+      const status = supabaseService.getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("[API] Supabase status error:", error);
+      res.status(500).json({
+        connected: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/supabase/test-connection", async (_req, res) => {
+    try {
+      console.log("[API] Testing Supabase connection...");
+      const connectionTest = await supabaseService.testConnection();
+      res.json({
+        success: connectionTest.connected,
+        ...connectionTest
+      });
+    } catch (error) {
+      console.error("[API] Supabase connection test error:", error);
+      res.status(500).json({
+        success: false,
+        connected: false,
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

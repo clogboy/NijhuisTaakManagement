@@ -115,9 +115,9 @@ export class SupabaseService {
     try {
       // Test connection with a simple query
       const { error } = await this.withTimeout(
-        this.client.from('contacts').select('count', { count: 'exact', head: true }),
+        this.client.from('contacts').select('count', { count: 'exact', head: true }) as any,
         this.timeout
-      );
+      ) as any;
 
       const latency = Date.now() - startTime;
 
