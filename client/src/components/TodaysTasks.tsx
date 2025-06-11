@@ -193,19 +193,21 @@ export default function TodaysTasks() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high": return "bg-red-100 text-red-800 border-red-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "high": return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700";
+      case "medium": return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700";
+      case "low": return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700";
+      default: return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-600";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "bg-green-100 text-green-800";
-      case "in-progress": return "bg-blue-100 text-blue-800";
-      case "on-hold": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "completed": return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
+      case "in-progress": case "in_progress": return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
+      case "on-hold": return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300";
+      case "pending": return "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300";
+      case "urgent": return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300";
+      default: return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
     }
   };
 
@@ -240,28 +242,33 @@ export default function TodaysTasks() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between text-lg">
-          <div className="flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-ms-blue" />
-            Today's Tasks
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-lg">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-ms-blue flex-shrink-0" />
+            <span>Today's Tasks</span>
             {hasOverdueWarning && (
-              <Badge variant="destructive" className="ml-2 text-xs">
+              <Badge variant="destructive" className="text-xs">
                 {overdueSubtasks.length} overdue
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 text-xs"
             >
-              <ArrowUpDown className="h-4 w-4" />
-              {sortOrder === "desc" ? "Hoog → Laag" : "Laag → Hoog"}
+              <ArrowUpDown className="h-3 w-3" />
+              <span className="hidden sm:inline">
+                {sortOrder === "desc" ? "High → Low" : "Low → High"}
+              </span>
+              <span className="sm:hidden">
+                {sortOrder === "desc" ? "↓" : "↑"}
+              </span>
             </Button>
             <Badge variant="secondary" className="text-xs">
-              {allTodaysTasks.length} taken
+              {allTodaysTasks.length} tasks
             </Badge>
           </div>
         </CardTitle>
@@ -271,12 +278,12 @@ export default function TodaysTasks() {
         {hasOverdueWarning && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
-              <div>
+              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
                   {overdueSubtasks.length} Overdue Subtask{overdueSubtasks.length > 1 ? 's' : ''}
                 </h4>
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1 leading-relaxed">
                   These will automatically convert to roadblocks at midnight if not completed.
                 </p>
               </div>
@@ -293,13 +300,13 @@ export default function TodaysTasks() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {allTodaysTasks.map((task: any) => {
               const isCompleted = completionMap[task.id] || false;
               return (
                 <div
                   key={`${task.isSubtask ? 'subtask' : 'activity'}-${task.id}`}
-                  className={`flex items-center p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors ${
+                  className={`flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                     isCompleted ? 'opacity-75' : ''
                   }`}
                 >
@@ -311,7 +318,7 @@ export default function TodaysTasks() {
                         completed: checked as boolean,
                       });
                     }}
-                    className="mr-3"
+                    className="mt-1 flex-shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div 
@@ -323,44 +330,54 @@ export default function TodaysTasks() {
                       }
                     }}
                   >
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className={`text-sm font-medium truncate ${
-                        isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'
-                      }`}>
-                        {task.title}
-                      </h4>
-                      {task.isSubtask && (
-                        <div className="flex items-center text-blue-600">
-                          {getTaskTypeIcon(task.taskType)}
-                          <span className="text-xs ml-1">Subtask</span>
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className={`text-sm font-medium leading-tight ${
+                          isCompleted ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-900 dark:text-white'
+                        }`}>
+                          {task.title}
+                        </h4>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${getPriorityColor(task.priority)}`}
+                          >
+                            {task.priority}
+                          </Badge>
+                          {task.urgencyScore && (
+                            <span className="text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-700 px-1 rounded">
+                              {task.urgencyScore}
+                            </span>
+                          )}
                         </div>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${getPriorityColor(task.priority)}`}
-                      >
-                        {task.priority}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500">
-                      <Badge
-                        variant="secondary"
-                        className={getStatusColor(task.status)}
-                      >
-                        {task.status}
-                      </Badge>
-                      {task.dueDate && (
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{format(new Date(task.dueDate), "MMM d")}</span>
-                        </div>
-                      )}
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-2">
+                        {task.isSubtask && (
+                          <div className="flex items-center text-blue-600 dark:text-blue-400">
+                            {getTaskTypeIcon(task.taskType)}
+                            <span className="text-xs ml-1">Subtask</span>
+                          </div>
+                        )}
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs ${getStatusColor(task.status)}`}
+                        >
+                          {task.status}
+                        </Badge>
+                        {task.dueDate && (
+                          <div className="flex items-center text-gray-500 dark:text-gray-400">
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span className="text-xs">{format(new Date(task.dueDate), "MMM d")}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="ml-2 h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 flex-shrink-0 mt-1"
                     onClick={(e) => {
                       e.stopPropagation();
                       window.location.href = task.isSubtask ? `/subtasks` : `/activities`;
