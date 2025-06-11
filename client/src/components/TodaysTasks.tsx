@@ -1,28 +1,138 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Clock, Calendar, ArrowRight } from "lucide-react";
-import { Activity } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction } from "lucide-react";
+import { Activity, Subtask } from "@shared/schema";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export default function TodaysTasks() {
   const [selectedTask, setSelectedTask] = useState<Activity | null>(null);
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const today = new Date();
   const todayString = format(today, "yyyy-MM-dd");
 
-  const { data: activities = [], isLoading } = useQuery<Activity[]>({
+  const { data: activities = [], isLoading: activitiesLoading } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
   });
 
-  // Filter activities for today (due today or scheduled for today)
-  const todaysTasks = activities.filter(activity => {
+  const { data: subtasks = [], isLoading: subtasksLoading } = useQuery<Subtask[]>({
+    queryKey: ["/api/subtasks"],
+  });
+
+  const { data: currentUser } = useQuery<{ user: any }>({
+    queryKey: ["/api/auth/me"],
+  });
+
+  const { data: taskCompletions = [] } = useQuery<Array<{activityId: number, completed: boolean}>>({
+    queryKey: ["/api/daily-task-completions", todayString],
+  });
+
+  const toggleTaskCompletion = useMutation({
+    mutationFn: async ({ activityId, completed }: { activityId: number; completed: boolean }) => {
+      return apiRequest(`/api/daily-task-completions`, "POST", {
+        activityId,
+        taskDate: todayString,
+        completed,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-task-completions", todayString] });
+      toast({
+        title: "Task updated",
+        description: "Task completion status updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update task completion status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Get user's assigned subtasks from active activities
+  const userEmail = currentUser?.user?.email;
+  const assignedSubtasks = subtasks.filter(subtask => {
+    if (!userEmail || !subtask.participants.includes(userEmail)) return false;
+    
+    // Find the linked activity
+    const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
+    return linkedActivity && linkedActivity.status !== "completed";
+  });
+
+  // Eisenhower matrix prioritization for subtasks
+  const prioritizeSubtasks = (subtasks: Subtask[]) => {
+    const now = new Date();
+    const urgentThreshold = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days
+
+    return subtasks.sort((a, b) => {
+      // Get participant task type preference
+      const aParticipantTypes = a.participantTypes as Record<string, string> || {};
+      const bParticipantTypes = b.participantTypes as Record<string, string> || {};
+      const aTaskType = aParticipantTypes[userEmail || ''] || a.type;
+      const bTaskType = bParticipantTypes[userEmail || ''] || b.type;
+
+      // Priority scoring: quick_win = 3, task = 2, roadblock = 1
+      const getTypeScore = (type: string) => {
+        switch (type) {
+          case "quick_win": return 3;
+          case "task": return 2;
+          case "roadblock": return 1;
+          default: return 2;
+        }
+      };
+
+      // Urgency scoring based on due date
+      const getUrgencyScore = (subtask: Subtask) => {
+        if (!subtask.dueDate) return 1;
+        const dueDate = new Date(subtask.dueDate);
+        if (dueDate <= urgentThreshold) return 3;
+        return 1;
+      };
+
+      const aScore = getTypeScore(aTaskType) + getUrgencyScore(a);
+      const bScore = getTypeScore(bTaskType) + getUrgencyScore(b);
+
+      return bScore - aScore; // Higher score first
+    });
+  };
+
+  // Filter activities for today (due today or in progress)
+  const activitiesToday = activities.filter(activity => {
     const dueDate = activity.dueDate ? format(new Date(activity.dueDate), "yyyy-MM-dd") : null;
     return dueDate === todayString || activity.status === "in-progress";
-  }).slice(0, 5); // Show max 5 tasks
+  });
+
+  // Combine prioritized subtasks and today's activities
+  const prioritizedSubtasks = prioritizeSubtasks(assignedSubtasks);
+  const allTodaysTasks = [
+    ...activitiesToday.map(activity => ({ ...activity, isSubtask: false })),
+    ...prioritizedSubtasks.slice(0, 5).map(subtask => ({
+      id: subtask.id,
+      title: subtask.title,
+      priority: subtask.priority,
+      dueDate: subtask.dueDate,
+      status: subtask.status,
+      description: subtask.description,
+      isSubtask: true,
+      taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type
+    }))
+  ].slice(0, 8);
+
+  // Create completion status map
+  const completionMap = taskCompletions.reduce((acc, completion) => {
+    acc[completion.activityId] = completion.completed;
+    return acc;
+  }, {} as Record<number, boolean>);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -42,7 +152,15 @@ export default function TodaysTasks() {
     }
   };
 
-  if (isLoading) {
+  const getTaskTypeIcon = (taskType?: string) => {
+    switch (taskType) {
+      case "quick_win": return <Zap className="h-3 w-3" />;
+      case "roadblock": return <Construction className="h-3 w-3" />;
+      default: return <Target className="h-3 w-3" />;
+    }
+  };
+
+  if (activitiesLoading || subtasksLoading) {
     return (
       <Card>
         <CardHeader>
@@ -71,12 +189,12 @@ export default function TodaysTasks() {
             Today's Tasks
           </div>
           <Badge variant="secondary" className="text-xs">
-            {todaysTasks.length} tasks
+            {allTodaysTasks.length} tasks
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {todaysTasks.length === 0 ? (
+        {allTodaysTasks.length === 0 ? (
           <div className="text-center py-8">
             <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-sm font-medium text-gray-900">No tasks for today</h3>
@@ -86,57 +204,85 @@ export default function TodaysTasks() {
           </div>
         ) : (
           <div className="space-y-3">
-            {todaysTasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors cursor-pointer"
-                onClick={() => {
-                  setSelectedTask(task);
-                  setIsTaskDetailModalOpen(true);
-                }}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="text-sm font-medium text-gray-900 truncate">
-                      {task.title}
-                    </h4>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${getPriorityColor(task.priority)}`}
-                    >
-                      {task.priority}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                    <Badge
-                      variant="secondary"
-                      className={getStatusColor(task.status)}
-                    >
-                      {task.status.replace("-", " ")}
-                    </Badge>
-                    {task.dueDate && (
-                      <div className="flex items-center">
-                        <Clock className="mr-1 h-3 w-3" />
-                        Due {format(new Date(task.dueDate), "MMM d")}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-2 h-8 w-8 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.href = `/activities`;
-                  }}
+            {allTodaysTasks.map((task: any) => {
+              const isCompleted = completionMap[task.id] || false;
+              return (
+                <div
+                  key={`${task.isSubtask ? 'subtask' : 'activity'}-${task.id}`}
+                  className={`flex items-center p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors ${
+                    isCompleted ? 'opacity-75' : ''
+                  }`}
                 >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                  <Checkbox
+                    checked={isCompleted}
+                    onCheckedChange={(checked) => {
+                      toggleTaskCompletion.mutate({
+                        activityId: task.id,
+                        completed: checked as boolean,
+                      });
+                    }}
+                    className="mr-3"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div 
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => {
+                      if (!task.isSubtask) {
+                        setSelectedTask(task);
+                        setIsTaskDetailModalOpen(true);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className={`text-sm font-medium truncate ${
+                        isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'
+                      }`}>
+                        {task.title}
+                      </h4>
+                      {task.isSubtask && (
+                        <div className="flex items-center text-blue-600">
+                          {getTaskTypeIcon(task.taskType)}
+                          <span className="text-xs ml-1">Subtask</span>
+                        </div>
+                      )}
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${getPriorityColor(task.priority)}`}
+                      >
+                        {task.priority}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                      <Badge
+                        variant="secondary"
+                        className={getStatusColor(task.status)}
+                      >
+                        {task.status}
+                      </Badge>
+                      {task.dueDate && (
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{format(new Date(task.dueDate), "MMM d")}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 h-8 w-8 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.location.href = task.isSubtask ? `/subtasks` : `/activities`;
+                    }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
             
-            {todaysTasks.length > 0 && (
+            {allTodaysTasks.length > 0 && (
               <div className="pt-2 border-t">
                 <Button
                   variant="outline"
@@ -152,10 +298,10 @@ export default function TodaysTasks() {
           </div>
         )}
       </CardContent>
-      
+
       {selectedTask && (
         <TaskDetailModal
-          activity={selectedTask}
+          task={selectedTask}
           isOpen={isTaskDetailModalOpen}
           onClose={() => setIsTaskDetailModalOpen(false)}
         />
