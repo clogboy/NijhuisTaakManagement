@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Clock, AlertCircle, Sync, Plus, Users, ExternalLink } from "lucide-react";
+import { CalendarIcon, Clock, AlertCircle, RotateCcw, Plus, Users, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -266,7 +266,7 @@ export default function Calendar() {
             disabled={syncMicrosoftMutation.isPending}
             variant="outline"
           >
-            <Sync className="h-4 w-4 mr-2" />
+            <RotateCcw className="h-4 w-4 mr-2" />
             {syncMicrosoftMutation.isPending ? "Synchroniseren..." : "Sync Microsoft Calendar"}
           </Button>
           <Button onClick={() => setIsCreateDialogOpen(true)}>
