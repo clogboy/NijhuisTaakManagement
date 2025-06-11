@@ -23,7 +23,8 @@ import {
   AlertTriangle,
   Pin,
   PinOff,
-  Clock
+  Clock,
+  ListChecks
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -126,6 +127,7 @@ export default function AppLayout({
     { path: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
     { path: "/activities", icon: CheckSquare, label: t("nav.activities") },
     { path: "/contacts", icon: Users, label: t("nav.contacts") },
+    { path: "/subtasks", icon: ListChecks, label: t("subtasks") },
     { path: "/quickwins", icon: Trophy, label: t("nav.quickWins") },
     { path: "/roadblocks", icon: AlertTriangle, label: t("nav.roadblocks") },
     { path: "/agenda", icon: Calendar, label: t("nav.agenda") },

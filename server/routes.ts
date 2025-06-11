@@ -581,12 +581,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.session.userId);
       const activities = await storage.getActivities(req.session.userId, user?.role === 'admin');
       
+      // Get subtasks for the user
+      const subtasks = await storage.getSubtasks(req.session.userId);
+      
       // Get ethos for the day
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
       
       // Generate AI-powered agenda
       const agendaSuggestion = await generateDailyAgenda(
         activities.filter(a => a.status !== 'completed'),
+        subtasks,
+        user?.email,
         ethos,
         maxTaskSwitches || 3
       );
