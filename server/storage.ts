@@ -246,12 +246,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActivities(userId: number, isAdmin: boolean): Promise<Activity[]> {
-    if (isAdmin) {
-      return await db.select().from(activities).orderBy(desc(activities.createdAt));
-    } else {
-      return await db.select().from(activities)
-        .where(eq(activities.createdBy, userId))
-        .orderBy(desc(activities.createdAt));
+    try {
+      if (isAdmin) {
+        return await db.select().from(activities).orderBy(desc(activities.createdAt));
+      } else {
+        return await db.select().from(activities)
+          .where(eq(activities.createdBy, userId))
+          .orderBy(desc(activities.createdAt));
+      }
+    } catch (error: any) {
+      console.log('Get activities error:', error);
+      throw new Error('Failed to fetch activities');
     }
   }
 

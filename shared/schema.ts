@@ -87,7 +87,7 @@ export const activities = pgTable("activities", {
   estimatedDuration: integer("estimated_duration"), // in minutes
   dueDate: timestamp("due_date"),
   participants: integer("participants").array(), // array of contact IDs
-  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
