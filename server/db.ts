@@ -8,7 +8,7 @@ let connectionString: string;
 let supabaseUrl: string | undefined;
 let supabaseKey: string | undefined;
 
-if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_DB_PASSWORD) {
   // Use Supabase
   supabaseUrl = process.env.SUPABASE_URL;
   supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -20,16 +20,15 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   }
   
   // Use Supabase's PostgreSQL connection format
-  // Note: You'll need to provide the actual database password from your Supabase project settings
-  const dbPassword = process.env.SUPABASE_DB_PASSWORD || 'your-database-password';
+  const dbPassword = process.env.SUPABASE_DB_PASSWORD;
   connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
-  console.log("Using Supabase PostgreSQL connection");
+  console.log(`Using Supabase PostgreSQL connection for project: ${projectRef}`);
 } else if (process.env.DATABASE_URL) {
   // Fallback to existing DATABASE_URL
   connectionString = process.env.DATABASE_URL;
-  console.log("Using DATABASE_URL connection");
+  console.log("Using DATABASE_URL connection (fallback)");
 } else {
-  throw new Error("No database connection configured. Set either SUPABASE_URL + SUPABASE_ANON_KEY or DATABASE_URL");
+  throw new Error("No database connection configured. Set SUPABASE_URL + SUPABASE_ANON_KEY + SUPABASE_DB_PASSWORD or DATABASE_URL");
 }
 
 // Create Supabase client for additional features if available
