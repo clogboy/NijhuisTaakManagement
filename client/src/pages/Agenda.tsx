@@ -61,6 +61,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function Agenda() {
+  const { t } = useTranslations();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -302,7 +303,7 @@ export default function Agenda() {
                       className="w-full bg-ms-blue hover:bg-ms-blue-dark text-white"
                     >
                       <Brain size={16} className="mr-2" />
-                      {generateAgendaMutation.isPending ? "Generating..." : "Generate AI Agenda"}
+                      {generateAgendaMutation.isPending ? t("common.loading") : t("agenda.generateAgenda")}
                     </Button>
                   </div>
                 </div>
@@ -396,20 +397,20 @@ export default function Agenda() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Lightbulb size={20} className="text-yellow-500" />
-                      AI Recommendations
+                      {t("agenda.aiRecommendations")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="font-medium text-sm text-neutral-medium mb-2">Daily Strategy</h4>
-                      <p className="text-sm">{agendaSuggestion?.suggestions || "AI service currently unavailable. Please check API key status."}</p>
+                      <h4 className="font-medium text-sm text-neutral-medium mb-2">{t("agenda.dailyStrategy")}</h4>
+                      <p className="text-sm">{agendaSuggestion?.suggestions || t("agenda.aiServiceUnavailable")}</p>
                     </div>
                     <div>
-                      <h4 className="font-medium text-sm text-neutral-medium mb-2">Task Switch Optimization</h4>
-                      <p className="text-sm">{agendaSuggestion?.taskSwitchOptimization || "Optimization analysis unavailable"}</p>
+                      <h4 className="font-medium text-sm text-neutral-medium mb-2">{t("agenda.taskSwitchOptimization")}</h4>
+                      <p className="text-sm">{agendaSuggestion?.taskSwitchOptimization || t("agenda.optimizationUnavailable")}</p>
                     </div>
                     <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                      <span className="text-sm font-medium">Estimated Task Switches</span>
+                      <span className="text-sm font-medium">{t("agenda.estimatedTaskSwitches")}</span>
                       <Badge variant={(agendaSuggestion?.estimatedTaskSwitches || 0) <= maxTaskSwitches ? "default" : "destructive"}>
                         {agendaSuggestion?.estimatedTaskSwitches || 0} / {maxTaskSwitches}
                       </Badge>
