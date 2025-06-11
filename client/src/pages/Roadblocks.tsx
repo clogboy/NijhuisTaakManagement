@@ -79,10 +79,10 @@ export default function Roadblocks() {
           <div>
             <h1 className="text-2xl font-bold text-neutral-dark dark:text-white flex items-center gap-2">
               <AlertTriangle className="h-6 w-6 text-red-500" />
-              Roadblocks Dashboard
+{t('roadblocks.title')}
             </h1>
             <p className="text-neutral-medium dark:text-gray-400 mt-1">
-              View roadblocks associated with your tasks. To report new roadblocks, open a task and use the Roadblocks tab.
+{t('roadblocks.description')}
             </p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function Roadblocks() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-medium h-4 w-4" />
           <Input
-            placeholder="Search roadblocks..."
+placeholder={t('roadblocks.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 micro-focus-ring"
@@ -105,11 +105,10 @@ export default function Roadblocks() {
               <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div>
                 <h3 className="font-medium text-red-800 dark:text-red-200">
-                  Roadblocks are now Task-Specific
+{t('roadblocks.taskSpecific')}
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                  Roadblocks are now managed within individual tasks. This dashboard shows all roadblocks across your tasks. 
-                  To report new roadblocks, go to Activities and open any task's detail view.
+{t('roadblocks.taskSpecificDescription')}
                 </p>
               </div>
             </div>

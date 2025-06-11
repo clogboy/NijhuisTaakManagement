@@ -137,11 +137,18 @@ export const nlTranslations = {
     deleteConfirm: "Weet je zeker dat je deze quick win wilt verwijderen?",
     deleteSuccess: "Quick win succesvol verwijderd",
     createSuccess: "Quick win succesvol aangemaakt",
-    updateSuccess: "Quick win succesvol bijgewerkt"
+    updateSuccess: "Quick win succesvol bijgewerkt",
+    description: "Bekijk quick wins gekoppeld aan je taken. Om nieuwe quick wins toe te voegen, open een taak en gebruik het Quick Wins tabblad.",
+    taskSpecific: "Quick Wins zijn nu taakspecifiek",
+    taskSpecificDescription: "Quick wins worden nu beheerd binnen individuele taken. Dit dashboard toont alle quick wins van je taken. Om nieuwe quick wins aan te maken, ga naar Activiteiten en open de detailweergave van een taak.",
+    noQuickWins: "Nog geen quick wins",
+    noMatches: "Geen quick wins komen overeen met je zoekopdracht",
+    addInstructions: "Voeg quick wins toe door een taak te openen in de Activiteiten sectie",
+    adjustSearch: "Probeer je zoekcriteria aan te passen"
   },
   roadblocks: {
-    title: "Roadblocks",
-    searchPlaceholder: "Zoek roadblocks...",
+    title: "Wegversperringen Dashboard",
+    description: "Bekijk wegversperringen gekoppeld aan je taken. Om nieuwe wegversperringen te rapporteren, open een taak en gebruik het Wegversperringen tabblad.",
     addNew: "Nieuwe roadblock toevoegen",
     noRoadblocksFound: "Geen roadblocks gevonden",
     createFirst: "Voeg je eerste roadblock toe om te beginnen",
@@ -172,7 +179,10 @@ export const nlTranslations = {
     relatedActivity: "Gerelateerde activiteit",
     resolved: "Opgelost",
     open: "Open",
-    inProgress: "In behandeling"
+    inProgress: "In behandeling",
+    taskSpecific: "Wegversperringen zijn nu taakspecifiek",
+    taskSpecificDescription: "Wegversperringen worden nu beheerd binnen individuele taken. Dit dashboard toont alle wegversperringen van je taken. Om nieuwe wegversperringen te rapporteren, ga naar Activiteiten en open de detailweergave van een taak.",
+    searchPlaceholder: "Zoek wegversperringen..."
   },
   profile: {
     title: "Profiel",
