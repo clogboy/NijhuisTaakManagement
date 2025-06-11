@@ -247,13 +247,16 @@ export class DatabaseStorage implements IStorage {
 
   async getActivities(userId: number, isAdmin: boolean): Promise<Activity[]> {
     try {
-      if (isAdmin) {
-        return await db.select().from(activities).orderBy(desc(activities.createdAt));
-      } else {
-        return await db.select().from(activities)
-          .where(eq(activities.createdBy, userId))
-          .orderBy(desc(activities.createdAt));
-      }
+      // Use raw SQL to avoid Drizzle schema mismatch issues
+      const query = isAdmin 
+        ? `SELECT * FROM activities ORDER BY created_at DESC`
+        : `SELECT * FROM activities WHERE created_by = $1 ORDER BY created_at DESC`;
+      
+      const result = isAdmin 
+        ? await db.execute(sql.raw(query))
+        : await db.execute(sql.raw(query, [userId]));
+      
+      return result.rows as Activity[];
     } catch (error: any) {
       console.log('Get activities error:', error);
       throw new Error('Failed to fetch activities');
@@ -318,9 +321,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuickWins(userId: number): Promise<QuickWin[]> {
-    return await db.select().from(quickWins)
-      .where(eq(quickWins.createdBy, userId))
-      .orderBy(desc(quickWins.createdAt));
+    try {
+      const result = await db.execute(sql.raw(
+        `SELECT * FROM quick_wins WHERE created_by = $1 ORDER BY created_at DESC`,
+        [userId]
+      ));
+      return result.rows as QuickWin[];
+    } catch (error: any) {
+      console.log('Get quick wins error:', error);
+      throw new Error('Failed to fetch quick wins');
+    }
   }
 
   async getQuickWinsByActivity(activityId: number): Promise<QuickWin[]> {
@@ -385,43 +395,47 @@ export class DatabaseStorage implements IStorage {
     completedCount: number;
     activeContacts: number;
   }> {
-    const now = new Date();
-    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    try {
+      const now = new Date();
+      const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    // Get urgent count
-    const urgentActivities = await db.select().from(activities).where(
-      and(
-        eq(activities.priority, 'urgent'),
-        !isAdmin ? eq(activities.createdBy, userId) : undefined
-      )
-    );
+      // Use raw SQL to avoid schema issues
+      const urgentResult = await db.execute(sql.raw(
+        isAdmin 
+          ? `SELECT COUNT(*) as count FROM activities WHERE priority = 'urgent'`
+          : `SELECT COUNT(*) as count FROM activities WHERE priority = 'urgent' AND created_by = $1`,
+        isAdmin ? [] : [userId]
+      ));
 
-    // Get due this week count  
-    const dueThisWeekActivities = await db.select().from(activities).where(
-      and(
-        sql`${activities.dueDate} <= ${weekFromNow}`,
-        sql`${activities.dueDate} >= ${now}`,
-        !isAdmin ? eq(activities.createdBy, userId) : undefined
-      )
-    );
+      const dueResult = await db.execute(sql.raw(
+        isAdmin
+          ? `SELECT COUNT(*) as count FROM activities WHERE due_date <= $1 AND due_date >= $2`
+          : `SELECT COUNT(*) as count FROM activities WHERE due_date <= $1 AND due_date >= $2 AND created_by = $3`,
+        isAdmin ? [weekFromNow, now] : [weekFromNow, now, userId]
+      ));
 
-    // Get completed count
-    const completedActivities = await db.select().from(activities).where(
-      and(
-        eq(activities.status, 'completed'),
-        !isAdmin ? eq(activities.createdBy, userId) : undefined
-      )
-    );
+      const completedResult = await db.execute(sql.raw(
+        isAdmin
+          ? `SELECT COUNT(*) as count FROM activities WHERE status = 'completed'`
+          : `SELECT COUNT(*) as count FROM activities WHERE status = 'completed' AND created_by = $1`,
+        isAdmin ? [] : [userId]
+      ));
 
-    // Get active contacts count
-    const activeContacts = await db.select().from(contacts).where(eq(contacts.createdBy, userId));
+      const contactsResult = await db.execute(sql.raw(
+        `SELECT COUNT(*) as count FROM contacts WHERE created_by = $1`,
+        [userId]
+      ));
 
-    return {
-      urgentCount: urgentActivities.length,
-      dueThisWeek: dueThisWeekActivities.length,
-      completedCount: completedActivities.length,
-      activeContacts: activeContacts.length,
-    };
+      return {
+        urgentCount: Number(urgentResult.rows[0]?.count || 0),
+        dueThisWeek: Number(dueResult.rows[0]?.count || 0),
+        completedCount: Number(completedResult.rows[0]?.count || 0),
+        activeContacts: Number(contactsResult.rows[0]?.count || 0),
+      };
+    } catch (error: any) {
+      console.log('Get stats error:', error);
+      throw new Error('Failed to fetch stats');
+    }
   }
 
   // Weekly Ethos methods
