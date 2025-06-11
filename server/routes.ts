@@ -573,9 +573,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Daily task completions
   app.get("/api/daily-task-completions/:date?", requireAuth, async (req: any, res) => {
     try {
-      const date = req.params.date || new Date().toISOString().split('T')[0];
-      // For now, return empty array since we need to implement storage methods
-      res.json([]);
+      const date = req.params.date;
+      const completions = await storage.getDailyTaskCompletions(req.user.id, date);
+      res.json(completions);
     } catch (error) {
       console.error("Error fetching daily task completions:", error);
       res.status(500).json({ error: "Failed to fetch daily task completions" });
@@ -590,8 +590,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "activityId, taskDate, and completed are required" });
       }
 
-      // For now, return success response
-      res.json({ success: true, activityId, taskDate, completed });
+      const result = await storage.createOrUpdateDailyTaskCompletion(
+        req.user.id,
+        activityId,
+        taskDate,
+        completed
+      );
+
+      res.json({ success: true, activityId, taskDate, completed, result });
     } catch (error) {
       console.error("Error updating task completion:", error);
       res.status(500).json({ error: "Failed to update task completion" });

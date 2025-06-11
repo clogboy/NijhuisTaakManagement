@@ -205,8 +205,8 @@ export default function TodaysTasks() {
     return scores[status as keyof typeof scores] || 1;
   }
 
-  // Create completion status map
-  const completionMap = taskCompletions.reduce((acc, completion) => {
+  // Create completion status map  
+  const completionMap = taskCompletions.reduce((acc, completion: any) => {
     acc[completion.activityId] = completion.completed;
     return acc;
   }, {} as Record<number, boolean>);
