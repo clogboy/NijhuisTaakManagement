@@ -340,24 +340,24 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                               placeholder="Type email address to add new participant..."
                               value=""
                               onChange={(e) => {
-                                const email = e.target.value.trim();
+                                const email = (e.target as HTMLInputElement).value.trim();
                                 if (email && email.includes('@') && !newSubtask.participants.includes(email)) {
                                   setNewSubtask({
                                     ...newSubtask,
                                     participants: [...newSubtask.participants, email]
                                   });
-                                  e.target.value = '';
+                                  (e.target as HTMLInputElement).value = '';
                                 }
                               }}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
-                                  const email = e.target.value.trim();
+                                  const email = (e.target as HTMLInputElement).value.trim();
                                   if (email && email.includes('@') && !newSubtask.participants.includes(email)) {
                                     setNewSubtask({
                                       ...newSubtask,
                                       participants: [...newSubtask.participants, email]
                                     });
-                                    e.target.value = '';
+                                    (e.target as HTMLInputElement).value = '';
                                   }
                                 }
                               }}

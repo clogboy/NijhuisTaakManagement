@@ -272,6 +272,27 @@ export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 export type MoodReminder = typeof moodReminders.$inferSelect;
 export type InsertMoodReminder = z.infer<typeof insertMoodReminderSchema>;
 
+export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvitations).omit({
+  id: true,
+  inviterId: true,
+  inviteToken: true,
+  status: true,
+  acceptedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type WorkspaceInvitation = typeof workspaceInvitations.$inferSelect;
+export type InsertWorkspaceInvitation = z.infer<typeof insertWorkspaceInvitationSchema>;
+
+export const insertWorkspaceAccessSchema = createInsertSchema(workspaceAccess).omit({
+  id: true,
+  grantedAt: true,
+});
+
+export type WorkspaceAccess = typeof workspaceAccess.$inferSelect;
+export type InsertWorkspaceAccess = z.infer<typeof insertWorkspaceAccessSchema>;
+
 export const dailyTaskCompletions = pgTable("daily_task_completions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),

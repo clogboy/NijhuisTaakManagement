@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema, insertTaskCommentSchema } from "@shared/schema";
+import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema, insertTaskCommentSchema, insertWorkspaceInvitationSchema } from "@shared/schema";
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
