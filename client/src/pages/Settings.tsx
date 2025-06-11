@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslations } from "@/hooks/useTranslations";
 
 import {
   User as UserIcon,
@@ -48,6 +49,7 @@ interface UserPreferences {
 }
 
 export default function Settings() {
+  const { t } = useTranslations();
   const { data: user, isLoading } = useQuery<{ user: UserType }>({
     queryKey: ["/api/auth/me"],
   });

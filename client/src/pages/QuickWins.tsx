@@ -7,8 +7,10 @@ import { QuickWin, Activity } from "@shared/schema";
 import { format } from "date-fns";
 import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function QuickWins() {
+  const { t } = useTranslations();
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: quickWins, isLoading: quickWinsLoading } = useQuery<QuickWin[]>({

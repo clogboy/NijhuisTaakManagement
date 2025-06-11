@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Shield, Calendar } from "lucide-react";
 import { User as UserType } from "@shared/schema";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function Profile() {
+  const { t } = useTranslations();
   const { data: user, isLoading } = useQuery<{ user: UserType }>({
     queryKey: ["/api/auth/me"],
   });
