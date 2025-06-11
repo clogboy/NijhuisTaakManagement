@@ -39,16 +39,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Invalid login data" });
         }
 
-        // Check password field that exists in Supabase
-        const userPassword = user.password || user.password_hash || user.encrypted_password;
-        console.log('User has password:', !!userPassword);
+        // Check password hash field
+        console.log('User has password_hash:', !!user.password_hash);
         
-        if (!userPassword) {
-          console.log('No password field found for user');
+        if (!user.password_hash) {
+          console.log('No password_hash field found for user');
           return res.status(400).json({ message: "Invalid login data" });
         }
 
-        const isValid = await bcrypt.compare(password, userPassword);
+        const isValid = await bcrypt.compare(password, user.password_hash);
         console.log('Password valid:', isValid);
         
         if (!isValid) {
