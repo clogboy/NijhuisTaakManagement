@@ -106,7 +106,7 @@ export default function EmailModal({ open, onOpenChange, contacts }: EmailModalP
       <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-neutral-dark">
-            Send Email
+{t('email.sendEmail')}
           </DialogTitle>
         </DialogHeader>
 
@@ -114,7 +114,7 @@ export default function EmailModal({ open, onOpenChange, contacts }: EmailModalP
           {/* Contact Selection */}
           <div>
             <label className="block text-sm font-medium text-neutral-dark mb-3">
-              Select Recipients
+{t('email.selectRecipients')}
             </label>
             <div className="border border-gray-300 rounded-lg p-3 max-h-32 overflow-y-auto">
               {contacts.map((contact) => (
@@ -138,7 +138,7 @@ export default function EmailModal({ open, onOpenChange, contacts }: EmailModalP
           {selectedContacts.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-neutral-dark mb-2">
-                Selected Recipients ({selectedContacts.length})
+{t('email.selectedRecipients')} ({selectedContacts.length})
               </label>
               <div className="flex flex-wrap gap-2">
                 {selectedContacts.map((contact) => (
@@ -165,9 +165,9 @@ export default function EmailModal({ open, onOpenChange, contacts }: EmailModalP
                 name="subject"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Subject</FormLabel>
+                    <FormLabel>{t('email.subject')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter email subject" {...field} />
+                      <Input placeholder={t('email.enterSubject')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -179,10 +179,10 @@ export default function EmailModal({ open, onOpenChange, contacts }: EmailModalP
                 name="body"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Message</FormLabel>
+                    <FormLabel>{t('email.message')}</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Enter your message..." 
+                        placeholder={t('email.enterMessage')} 
                         rows={8}
                         {...field} 
                       />
@@ -198,14 +198,14 @@ export default function EmailModal({ open, onOpenChange, contacts }: EmailModalP
                   variant="outline" 
                   onClick={() => onOpenChange(false)}
                 >
-                  Cancel
+{t('common.cancel')}
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={sendEmailMutation.isPending || selectedContacts.length === 0}
                   className="bg-ms-blue hover:bg-ms-blue-dark text-white"
                 >
-                  {sendEmailMutation.isPending ? "Sending..." : "Send Email"}
+{sendEmailMutation.isPending ? t('common.loading') : t('email.sendEmail')}
                 </Button>
               </div>
             </form>
