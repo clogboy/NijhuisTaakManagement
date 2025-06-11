@@ -205,7 +205,8 @@ export default function Subtasks() {
               </CardTitle>
               <div className="flex gap-2 mb-2">
                 <Badge className={getTypeColor(subtask.type)}>
-                  {subtask.type === "quick_win" ? "Quick Win" : "Wegversperring"}
+                  {subtask.type === "quick_win" ? "Quick Win" : 
+                   subtask.type === "roadblock" ? "Wegversperring" : "Taak"}
                 </Badge>
                 <Badge className={getStatusColor(subtask.status)}>
                   {subtask.status === "pending" ? "In wachtrij" :

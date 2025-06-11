@@ -17,6 +17,17 @@ export default function Roadblocks() {
     queryKey: ["/api/roadblocks"],
   });
 
+  // Also fetch subtasks that are classified as roadblocks
+  const { data: subtasks = [] } = useQuery<any[]>({
+    queryKey: ["/api/subtasks"],
+  });
+
+  // Filter subtasks that are classified as roadblocks by participants
+  const roadblockSubtasks = subtasks.filter((subtask: any) => {
+    const participantTypes = subtask.participantTypes as Record<string, string> || {};
+    return subtask.type === "roadblock" || Object.values(participantTypes).includes("roadblock");
+  });
+
   const { data: activities } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
   });

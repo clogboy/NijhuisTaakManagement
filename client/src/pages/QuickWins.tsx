@@ -18,6 +18,17 @@ export default function QuickWins() {
     queryFn: () => fetch("/api/quickwins", { credentials: "include" }).then(res => res.json()),
   });
 
+  // Also fetch subtasks that are classified as quick wins
+  const { data: subtasks = [] } = useQuery<any[]>({
+    queryKey: ["/api/subtasks"],
+  });
+
+  // Filter subtasks that are classified as quick wins by participants
+  const quickWinSubtasks = subtasks.filter((subtask: any) => {
+    const participantTypes = subtask.participantTypes as Record<string, string> || {};
+    return subtask.type === "quick_win" || Object.values(participantTypes).includes("quick_win");
+  });
+
   const { data: activities } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
   });

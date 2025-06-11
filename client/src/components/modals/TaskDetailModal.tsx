@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -50,6 +50,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
   // Fetch comments
   const { data: comments = [] } = useQuery<TaskComment[]>({
     queryKey: ["/api/activities", activity.id, "comments"],
+    queryFn: () => fetch(`/api/activities/${activity.id}/comments`).then(res => res.json()),
     enabled: isOpen,
   });
 
@@ -169,7 +170,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className="flex-1">
@@ -192,7 +193,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[70vh]">
+        <div className="flex-1 overflow-hidden">
           {activity.description && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700">{activity.description}</p>
@@ -205,189 +206,197 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
               <TabsTrigger value="subtasks">Subtaken</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="comments" className="flex-1 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    Opmerking toevoegen
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Textarea
-                    placeholder="Voeg een opmerking toe..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows={3}
-                  />
-                  <Button 
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim() || addCommentMutation.isPending}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Opmerking toevoegen
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-3">
-                {comments.map((comment) => (
-                  <Card key={comment.id}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium text-sm">User</span>
-                        <span className="text-xs text-gray-500">
-                          {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                        </span>
-                      </div>
-                      <p className="text-sm">{comment.comment}</p>
+            <TabsContent value="comments" className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5" />
+                        Opmerking toevoegen
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Textarea
+                        placeholder="Voeg een opmerking toe..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        rows={3}
+                      />
+                      <Button 
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim() || addCommentMutation.isPending}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Opmerking toevoegen
+                      </Button>
                     </CardContent>
                   </Card>
-                ))}
-                {comments.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    Nog geen opmerkingen. Voeg de eerste toe!
+
+                  <div className="space-y-3">
+                    {comments.map((comment) => (
+                      <Card key={comment.id}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-sm">User</span>
+                            <span className="text-xs text-gray-500">
+                              {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                            </span>
+                          </div>
+                          <p className="text-sm">{comment.comment}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {comments.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        Nog geen opmerkingen. Voeg de eerste toe!
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="subtasks" className="flex-1 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ListChecks className="h-5 w-5" />
-                    Subtaak toevoegen
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Maak subtaken die deelnemers kunnen markeren als taken, quick wins of wegversperringen.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Input
-                    placeholder="Subtaak titel..."
-                    value={newSubtask.title}
-                    onChange={(e) => setNewSubtask({ ...newSubtask, title: e.target.value })}
-                  />
-                  <Textarea
-                    placeholder="Beschrijving..."
-                    value={newSubtask.description}
-                    onChange={(e) => setNewSubtask({ ...newSubtask, description: e.target.value })}
-                    rows={2}
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-sm font-medium">Prioriteit</label>
-                      <select
-                        value={newSubtask.priority}
-                        onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as "low" | "medium" | "high" })}
-                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                      >
-                        <option value="low">Laag</option>
-                        <option value="medium">Gemiddeld</option>
-                        <option value="high">Hoog</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Vervaldatum</label>
+            <TabsContent value="subtasks" className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ListChecks className="h-5 w-5" />
+                        Subtaak toevoegen
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Maak subtaken die deelnemers kunnen markeren als taken, quick wins of wegversperringen.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                       <Input
-                        type="date"
-                        value={newSubtask.dueDate}
-                        onChange={(e) => setNewSubtask({ ...newSubtask, dueDate: e.target.value })}
-                        className="mt-1"
+                        placeholder="Subtaak titel..."
+                        value={newSubtask.title}
+                        onChange={(e) => setNewSubtask({ ...newSubtask, title: e.target.value })}
                       />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Deelnemers</label>
-                    <div className="space-y-2">
-                      {contacts.map((contact) => (
-                        <div key={contact.id} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`contact-${contact.id}`}
-                            checked={newSubtask.participants.includes(contact.email)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewSubtask({
-                                  ...newSubtask,
-                                  participants: [...newSubtask.participants, contact.email]
-                                });
-                              } else {
-                                setNewSubtask({
-                                  ...newSubtask,
-                                  participants: newSubtask.participants.filter(p => p !== contact.email)
-                                });
-                              }
-                            }}
-                            className="rounded"
+                      <Textarea
+                        placeholder="Beschrijving..."
+                        value={newSubtask.description}
+                        onChange={(e) => setNewSubtask({ ...newSubtask, description: e.target.value })}
+                        rows={2}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-sm font-medium">Prioriteit</label>
+                          <select
+                            value={newSubtask.priority}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as "low" | "medium" | "high" })}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          >
+                            <option value="low">Laag</option>
+                            <option value="medium">Gemiddeld</option>
+                            <option value="high">Hoog</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Vervaldatum</label>
+                          <Input
+                            type="date"
+                            value={newSubtask.dueDate}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, dueDate: e.target.value })}
+                            className="mt-1"
                           />
-                          <label htmlFor={`contact-${contact.id}`} className="text-sm">
-                            {contact.name} ({contact.email})
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={handleAddSubtask}
-                    disabled={!newSubtask.title.trim() || addSubtaskMutation.isPending}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Subtaak toevoegen
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-3">
-                {subtasks.map((subtask) => (
-                  <Card key={subtask.id}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {getTaskTypeIcon(subtask.type)}
-                          <h4 className="font-medium">{subtask.title}</h4>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge className={getPriorityColor(subtask.priority)}>
-                            {subtask.priority}
-                          </Badge>
-                          <Badge className={getStatusColor(subtask.status)}>
-                            {subtask.status}
-                          </Badge>
                         </div>
                       </div>
-                      {subtask.description && (
-                        <p className="text-sm text-gray-600 mb-2">{subtask.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        {subtask.participants.length > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            <span>{subtask.participants.length} deelnemers</span>
-                          </div>
-                        )}
-                        {subtask.dueDate && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>Vervalt {format(new Date(subtask.dueDate), "d MMM")}</span>
-                          </div>
-                        )}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Deelnemers</label>
+                        <div className="space-y-2">
+                          {contacts.map((contact) => (
+                            <div key={contact.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`contact-${contact.id}`}
+                                checked={newSubtask.participants.includes(contact.email)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewSubtask({
+                                      ...newSubtask,
+                                      participants: [...newSubtask.participants, contact.email]
+                                    });
+                                  } else {
+                                    setNewSubtask({
+                                      ...newSubtask,
+                                      participants: newSubtask.participants.filter(p => p !== contact.email)
+                                    });
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <label htmlFor={`contact-${contact.id}`} className="text-sm">
+                                {contact.name} ({contact.email})
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
+                      <Button 
+                        onClick={handleAddSubtask}
+                        disabled={!newSubtask.title.trim() || addSubtaskMutation.isPending}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Subtaak toevoegen
+                      </Button>
                     </CardContent>
                   </Card>
-                ))}
-                {subtasks.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    Nog geen subtaken. Voeg er een toe om te beginnen!
+
+                  <div className="space-y-3">
+                    {subtasks.map((subtask) => (
+                      <Card key={subtask.id}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {getTaskTypeIcon(subtask.type)}
+                              <h4 className="font-medium">{subtask.title}</h4>
+                            </div>
+                            <div className="flex gap-2">
+                              <Badge className={getPriorityColor(subtask.priority)}>
+                                {subtask.priority}
+                              </Badge>
+                              <Badge className={getStatusColor(subtask.status)}>
+                                {subtask.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          {subtask.description && (
+                            <p className="text-sm text-gray-600 mb-2">{subtask.description}</p>
+                          )}
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            {subtask.participants.length > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                <span>{subtask.participants.length} deelnemers</span>
+                              </div>
+                            )}
+                            {subtask.dueDate && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>Vervalt {format(new Date(subtask.dueDate), "d MMM")}</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {subtasks.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        Nog geen subtaken. Voeg er een toe om te beginnen!
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              </ScrollArea>
             </TabsContent>
           </Tabs>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
