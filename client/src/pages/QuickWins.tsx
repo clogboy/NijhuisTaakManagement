@@ -66,10 +66,10 @@ export default function QuickWins() {
           <div>
             <h1 className="text-2xl font-bold text-neutral-dark dark:text-white flex items-center gap-2">
               <Trophy className="h-6 w-6 text-yellow-500" />
-              Quick Wins Dashboard
+{t('quickWins.title')}
             </h1>
             <p className="text-neutral-medium dark:text-gray-400 mt-1">
-              View quick wins associated with your tasks. To add new quick wins, open a task and use the Quick Wins tab.
+{t('quickWins.description')}
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function QuickWins() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-medium h-4 w-4" />
           <Input
-            placeholder="Search quick wins..."
+placeholder={t('quickWins.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 micro-focus-ring"
@@ -92,11 +92,10 @@ export default function QuickWins() {
               <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
               <div>
                 <h3 className="font-medium text-yellow-800 dark:text-yellow-200">
-                  Quick Wins are now Task-Specific
+{t('quickWins.taskSpecific')}
                 </h3>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  Quick wins are now managed within individual tasks. This dashboard shows all quick wins across your tasks. 
-                  To create new quick wins, go to Activities and open any task's detail view.
+{t('quickWins.taskSpecificDescription')}
                 </p>
               </div>
             </div>
@@ -105,18 +104,18 @@ export default function QuickWins() {
 
         {quickWinsLoading ? (
           <div className="text-center py-12">
-            <p className="text-neutral-medium">Loading quick wins...</p>
+            <p className="text-neutral-medium">{t('common.loading')}</p>
           </div>
         ) : filteredQuickWins.length === 0 ? (
           <div className="text-center py-12">
             <Trophy className="h-12 w-12 text-neutral-light mx-auto mb-4" />
             <p className="text-neutral-medium text-lg mb-2">
-              {quickWins?.length === 0 ? "No quick wins yet" : "No quick wins match your search"}
+{quickWins?.length === 0 ? t('quickWins.noQuickWins') : t('quickWins.noMatches')}
             </p>
             <p className="text-neutral-medium">
-              {quickWins?.length === 0 
-                ? "Add quick wins by opening any task in the Activities section" 
-                : "Try adjusting your search criteria"
+{quickWins?.length === 0 
+                ? t('quickWins.addInstructions') 
+                : t('quickWins.adjustSearch')
               }
             </p>
           </div>
