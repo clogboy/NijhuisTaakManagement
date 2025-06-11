@@ -114,20 +114,7 @@ export interface IStorage {
   deleteMoodReminder(id: number): Promise<void>;
   getMoodBasedTaskSuggestions(userId: number, currentMood: string, energy: number, focus: number): Promise<Activity[]>;
 
-  // Workspace Invitations
-  getWorkspaceInvitations(inviterId: number): Promise<WorkspaceInvitation[]>;
-  getWorkspaceInvitationByToken(token: string): Promise<WorkspaceInvitation | undefined>;
-  createWorkspaceInvitation(invitation: InsertWorkspaceInvitation & { inviterId: number }): Promise<WorkspaceInvitation>;
-  updateWorkspaceInvitation(id: number, invitation: Partial<InsertWorkspaceInvitation>): Promise<WorkspaceInvitation>;
-  deleteWorkspaceInvitation(id: number): Promise<void>;
 
-  // Workspace Access
-  getWorkspaceAccess(ownerId: number): Promise<WorkspaceAccess[]>;
-  getGuestAccess(guestId: number): Promise<WorkspaceAccess[]>;
-  createWorkspaceAccess(access: InsertWorkspaceAccess): Promise<WorkspaceAccess>;
-  updateWorkspaceAccess(id: number, access: Partial<InsertWorkspaceAccess>): Promise<WorkspaceAccess>;
-  deleteWorkspaceAccess(id: number): Promise<void>;
-  hasWorkspaceAccess(guestId: number, ownerId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {

@@ -241,16 +241,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to delete this contact" });
       }
       
-      // Try Supabase first
+      // Delete from both Supabase and local storage to maintain sync
       try {
         await supabaseService.deleteContact(contactId);
         console.log(`[API] Successfully deleted contact from Supabase: ${contactId}`);
+        
+        // Also delete from local storage to maintain sync
+        await storage.deleteContact(contactId);
+        console.log(`[API] Successfully deleted contact from local storage: ${contactId}`);
+        
         res.json({ message: "Contact deleted successfully" });
         return;
       } catch (supabaseError) {
-        console.warn("[API] Supabase deletion failed, falling back to local storage:", supabaseError);
+        console.warn("[API] Supabase deletion failed, falling back to local storage only:", supabaseError);
         
-        // Fallback to local storage
+        // Fallback to local storage only
         await storage.deleteContact(contactId);
         console.log(`[API] Deleted contact from local storage: ${contactId}`);
         res.json({ message: "Contact deleted successfully" });
