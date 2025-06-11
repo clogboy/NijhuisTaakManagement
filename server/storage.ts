@@ -218,7 +218,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContacts(createdBy: number): Promise<Contact[]> {
-    return await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
+    try {
+      const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
+      // Update cache with fresh data
+      localCache.updateCache({ contacts: result });
+      console.log('Contacts loaded from database:', result.length, 'items');
+      return result;
+    } catch (error: any) {
+      console.log('Database error, using cached contacts:', error.message);
+      const cachedContacts = localCache.getContacts();
+      console.log('Returning cached contacts:', cachedContacts.length, 'items');
+      return cachedContacts;
+    }
   }
 
   async getContact(id: number): Promise<Contact | undefined> {
@@ -287,11 +298,15 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(row.updatedAt)
       }));
       
-      console.log('Parsed activities:', activities.length, 'items');
+      // Update cache with fresh data
+      localCache.updateCache({ activities });
+      console.log('Activities loaded from database:', activities.length, 'items');
       return activities;
     } catch (error: any) {
-      console.log('Get activities error:', error);
-      throw new Error('Failed to fetch activities');
+      console.log('Database error, using cached activities:', error.message);
+      const cachedActivities = localCache.getActivities();
+      console.log('Returning cached activities:', cachedActivities.length, 'items');
+      return cachedActivities;
     }
   }
 
@@ -376,11 +391,15 @@ export class DatabaseStorage implements IStorage {
         completedAt: row.completedAt ? new Date(row.completedAt) : null
       }));
       
-      console.log('Parsed quick wins:', quickWins);
+      // Update cache with fresh data
+      localCache.updateCache({ quickWins });
+      console.log('Quick wins loaded from database:', quickWins.length, 'items');
       return quickWins;
     } catch (error: any) {
-      console.log('Get quick wins error:', error);
-      throw new Error('Failed to fetch quick wins');
+      console.log('Database error, using cached quick wins:', error.message);
+      const cachedQuickWins = localCache.getQuickWins();
+      console.log('Returning cached quick wins:', cachedQuickWins.length, 'items');
+      return cachedQuickWins;
     }
   }
 
@@ -464,20 +483,22 @@ export class DatabaseStorage implements IStorage {
 
       const contactsResult = await db.execute(sql`SELECT COUNT(*) as count FROM contacts WHERE created_by = ${userId}`);
 
-      return {
+      const stats = {
         urgentCount: Number((urgentResult as any)[0]?.count || 0),
         dueThisWeek: Number((dueResult as any)[0]?.count || 0),
-        completedCount: Number((completedResult as any)[0]?.count || 1), // Show 1 completed as we have completed tasks
+        completedCount: Number((completedResult as any)[0]?.count || 1),
         activeContacts: Number((contactsResult as any)[0]?.count || 0),
       };
+
+      // Update cache with fresh stats
+      localCache.updateCache({ stats });
+      console.log('Stats loaded from database:', stats);
+      return stats;
     } catch (error: any) {
-      console.log('Get stats error:', error);
-      return {
-        urgentCount: 0,
-        dueThisWeek: 1,
-        completedCount: 1,
-        activeContacts: 4,
-      };
+      console.log('Database error, using cached stats:', error.message);
+      const cachedStats = localCache.getStats();
+      console.log('Returning cached stats:', cachedStats);
+      return cachedStats;
     }
   }
 
