@@ -29,7 +29,7 @@ export default function Profile() {
     return (
       <div className="flex-1 overflow-y-auto p-6">
         <div className="text-center">
-          <p className="text-gray-500">Unable to load profile information.</p>
+          <p className="text-gray-500">{t('profile.errorLoading')}</p>
         </div>
       </div>
     );
@@ -38,13 +38,13 @@ export default function Profile() {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-neutral-dark mb-6">Profile</h1>
+        <h1 className="text-2xl font-bold text-neutral-dark mb-6">{t('profile.title')}</h1>
         
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <User className="mr-2 h-5 w-5" />
-              Account Information
+              {t('profile.personalInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
