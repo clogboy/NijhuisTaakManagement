@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<translations>
+  <!-- Navigation -->
+  <nav>
+    <dashboard>Dashboard</dashboard>
+    <activities>Activiteiten</activities>
+    <contacts>Contacten</contacts>
+    <agenda>Agenda</agenda>
+    <timeBlocking>Tijdblokken</timeBlocking>
+    <quickWins>Quick Wins</quickWins>
+    <roadblocks>Wegversperringen</roadblocks>
+    <profile>Profiel</profile>
+    <settings>Instellingen</settings>
+  </nav>
+
+  <!-- Dashboard -->
+  <dashboard>
+    <title>Dashboard</title>
+    <welcomeBack>Welkom terug</welcomeBack>
+    <todaysOverview>Overzicht van vandaag</todaysOverview>
+    <urgentTasks>Urgente taken</urgentTasks>
+    <dueThisWeek>Deze week vervallen</dueThisWeek>
+    <completedTasks>Voltooide taken</completedTasks>
+    <activeContacts>Actieve contacten</activeContacts>
+    <recentActivities>Recente activiteiten</recentActivities>
+    <quickActions>Snelle acties</quickActions>
+    <viewAll>Alles bekijken</viewAll>
+    <noActivities>Geen activiteiten gevonden</noActivities>
+    <noContacts>Geen contacten gevonden</noContacts>
+    <addActivity>Activiteit toevoegen</addActivity>
+    <addContact>Contact toevoegen</addContact>
+  </dashboard>
+
+  <!-- Activities -->
+  <activities>
+    <title>Activiteiten</title>
+    <searchPlaceholder>Zoek activiteiten...</searchPlaceholder>
+    <addNew>Nieuwe activiteit toevoegen</addNew>
+    <filterBy>Filteren op</filterBy>
+    <all>Alle</all>
+    <active>Actief</active>
+    <completed>Voltooid</completed>
+    <priority>Prioriteit</priority>
+    <status>Status</status>
+    <dueDate>Vervaldatum</dueDate>
+    <assignedTo>Toegewezen aan</assignedTo>
+    <noActivitiesFound>Geen activiteiten gevonden</noActivitiesFound>
+    <createFirst>Maak je eerste activiteit aan om te beginnen</createFirst>
+    <formTitle>Activiteit titel</formTitle>
+    <formDescription>Beschrijving</formDescription>
+    <formPriority>Prioriteit</formPriority>
+    <formStatus>Status</formStatus>
+    <formDueDate>Vervaldatum</formDueDate>
+    <formParticipants>Deelnemers</formParticipants>
+    <formStatusTags>Status labels</formStatusTags>
+    <save>Opslaan</save>
+    <cancel>Annuleren</cancel>
+    <edit>Bewerken</edit>
+    <delete>Verwijderen</delete>
+    <deleteConfirm>Weet je zeker dat je deze activiteit wilt verwijderen?</deleteConfirm>
+    <deleteSuccess>Activiteit succesvol verwijderd</deleteSuccess>
+    <createSuccess>Activiteit succesvol aangemaakt</createSuccess>
+    <updateSuccess>Activiteit succesvol bijgewerkt</updateSuccess>
+  </activities>
+
+  <!-- Contacts -->
+  <contacts>
+    <title>Contacten</title>
+    <searchPlaceholder>Zoek contacten...</searchPlaceholder>
+    <addNew>Nieuw contact toevoegen</addNew>
+    <noContactsFound>Geen contacten gevonden</noContactsFound>
+    <createFirst>Voeg je eerste contact toe om te beginnen</createFirst>
+    <formName>Naam</formName>
+    <formEmail>E-mail</formEmail>
+    <formPhone>Telefoon</formPhone>
+    <formCompany>Bedrijf</formCompany>
+    <formPosition>Functie</formPosition>
+    <formNotes>Notities</formNotes>
+    <save>Opslaan</save>
+    <cancel>Annuleren</cancel>
+    <edit>Bewerken</edit>
+    <delete>Verwijderen</delete>
+    <deleteConfirm>Weet je zeker dat je dit contact wilt verwijderen?</deleteConfirm>
+    <deleteSuccess>Contact succesvol verwijderd</deleteSuccess>
+    <createSuccess>Contact succesvol aangemaakt</createSuccess>
+    <updateSuccess>Contact succesvol bijgewerkt</updateSuccess>
+  </contacts>
+
+  <!-- Agenda -->
+  <agenda>
+    <title>Agenda</title>
+    <generateAgenda>Agenda genereren</generateAgenda>
+    <maxTaskSwitches>Max taakwisselingen</maxTaskSwitches>
+    <todaysEthos>Ethos van vandaag</todaysEthos>
+    <aiRecommendations>AI Aanbevelingen</aiRecommendations>
+    <scheduledActivities>Geplande activiteiten</scheduledActivities>
+    <eisenhowerMatrix>Eisenhower Matrix</eisenhowerMatrix>
+    <urgentImportant>Urgent &amp; Belangrijk</urgentImportant>
+    <importantNotUrgent>Belangrijk maar niet urgent</importantNotUrgent>
+    <urgentNotImportant>Urgent maar niet belangrijk</urgentNotImportant>
+    <neitherUrgentNorImportant>Niet urgent en niet belangrijk</neitherUrgentNorImportant>
+    <doFirst>Doe eerst</doFirst>
+    <schedule>Plannen</schedule>
+    <delegate>Delegeren</delegate>
+    <eliminate>Elimineren</eliminate>
+    <dailyStrategy>Dagelijkse strategie</dailyStrategy>
+    <taskSwitchOptimization>Taakwissel optimalisatie</taskSwitchOptimization>
+    <estimatedTaskSwitches>Geschatte taakwisselingen</estimatedTaskSwitches>
+    <noActivitiesInQuadrant>Geen activiteiten in dit kwadrant</noActivitiesInQuadrant>
+    <aiServiceUnavailable>AI service momenteel niet beschikbaar</aiServiceUnavailable>
+    <aiQuotaExceeded>De OpenAI API sleutels hebben hun quotum overschreden. Controleer je API factuurstatus of verstrek bijgewerkte sleutels voor AI-aangedreven agenda generatie en Eisenhower matrix categorisatie.</aiQuotaExceeded>
+    <eisenhowerUnavailable>Eisenhower Matrix niet beschikbaar</eisenhowerUnavailable>
+    <aiCategorizationUnavailable>AI categorisatie is momenteel niet beschikbaar vanwege API quotum limieten. Je activiteiten staan hieronder zonder prioritering.</aiCategorizationUnavailable>
+    <optimizationUnavailable>Optimalisatie analyse niet beschikbaar</optimizationUnavailable>
+  </agenda>
+
+  <!-- Time Blocking -->
+  <timeBlocking>
+    <title>Tijdblokken</title>
+    <searchPlaceholder>Zoek tijdblokken...</searchPlaceholder>
+    <autoSchedule>Automatisch plannen</autoSchedule>
+    <addNew>Nieuw tijdblok toevoegen</addNew>
+    <microsoftCalendar>Microsoft Agenda</microsoftCalendar>
+    <syncCalendar>Agenda synchroniseren</syncCalendar>
+    <checkConflicts>Conflicten controleren</checkConflicts>
+    <workingHours>Werktijden</workingHours>
+    <noTimeBlocks>Geen tijdblokken gevonden</noTimeBlocks>
+    <createFirst>Maak je eerste tijdblok aan om te beginnen</createFirst>
+    <formTitle>Tijdblok titel</formTitle>
+    <formDescription>Beschrijving</formDescription>
+    <formStartTime>Starttijd</formStartTime>
+    <formEndTime>Eindtijd</formEndTime>
+    <formColor>Kleur</formColor>
+    <formActivity>Activiteit</formActivity>
+    <save>Opslaan</save>
+    <cancel>Annuleren</cancel>
+    <edit>Bewerken</edit>
+    <delete>Verwijderen</delete>
+    <deleteConfirm>Weet je zeker dat je dit tijdblok wilt verwijderen?</deleteConfirm>
+    <deleteSuccess>Tijdblok succesvol verwijderd</deleteSuccess>
+    <createSuccess>Tijdblok succesvol aangemaakt</createSuccess>
+    <updateSuccess>Tijdblok succesvol bijgewerkt</updateSuccess>
+  </timeBlocking>
+
+  <!-- Quick Wins -->
+  <quickWins>
+    <title>Quick Wins</title>
+    <searchPlaceholder>Zoek quick wins...</searchPlaceholder>
+    <taskSpecific>Quick wins zijn nu taakspecifiek</taskSpecific>
+    <taskSpecificDescription>Quick wins worden nu beheerd binnen individuele taken. Dit dashboard toont alle quick wins van je taken. Om nieuwe quick wins te rapporteren, ga naar Activiteiten en open de detailweergave van een taak.</taskSpecificDescription>
+    <noQuickWins>Geen quick wins gevonden</noQuickWins>
+    <loadingQuickWins>Quick wins laden...</loadingQuickWins>
+    <relatedActivity>Gerelateerde activiteit</relatedActivity>
+    <completed>Voltooid</completed>
+    <pending>In behandeling</pending>
+  </quickWins>
+
+  <!-- Roadblocks -->
+  <roadblocks>
+    <title>Wegversperringen</title>
+    <searchPlaceholder>Zoek wegversperringen...</searchPlaceholder>
+    <taskSpecific>Wegversperringen zijn nu taakspecifiek</taskSpecific>
+    <taskSpecificDescription>Wegversperringen worden nu beheerd binnen individuele taken. Dit dashboard toont alle wegversperringen van je taken. Om nieuwe wegversperringen te rapporteren, ga naar Activiteiten en open de detailweergave van een taak.</taskSpecificDescription>
+    <noRoadblocks>Geen wegversperringen gevonden</noRoadblocks>
+    <loadingRoadblocks>Wegversperringen laden...</loadingRoadblocks>
+    <relatedActivity>Gerelateerde activiteit</relatedActivity>
+    <resolved>Opgelost</resolved>
+    <open>Open</open>
+    <inProgress>In behandeling</inProgress>
+  </roadblocks>
+
+  <!-- Profile -->
+  <profile>
+    <title>Profiel</title>
+    <personalInfo>Persoonlijke informatie</personalInfo>
+    <preferences>Voorkeuren</preferences>
+    <name>Naam</name>
+    <email>E-mail</email>
+    <role>Rol</role>
+    <save>Opslaan</save>
+    <updateSuccess>Profiel succesvol bijgewerkt</updateSuccess>
+  </profile>
+
+  <!-- Settings -->
+  <settings>
+    <title>Instellingen</title>
+    <general>Algemeen</general>
+    <notifications>Meldingen</notifications>
+    <api>API</api>
+    <theme>Thema</theme>
+    <language>Taal</language>
+    <timezone>Tijdzone</timezone>
+    <save>Opslaan</save>
+    <updateSuccess>Instellingen succesvol bijgewerkt</updateSuccess>
+  </settings>
+
+  <!-- Common -->
+  <common>
+    <loading>Laden...</loading>
+    <error>Fout</error>
+    <success>Succes</success>
+    <warning>Waarschuwing</warning>
+    <info>Informatie</info>
+    <confirm>Bevestigen</confirm>
+    <yes>Ja</yes>
+    <no>Nee</no>
+    <ok>OK</ok>
+    <close>Sluiten</close>
+    <back>Terug</back>
+    <next>Volgende</next>
+    <previous>Vorige</previous>
+    <search>Zoeken</search>
+    <filter>Filteren</filter>
+    <sort>Sorteren</sort>
+    <refresh>Verversen</refresh>
+    <export>Exporteren</export>
+    <import>Importeren</import>
+    <print>Afdrukken</print>
+    <share>Delen</share>
+    <copy>Kopiëren</copy>
+    <paste>Plakken</paste>
+    <cut>Knippen</cut>
+    <undo>Ongedaan maken</undo>
+    <redo>Opnieuw</redo>
+    <required>Verplicht</required>
+    <optional>Optioneel</optional>
+    <today>Vandaag</today>
+    <yesterday>Gisteren</yesterday>
+    <tomorrow>Morgen</tomorrow>
+    <thisWeek>Deze week</thisWeek>
+    <nextWeek>Volgende week</nextWeek>
+    <thisMonth>Deze maand</thisMonth>
+    <nextMonth>Volgende maand</nextMonth>
+    <low>Laag</low>
+    <normal>Normaal</normal>
+    <high>Hoog</high>
+    <urgent>Urgent</urgent>
+    <due>Vervalt</due>
+  </common>
+
+  <!-- Login -->
+  <login>
+    <title>Inloggen</title>
+    <email>E-mail</email>
+    <password>Wachtwoord</password>
+    <rememberMe>Onthoud mij</rememberMe>
+    <forgotPassword>Wachtwoord vergeten?</forgotPassword>
+    <signIn>Inloggen</signIn>
+    <signUp>Registreren</signUp>
+    <noAccount>Geen account?</noAccount>
+    <haveAccount>Al een account?</haveAccount>
+    <microsoftSignIn>Inloggen met Microsoft</microsoftSignIn>
+  </login>
+</translations>
