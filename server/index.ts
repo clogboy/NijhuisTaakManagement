@@ -3,6 +3,16 @@ import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { dailyScheduler } from "./scheduler";
+import { User } from "@shared/schema";
+
+// Extend Express Request type to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
 
 const app = express();
 app.use(express.json());
