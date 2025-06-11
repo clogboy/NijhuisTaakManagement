@@ -65,16 +65,16 @@ export default function Activities() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities", selectedActivity?.id, "logs"] });
       toast({
-        title: "Success",
-        description: "Log entry added successfully",
+        title: t('common.success'),
+        description: t('activities.logEntryAdded'),
       });
       setLogEntry("");
       setLogDate(new Date().toISOString().split('T')[0]);
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to add log entry",
+        title: t('common.error'),
+        description: error.message || t('activities.logEntryFailed'),
         variant: "destructive",
       });
     },
