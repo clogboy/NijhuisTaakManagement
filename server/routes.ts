@@ -346,6 +346,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QuickWins routes
+  app.get("/api/quickwins", requireAuth, async (req: any, res) => {
+    try {
+      const quickWins = await storage.getQuickWins(req.user.id);
+      res.json(quickWins);
+    } catch (error) {
+      console.error("Get quick wins error:", error);
+      res.status(500).json({ message: "Failed to fetch quick wins" });
+    }
+  });
+
   // Task Comments routes
   app.get("/api/activities/:id/comments", requireAuth, async (req: any, res) => {
     try {
