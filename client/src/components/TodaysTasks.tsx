@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction, ArrowUpDown, AlertTriangle, Play, Pause, Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Activity, Subtask } from "@shared/schema";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import { TaskProgress } from "@/components/TaskProgress";
@@ -47,6 +48,8 @@ export default function TodaysTasks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/daily-task-completions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       toast({
         title: "Task updated",
         description: "Task completion status updated successfully",
@@ -61,10 +64,33 @@ export default function TodaysTasks() {
     },
   });
 
-  // Get user's assigned subtasks from active activities
+  const updateTaskStatus = useMutation({
+    mutationFn: async ({ taskId, status, isSubtask }: { taskId: number; status: string; isSubtask: boolean }) => {
+      const endpoint = isSubtask ? `/api/subtasks/${taskId}/status` : `/api/activities/${taskId}/status`;
+      return apiRequest(endpoint, "PATCH", { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      toast({
+        title: "Status updated",
+        description: "Task status updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update task status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Get user's assigned subtasks from active activities and exclude completed
   const userEmail = currentUser?.user?.email;
   const assignedSubtasks = subtasks.filter(subtask => {
     if (!userEmail || !subtask.participants.includes(userEmail)) return false;
+    if (subtask.status === "completed") return false;
     
     // Find the linked activity
     const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
@@ -120,10 +146,11 @@ export default function TodaysTasks() {
 
   const hasOverdueWarning = overdueSubtasks.length > 0;
 
-  // Filter activities for today (due today or in progress)
+  // Filter activities for today (due today or in progress) and exclude completed
   const activitiesToday = activities.filter(activity => {
+    if (activity.status === "completed") return false;
     const dueDate = activity.dueDate ? format(new Date(activity.dueDate), "yyyy-MM-dd") : null;
-    return dueDate === todayString || activity.status === "in-progress";
+    return dueDate === todayString || activity.status === "in_progress";
   }).sort((a, b) => {
     // Eisenhower Matrix priority order
     const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -298,28 +325,85 @@ export default function TodaysTasks() {
               const isCompleted = completionMap[task.id] || false;
               
               return (
-                <TaskProgress
+                <div
                   key={`${task.isSubtask ? 'subtask' : 'activity'}-${task.id}`}
-                  taskId={task.id}
-                  title={task.title}
-                  status={task.status}
-                  taskType={task.taskType}
-                  isCompleted={isCompleted}
-                  onToggleComplete={(taskId, completed) => {
-                    toggleTaskCompletion.mutate({
-                      activityId: taskId,
-                      completed,
-                    });
-                  }}
-                  onNavigate={!task.isSubtask ? () => {
-                    setSelectedTask(task);
-                    setIsTaskDetailModalOpen(true);
-                  } : undefined}
-                  showProgress={true}
-                  animated={true}
-                  size="md"
-                  className="transition-all duration-300"
-                />
+                  className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Checkbox
+                    checked={isCompleted}
+                    onCheckedChange={(checked) => {
+                      toggleTaskCompletion.mutate({
+                        activityId: task.id,
+                        completed: !!checked,
+                      });
+                    }}
+                    className="flex-shrink-0"
+                  />
+                  
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {task.taskType === 'quick_win' && <Zap className="h-4 w-4 text-yellow-500" />}
+                      {task.taskType === 'roadblock' && <Construction className="h-4 w-4 text-red-500" />}
+                      {task.taskType === 'task' && <Target className="h-4 w-4 text-blue-500" />}
+                      <h3 className="font-medium text-sm truncate">{task.title}</h3>
+                      {task.priority === 'urgent' && (
+                        <Badge variant="destructive" className="text-xs">Urgent</Badge>
+                      )}
+                    </div>
+                    {task.dueDate && (
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(task.dueDate), "MMM d")}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Select
+                      value={task.status}
+                      onValueChange={(status) => {
+                        updateTaskStatus.mutate({
+                          taskId: task.id,
+                          status,
+                          isSubtask: task.isSubtask
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-32 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {task.isSubtask ? (
+                          <>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </>
+                        ) : (
+                          <>
+                            <SelectItem value="planned">Planned</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    
+                    {!task.isSubtask && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTask(task);
+                          setIsTaskDetailModalOpen(true);
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               );
             })}
             

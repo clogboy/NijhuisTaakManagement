@@ -679,14 +679,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Manual progress update endpoint
-  app.patch("/api/activities/:id/progress", requireAuth, async (req: any, res) => {
+  // Manual status update endpoint for activities
+  app.patch("/api/activities/:id/status", requireAuth, async (req: any, res) => {
     try {
       const activityId = parseInt(req.params.id);
-      const { progress } = req.body;
+      const { status } = req.body;
 
-      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
-        return res.status(400).json({ error: "Progress must be a number between 0 and 100" });
+      const validStatuses = ['planned', 'in_progress', 'completed'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
       }
 
       const activity = await storage.getActivity(activityId);
@@ -698,27 +699,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to update this activity" });
       }
 
-      // Update activity with new progress
-      const updatedActivity = await storage.updateActivity(activityId, {
-        progress: progress,
-        status: progress === 100 ? 'completed' : (progress === 0 ? 'active' : 'in_progress'),
-        completedDate: progress === 100 ? new Date() : null
-      });
-
+      const updatedActivity = await storage.updateActivity(activityId, { status });
       res.json({ success: true, activity: updatedActivity });
     } catch (error) {
-      console.error("Error updating activity progress:", error);
-      res.status(500).json({ error: "Failed to update progress" });
+      console.error("Error updating activity status:", error);
+      res.status(500).json({ error: "Failed to update status" });
     }
   });
 
-  app.patch("/api/subtasks/:id/progress", requireAuth, async (req: any, res) => {
+  app.patch("/api/subtasks/:id/status", requireAuth, async (req: any, res) => {
     try {
       const subtaskId = parseInt(req.params.id);
-      const { progress } = req.body;
+      const { status } = req.body;
 
-      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
-        return res.status(400).json({ error: "Progress must be a number between 0 and 100" });
+      const validStatuses = ['pending', 'in_progress', 'completed', 'resolved'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
       }
 
       const subtask = await storage.getSubtask(subtaskId);
@@ -731,17 +727,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to update this subtask" });
       }
 
-      // Update subtask with new progress
       const updatedSubtask = await storage.updateSubtask(subtaskId, {
-        progress: progress,
-        status: progress === 100 ? 'completed' : (progress === 0 ? 'active' : 'in_progress'),
-        completedDate: progress === 100 ? new Date() : null
+        status,
+        completedDate: status === 'completed' ? new Date() : null
       });
 
       res.json({ success: true, subtask: updatedSubtask });
     } catch (error) {
-      console.error("Error updating subtask progress:", error);
-      res.status(500).json({ error: "Failed to update progress" });
+      console.error("Error updating subtask status:", error);
+      res.status(500).json({ error: "Failed to update status" });
     }
   });
 
