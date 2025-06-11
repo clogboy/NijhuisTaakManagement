@@ -114,7 +114,22 @@ export interface IStorage {
   deleteMoodReminder(id: number): Promise<void>;
   getMoodBasedTaskSuggestions(userId: number, currentMood: string, energy: number, focus: number): Promise<Activity[]>;
 
+  // BimCollab Integration
+  getBimcollabProjects(userId: number): Promise<BimcollabProject[]>;
+  getBimcollabIssues(projectId: string): Promise<BimcollabIssue[]>;
+  createBimcollabProject(project: InsertBimcollabProject & { userId: number }): Promise<BimcollabProject>;
+  createBimcollabIssue(issue: InsertBimcollabIssue): Promise<BimcollabIssue>;
 
+  // Teams Integration
+  getTeamsBoards(userId: number): Promise<TeamsBoard[]>;
+  getTeamsCards(boardId: string): Promise<TeamsCard[]>;
+  createTeamsBoard(board: InsertTeamsBoard & { userId: number }): Promise<TeamsBoard>;
+  createTeamsCard(card: InsertTeamsCard): Promise<TeamsCard>;
+
+  // Integration Settings
+  getIntegrationSettings(userId: number): Promise<IntegrationSettings | undefined>;
+  createIntegrationSettings(settings: InsertIntegrationSettings & { userId: number }): Promise<IntegrationSettings>;
+  updateIntegrationSettings(userId: number, settings: Partial<InsertIntegrationSettings>): Promise<IntegrationSettings>;
 }
 
 export class DatabaseStorage implements IStorage {

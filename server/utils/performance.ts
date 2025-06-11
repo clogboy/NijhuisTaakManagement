@@ -59,8 +59,8 @@ export class PerformanceMonitor {
     const operationMetrics = this.metrics.get(operation)!;
     operationMetrics.push(metrics);
     
-    // Keep only last 100 measurements per operation
-    if (operationMetrics.length > 100) {
+    // Keep only last 10 measurements per operation to prevent memory leaks
+    if (operationMetrics.length > 10) {
       operationMetrics.shift();
     }
   }
