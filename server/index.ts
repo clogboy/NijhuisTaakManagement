@@ -8,11 +8,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Simple session middleware without external dependencies
+// Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'nijhuis-activity-manager-secret-key',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: {
     secure: false, // Allow non-HTTPS in development
     httpOnly: true,

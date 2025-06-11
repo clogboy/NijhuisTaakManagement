@@ -7,7 +7,6 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   role: text("role").notNull().default("user"), // 'admin' or 'user'
-  password_hash: text("password_hash"),
   microsoftId: text("microsoft_id").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -88,7 +87,7 @@ export const activities = pgTable("activities", {
   estimatedDuration: integer("estimated_duration"), // in minutes
   dueDate: timestamp("due_date"),
   participants: integer("participants").array(), // array of contact IDs
-  createdBy: integer("created_by").notNull(),
+  createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

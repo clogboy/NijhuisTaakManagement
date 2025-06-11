@@ -1,23 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { 
-  getCachedActivities, 
-  getCachedContacts, 
-  getCachedQuickWins, 
-  getCachedRoadblocks,
-  getCachedSubtasks,
-  getCachedStats 
-} from "./cache";
 import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema, insertTaskCommentSchema, insertWorkspaceInvitationSchema } from "@shared/schema";
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
-import { calendarService } from "./calendar-service";
 import { dailyScheduler } from "./scheduler";
 import { z } from "zod";
 import "./types";
-import { authenticateUser, getUserById } from "./simple-auth";
 
 const loginUserSchema = z.object({
   email: z.string().email(),
@@ -25,31 +15,39 @@ const loginUserSchema = z.object({
   microsoftId: z.string(),
 });
 
-const simpleLoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
-  app.post("/api/auth/login", (req, res) => {
+  app.post("/api/auth/login", async (req, res) => {
     try {
-      // Check if this is a simple email/password login
-      if (req.body.password && !req.body.microsoftId) {
-        const { email, password } = simpleLoginSchema.parse(req.body);
-        console.log('Simple login attempt for:', email);
-        
-        const user = authenticateUser(email, password);
-        if (user) {
-          (req as any).session.userId = user.id;
-          console.log('Login successful for user:', user.id);
-          return res.json({ user });
+      const { email, name, microsoftId } = loginUserSchema.parse(req.body);
+      
+      // First try to find by Microsoft ID
+      let user = await storage.getUserByMicrosoftId(microsoftId);
+      
+      // If not found, try to find by email and update with Microsoft ID
+      if (!user) {
+        user = await storage.getUserByEmail(email);
+        if (user && !user.microsoftId) {
+          // Update existing user with Microsoft ID and correct name
+          user = await storage.updateUser(user.id, { microsoftId, name });
         }
-        
-        return res.status(400).json({ message: "Invalid login data" });
       }
       
-      res.status(400).json({ message: "Microsoft login not implemented" });
+      if (!user) {
+        // Create new user
+        const role = email === "b.weinreder@nijhuis.nl" ? "admin" : "user";
+        user = await storage.createUser({
+          email,
+          name,
+          microsoftId,
+          role,
+        });
+      }
+
+      // Set user session
+      (req as any).session.userId = user.id;
+      
+      res.json({ user: { ...user } });
     } catch (error) {
       console.error("Login error:", error);
       res.status(400).json({ message: "Invalid login data" });
@@ -93,34 +91,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true });
   });
 
-  app.get("/api/auth/me", (req, res) => {
+  app.get("/api/auth/me", async (req, res) => {
     const userId = (req as any).session?.userId;
     if (!userId) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const user = getUserById(userId);
-    if (user) {
-      return res.json({ user });
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
     }
 
-    return res.status(401).json({ message: "User not found" });
+    res.json({ user });
   });
 
   // Middleware to check authentication
-  const requireAuth = (req: any, res: any, next: any) => {
+  const requireAuth = async (req: any, res: any, next: any) => {
     const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const user = getUserById(userId);
-    if (user) {
-      req.user = user;
-      return next();
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
     }
 
-    return res.status(401).json({ message: "User not found" });
+    req.user = user;
+    next();
   };
 
   // Contacts routes

@@ -9,26 +9,6 @@ import {
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
-// Temporary in-memory storage to bypass database issues
-const tempData = {
-  users: [
-    { id: 1, email: "b.weinreder@nijhuis.nl", name: "Bram Weinreder", role: "admin", password_hash: "$2b$10$xJ8mZQWqD9H6hOjKm5nFvOVGQKWr3yHt2mNgBvCwXzL4pQ8rS1jEm", microsoftId: null, createdAt: new Date() }
-  ],
-  activities: [
-    { id: 1, title: "Setup Project Foundation", description: "Initialize the productivity platform with core features", priority: "high", status: "completed", statusTags: null, estimatedDuration: 120, dueDate: null, participants: null, createdBy: 1, createdAt: new Date(), updatedAt: new Date() },
-    { id: 2, title: "Calendar Integration", description: "Implement Microsoft Calendar sync and deadline management", priority: "high", status: "in_progress", statusTags: null, estimatedDuration: 180, dueDate: null, participants: null, createdBy: 1, createdAt: new Date(), updatedAt: new Date() },
-    { id: 3, title: "Contact Management", description: "Build contact database with email capabilities", priority: "medium", status: "planned", statusTags: null, estimatedDuration: 90, dueDate: null, participants: null, createdBy: 1, createdAt: new Date(), updatedAt: new Date() }
-  ],
-  quickWins: [
-    { id: 1, title: "Add keyboard shortcuts", description: "Implement common keyboard shortcuts for navigation", impact: "medium", effort: "low", status: "pending", linkedActivityId: 1, createdBy: 1, createdAt: new Date() },
-    { id: 2, title: "Dark mode toggle", description: "Add theme switching capability", impact: "high", effort: "medium", status: "pending", linkedActivityId: 1, createdBy: 1, createdAt: new Date() }
-  ],
-  contacts: [
-    { id: 1, name: "Bram Weinreder", email: "b.weinreder@nijhuis.nl", phone: "+31-123-456-789", company: "Nijhuis", createdBy: 1, createdAt: new Date() },
-    { id: 2, name: "Project Manager", email: "pm@nijhuis.nl", phone: "+31-987-654-321", company: "Nijhuis", createdBy: 1, createdAt: new Date() }
-  ]
-};
-
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
@@ -147,55 +127,14 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // Flag to track if we're in fallback mode
-  private fallbackMode = false;
   async getUser(id: number): Promise<User | undefined> {
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
-      return user || undefined;
-    } catch (error: any) {
-      console.log('Database error in getUser, using fallback:', error.message);
-      this.fallbackMode = true;
-      // Return admin user for fallback
-      if (id === 1) {
-        return {
-          id: 1,
-          email: "b.weinreder@nijhuis.nl",
-          name: "Bram Weinreder",
-          role: "admin",
-          microsoftId: null,
-          createdAt: new Date()
-        } as User;
-      }
-      return undefined;
-    }
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, username));
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    try {
-      const [user] = await db.select().from(users).where(eq(users.email, email));
-      return user || undefined;
-    } catch (error: any) {
-      console.log('Database error in getUserByEmail, using fallback:', error.message);
-      this.fallbackMode = true;
-      // Return admin user for fallback
-      if (email === "b.weinreder@nijhuis.nl") {
-        return {
-          id: 1,
-          email: "b.weinreder@nijhuis.nl",
-          name: "Bram Weinreder",
-          role: "admin",
-          microsoftId: null,
-          createdAt: new Date()
-        } as User;
-      }
-      return undefined;
-    }
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
   }
 
   async getUserByMicrosoftId(microsoftId: string): Promise<User | undefined> {
@@ -221,14 +160,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContacts(createdBy: number): Promise<Contact[]> {
-    try {
-      const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
-      console.log('Contacts loaded from database:', result.length, 'items');
-      return result;
-    } catch (error: any) {
-      console.log('Database error, using temp data:', error.message);
-      return tempData.contacts as Contact[];
-    }
+    return await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
   }
 
   async getContact(id: number): Promise<Contact | undefined> {
@@ -256,52 +188,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActivities(userId: number, isAdmin: boolean): Promise<Activity[]> {
-    try {
-      const query = isAdmin 
-        ? sql`SELECT 
-            id, title, description, priority, status, 
-            status_tags as "statusTags", 
-            estimated_duration as "estimatedDuration",
-            due_date as "dueDate",
-            participants,
-            created_by as "createdBy",
-            created_at as "createdAt", 
-            updated_at as "updatedAt"
-            FROM activities ORDER BY created_at DESC`
-        : sql`SELECT 
-            id, title, description, priority, status, 
-            status_tags as "statusTags", 
-            estimated_duration as "estimatedDuration",
-            due_date as "dueDate",
-            participants,
-            created_by as "createdBy",
-            created_at as "createdAt", 
-            updated_at as "updatedAt"
-            FROM activities WHERE created_by = ${userId} ORDER BY created_at DESC`;
-      
-      const result = await db.execute(query);
-      
-      // Convert database result to proper format
-      const activities = (result as any).map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        priority: row.priority,
-        status: row.status,
-        statusTags: row.statusTags,
-        estimatedDuration: row.estimatedDuration,
-        dueDate: row.dueDate ? new Date(row.dueDate) : null,
-        participants: row.participants,
-        createdBy: row.createdBy,
-        createdAt: new Date(row.createdAt),
-        updatedAt: new Date(row.updatedAt)
-      }));
-      
-      console.log('Activities loaded from database:', activities.length, 'items');
-      return activities;
-    } catch (error: any) {
-      console.log('Database error, using temp data:', error.message);
-      return tempData.activities as Activity[];
+    if (isAdmin) {
+      return await db.select().from(activities).orderBy(desc(activities.createdAt));
+    } else {
+      return await db.select().from(activities)
+        .where(eq(activities.createdBy, userId))
+        .orderBy(desc(activities.createdAt));
     }
   }
 
@@ -363,35 +255,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuickWins(userId: number): Promise<QuickWin[]> {
-    try {
-      const result = await db.execute(sql`SELECT 
-        id, title, description, impact, effort, status, 
-        linked_activity_id as "linkedActivityId", 
-        created_by as "createdBy", 
-        created_at as "createdAt",
-        completed_at as "completedAt"
-        FROM quick_wins WHERE created_by = ${userId} ORDER BY created_at DESC`);
-      
-      // Convert database result to proper format
-      const quickWins = (result as any).map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        impact: row.impact,
-        effort: row.effort,
-        status: row.status,
-        linkedActivityId: row.linkedActivityId,
-        createdBy: row.createdBy,
-        createdAt: new Date(row.createdAt),
-        completedAt: row.completedAt ? new Date(row.completedAt) : null
-      }));
-      
-      console.log('Quick wins loaded from database:', quickWins.length, 'items');
-      return quickWins;
-    } catch (error: any) {
-      console.log('Database error, using temp data:', error.message);
-      return tempData.quickWins as QuickWin[];
-    }
+    return await db.select().from(quickWins)
+      .where(eq(quickWins.createdBy, userId))
+      .orderBy(desc(quickWins.createdAt));
   }
 
   async getQuickWinsByActivity(activityId: number): Promise<QuickWin[]> {
@@ -456,42 +322,43 @@ export class DatabaseStorage implements IStorage {
     completedCount: number;
     activeContacts: number;
   }> {
-    try {
-      const now = new Date();
-      const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      const urgentResult = isAdmin 
-        ? await db.execute(sql`SELECT COUNT(*) as count FROM activities WHERE priority = 'urgent'`)
-        : await db.execute(sql`SELECT COUNT(*) as count FROM activities WHERE priority = 'urgent' AND created_by = ${userId}`);
+    // Get urgent count
+    const urgentActivities = await db.select().from(activities).where(
+      and(
+        eq(activities.priority, 'urgent'),
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
+      )
+    );
 
-      const dueResult = isAdmin
-        ? await db.execute(sql`SELECT COUNT(*) as count FROM activities WHERE due_date <= ${weekFromNow} AND due_date >= ${now}`)
-        : await db.execute(sql`SELECT COUNT(*) as count FROM activities WHERE due_date <= ${weekFromNow} AND due_date >= ${now} AND created_by = ${userId}`);
+    // Get due this week count
+    const dueThisWeekActivities = await db.select().from(activities).where(
+      and(
+        sql`${activities.dueDate} <= ${weekFromNow}`,
+        sql`${activities.dueDate} >= ${now}`,
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
+      )
+    );
 
-      const completedResult = isAdmin
-        ? await db.execute(sql`SELECT COUNT(*) as count FROM activities WHERE status = 'completed'`)
-        : await db.execute(sql`SELECT COUNT(*) as count FROM activities WHERE status = 'completed' AND created_by = ${userId}`);
+    // Get completed count
+    const completedActivities = await db.select().from(activities).where(
+      and(
+        eq(activities.status, 'completed'),
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
+      )
+    );
 
-      const contactsResult = await db.execute(sql`SELECT COUNT(*) as count FROM contacts WHERE created_by = ${userId}`);
+    // Get active contacts count
+    const activeContacts = await db.select().from(contacts).where(eq(contacts.createdBy, userId));
 
-      const stats = {
-        urgentCount: Number((urgentResult as any)[0]?.count || 0),
-        dueThisWeek: Number((dueResult as any)[0]?.count || 0),
-        completedCount: Number((completedResult as any)[0]?.count || 1),
-        activeContacts: Number((contactsResult as any)[0]?.count || 0),
-      };
-
-      console.log('Stats loaded from database:', stats);
-      return stats;
-    } catch (error: any) {
-      console.log('Database error, using temp stats:', error.message);
-      return {
-        urgentCount: 0,
-        dueThisWeek: 1,
-        completedCount: 1,
-        activeContacts: 2,
-      };
-    }
+    return {
+      urgentCount: urgentActivities.length,
+      dueThisWeek: dueThisWeekActivities.length,
+      completedCount: completedActivities.length,
+      activeContacts: activeContacts.length,
+    };
   }
 
   // Weekly Ethos methods
