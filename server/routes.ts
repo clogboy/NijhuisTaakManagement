@@ -225,7 +225,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contactId = parseInt(req.params.id);
       
+      if (isNaN(contactId) || contactId <= 0) {
+        return res.status(400).json({ message: "Invalid contact ID" });
+      }
+      
       console.log(`[API] Deleting contact ${contactId} - attempting Supabase first...`);
+      
+      // Check if contact exists and belongs to user
+      const existingContact = await storage.getContact(contactId);
+      if (!existingContact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      if (existingContact.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to delete this contact" });
+      }
       
       // Try Supabase first
       try {
@@ -522,12 +536,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/subtasks/:id", requireAuth, async (req: any, res) => {
     try {
       const subtaskId = parseInt(req.params.id);
-      const subtaskData = insertSubtaskSchema.partial().parse(req.body);
-      const subtask = await storage.updateSubtask(subtaskId, subtaskData);
+      console.log(`[API] Updating subtask ${subtaskId} with data:`, req.body);
+      
+      // Allow partial updates without strict validation for status changes
+      const allowedFields = ['status', 'title', 'description', 'priority', 'dueDate', 'participants', 'participantTypes'];
+      const updateData = Object.keys(req.body)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = req.body[key];
+          return obj;
+        }, {} as any);
+      
+      console.log(`[API] Filtered update data:`, updateData);
+      
+      const subtask = await storage.updateSubtask(subtaskId, updateData);
+      console.log(`[API] Successfully updated subtask:`, subtask);
       res.json(subtask);
     } catch (error) {
       console.error("Update subtask error:", error);
-      res.status(400).json({ message: "Invalid subtask data" });
+      res.status(500).json({ 
+        message: "Failed to update subtask", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
