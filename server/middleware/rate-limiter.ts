@@ -111,6 +111,6 @@ export const apiLimiter = new RateLimiter({
 
 export const strictLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: 10, // 10 requests per minute
+  maxRequests: 50, // 50 requests per minute for task interactions
   message: 'Rate limit exceeded'
 });

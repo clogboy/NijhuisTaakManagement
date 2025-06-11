@@ -332,10 +332,20 @@ export default function TodaysTasks() {
                   <Checkbox
                     checked={isCompleted}
                     onCheckedChange={(checked) => {
+                      // First update the daily completion
                       toggleTaskCompletion.mutate({
                         activityId: task.id,
                         completed: !!checked,
                       });
+                      
+                      // Then update the task status
+                      if (checked) {
+                        updateTaskStatus.mutate({
+                          taskId: task.id,
+                          status: 'completed',
+                          isSubtask: task.isSubtask
+                        });
+                      }
                     }}
                     className="flex-shrink-0"
                   />
@@ -369,8 +379,21 @@ export default function TodaysTasks() {
                         });
                       }}
                     >
-                      <SelectTrigger className="w-32 h-8 text-xs">
-                        <SelectValue />
+                      <SelectTrigger className="w-28 h-8 text-xs">
+                        <SelectValue>
+                          {task.isSubtask ? (
+                            task.status === 'pending' ? 'Pending' :
+                            task.status === 'in_progress' ? 'In Progress' :
+                            task.status === 'completed' ? 'Completed' :
+                            task.status === 'resolved' ? 'Resolved' :
+                            task.status
+                          ) : (
+                            task.status === 'pending' ? 'Pending' :
+                            task.status === 'in_progress' ? 'In Progress' :
+                            task.status === 'completed' ? 'Completed' :
+                            task.status
+                          )}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {task.isSubtask ? (
@@ -378,10 +401,11 @@ export default function TodaysTasks() {
                             <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="in_progress">In Progress</SelectItem>
                             <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
                           </>
                         ) : (
                           <>
-                            <SelectItem value="planned">Planned</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="in_progress">In Progress</SelectItem>
                             <SelectItem value="completed">Completed</SelectItem>
                           </>

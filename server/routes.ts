@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activityId = parseInt(req.params.id);
       const { status } = req.body;
 
-      const validStatuses = ['planned', 'in_progress', 'completed'];
+      const validStatuses = ['pending', 'in_progress', 'completed'];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
       }
