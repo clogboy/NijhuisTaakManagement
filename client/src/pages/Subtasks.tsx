@@ -22,7 +22,14 @@ export default function Subtasks() {
 
   const { data: subtasks, isLoading: subtasksLoading } = useQuery<Subtask[]>({
     queryKey: ["/api/subtasks"],
-    queryFn: () => fetch("/api/subtasks", { credentials: "include" }).then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/subtasks", { credentials: "include" });
+      if (!res.ok) {
+        throw new Error("Failed to fetch subtasks");
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: activities } = useQuery<Activity[]>({
@@ -76,7 +83,7 @@ export default function Subtasks() {
   }, {} as Record<string, Contact>) || {};
 
   // Filter subtasks based on search and type
-  const filteredSubtasks = subtasks?.filter(subtask => {
+  const filteredSubtasks = (subtasks || []).filter(subtask => {
     const matchesSearch = 
       subtask.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       subtask.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
