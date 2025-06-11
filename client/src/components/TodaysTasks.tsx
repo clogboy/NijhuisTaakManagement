@@ -226,6 +226,23 @@ export default function TodaysTasks() {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Overdue Warning */}
+        {hasOverdueWarning && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
+                  {overdueSubtasks.length} Overdue Subtask{overdueSubtasks.length > 1 ? 's' : ''}
+                </h4>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  These will automatically convert to roadblocks at midnight if not completed.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {allTodaysTasks.length === 0 ? (
           <div className="text-center py-8">
             <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
