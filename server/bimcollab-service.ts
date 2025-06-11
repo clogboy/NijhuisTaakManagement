@@ -251,13 +251,13 @@ export class BimcollabService {
         throw new Error('Issue not found');
       }
 
-      // Create roadblock from issue
+      // Create roadblock from issue - simplified to match schema
       const roadblock = await storage.createRoadblock({
         title: `[BimCollab] ${issue.title}`,
         description: `${issue.description}\n\nBimCollab Issue Type: ${issue.issueType}\nModel Element: ${issue.modelElement || 'N/A'}`,
-        priority: issue.priority || 'normal',
         status: 'active',
-        participants: issue.assignedTo || [],
+        linkedActivityId: 0, // Required field
+        reportedDate: new Date(),
         createdBy: userId,
       });
 
@@ -339,7 +339,7 @@ export class BimcollabService {
     issueCount: number;
     openIssues: number;
   }> {
-    const settings = await storage.getIntegrationSettings(userId, 'bimcollab');
+    const settings = await storage.getIntegrationSettings(userId);
     const projects = await storage.getBimcollabProjects(userId);
     const allIssues = await Promise.all(
       projects.map(p => storage.getBimcollabIssues(p.id.toString()))
@@ -348,7 +348,7 @@ export class BimcollabService {
     const openIssues = issues.filter(i => i.status === 'open').length;
 
     return {
-      isConfigured: !!settings && settings.isEnabled,
+      isConfigured: !!settings && Boolean(settings.isEnabled),
       lastSync: settings?.lastSyncAt || undefined,
       projectCount: projects.length,
       issueCount: issues.length,
