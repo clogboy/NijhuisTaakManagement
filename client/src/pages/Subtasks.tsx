@@ -378,12 +378,7 @@ export default function Subtasks() {
                   : "Je hebt nog geen subtaken aangemaakt"
                 }
               </p>
-              {!searchQuery && selectedType === "all" && (
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Eerste subtaak aanmaken
-                </Button>
-              )}
+
             </CardContent>
           </Card>
         ) : (

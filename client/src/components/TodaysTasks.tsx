@@ -116,16 +116,21 @@ export default function TodaysTasks() {
   const prioritizedSubtasks = prioritizeSubtasks(assignedSubtasks);
   const allTodaysTasks = [
     ...activitiesToday.map(activity => ({ ...activity, isSubtask: false })),
-    ...prioritizedSubtasks.slice(0, 5).map(subtask => ({
-      id: subtask.id,
-      title: subtask.title,
-      priority: subtask.priority,
-      dueDate: subtask.dueDate,
-      status: subtask.status,
-      description: subtask.description,
-      isSubtask: true,
-      taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type
-    }))
+    ...prioritizedSubtasks.slice(0, 5).map(subtask => {
+      // Find the linked activity for this subtask
+      const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
+      return {
+        ...linkedActivity!, // Use the full activity structure
+        id: subtask.id,
+        title: subtask.title,
+        priority: subtask.priority,
+        dueDate: subtask.dueDate,
+        status: subtask.status,
+        description: subtask.description,
+        isSubtask: true,
+        taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type
+      };
+    })
   ].slice(0, 8);
 
   // Create completion status map
@@ -301,7 +306,7 @@ export default function TodaysTasks() {
 
       {selectedTask && (
         <TaskDetailModal
-          task={selectedTask}
+          activity={selectedTask}
           isOpen={isTaskDetailModalOpen}
           onClose={() => setIsTaskDetailModalOpen(false)}
         />

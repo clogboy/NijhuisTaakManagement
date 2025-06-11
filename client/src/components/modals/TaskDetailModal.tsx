@@ -1,39 +1,33 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  MessageCircle,
-  Trophy,
-  AlertTriangle,
-  Plus,
+import { 
+  MessageSquare, 
+  ListChecks, 
+  Calendar, 
+  Users, 
   Clock,
-  User,
-  CheckCircle2,
-  X
+  Plus,
+  Target,
+  Zap,
+  Construction
 } from "lucide-react";
-import { Activity, TaskComment, QuickWin, Roadblock, Contact } from "@shared/schema";
+import { Activity, TaskComment, Subtask, Contact } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface TaskDetailModalProps {
   activity: Activity;
@@ -44,43 +38,29 @@ interface TaskDetailModalProps {
 export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // Comment state
   const [newComment, setNewComment] = useState("");
-  
-  // Quick Win state
-  const [newQuickWin, setNewQuickWin] = useState({
+  const [newSubtask, setNewSubtask] = useState({
     title: "",
     description: "",
-    impact: "medium" as "low" | "medium" | "high",
-    effort: "medium" as "low" | "medium" | "high",
-  });
-  
-  // Roadblock state
-  const [newRoadblock, setNewRoadblock] = useState({
-    title: "",
-    description: "",
-    severity: "medium" as "low" | "medium" | "high" | "critical",
-    assignedTo: "",
+    priority: "medium" as "low" | "medium" | "high",
+    participants: [] as string[],
+    dueDate: "",
   });
 
-  // Fetch task comments
+  // Fetch comments
   const { data: comments = [] } = useQuery<TaskComment[]>({
     queryKey: ["/api/activities", activity.id, "comments"],
     enabled: isOpen,
   });
 
-  // Fetch task quick wins
-  const { data: quickWins = [] } = useQuery<QuickWin[]>({
-    queryKey: ["/api/activities", activity.id, "quickwins"],
+  // Fetch subtasks
+  const { data: allSubtasks = [] } = useQuery<Subtask[]>({
+    queryKey: ["/api/subtasks"],
     enabled: isOpen,
   });
 
-  // Fetch task roadblocks
-  const { data: roadblocks = [] } = useQuery<Roadblock[]>({
-    queryKey: ["/api/activities", activity.id, "roadblocks"],
-    enabled: isOpen,
-  });
+  // Filter subtasks for this activity
+  const subtasks = allSubtasks.filter(subtask => subtask.linkedActivityId === activity.id);
 
   // Fetch contacts for participants
   const { data: contacts = [] } = useQuery<Contact[]>({
@@ -113,64 +93,34 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
     },
   });
 
-  // Add quick win mutation
-  const addQuickWinMutation = useMutation({
-    mutationFn: async (quickWin: typeof newQuickWin) => {
-      return apiRequest("/api/quickwins", "POST", {
-        ...quickWin,
+  // Add subtask mutation
+  const addSubtaskMutation = useMutation({
+    mutationFn: async (subtask: typeof newSubtask) => {
+      return apiRequest("/api/subtasks", "POST", {
+        ...subtask,
+        type: "task", // Default type
         linkedActivityId: activity.id,
+        dueDate: subtask.dueDate ? new Date(subtask.dueDate).toISOString() : null,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/activities", activity.id, "quickwins"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/quickwins"] });
-      setNewQuickWin({
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      setNewSubtask({
         title: "",
         description: "",
-        impact: "medium",
-        effort: "medium",
+        priority: "medium",
+        participants: [],
+        dueDate: "",
       });
       toast({
-        title: "Quick Win Added",
-        description: "Quick win has been added to this task",
+        title: "Subtask Added",
+        description: "Subtask has been added to this activity",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add quick win",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Add roadblock mutation
-  const addRoadblockMutation = useMutation({
-    mutationFn: async (roadblock: typeof newRoadblock) => {
-      return apiRequest("/api/roadblocks", "POST", {
-        ...roadblock,
-        linkedActivityId: activity.id,
-        reportedDate: new Date().toISOString(),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/activities", activity.id, "roadblocks"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
-      setNewRoadblock({
-        title: "",
-        description: "",
-        severity: "medium",
-        assignedTo: "",
-      });
-      toast({
-        title: "Roadblock Reported",
-        description: "Roadblock has been added to this task",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add roadblock",
+        description: error.message || "Failed to add subtask",
         variant: "destructive",
       });
     },
@@ -182,84 +132,90 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
     }
   };
 
-  const handleAddQuickWin = () => {
-    if (newQuickWin.title.trim()) {
-      addQuickWinMutation.mutate(newQuickWin);
+  const handleAddSubtask = () => {
+    if (newSubtask.title.trim()) {
+      addSubtaskMutation.mutate(newSubtask);
     }
   };
 
-  const handleAddRoadblock = () => {
-    if (newRoadblock.title.trim() && newRoadblock.description.trim()) {
-      addRoadblockMutation.mutate(newRoadblock);
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "high": return "bg-red-100 text-red-800 border-red-200";
+      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low": return "bg-green-100 text-green-800 border-green-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed": return "bg-green-100 text-green-800";
+      case "resolved": return "bg-green-100 text-green-800";
+      case "in_progress": return "bg-blue-100 text-blue-800";
+      case "pending": return "bg-gray-100 text-gray-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getTaskTypeIcon = (type: string) => {
+    switch (type) {
+      case "quick_win": return <Zap className="h-4 w-4 text-yellow-600" />;
+      case "roadblock": return <Construction className="h-4 w-4 text-red-600" />;
+      default: return <Target className="h-4 w-4 text-blue-600" />;
+    }
+  };
+
+  if (!activity) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] w-[95vw] sm:w-full overflow-hidden">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <span className="text-base sm:text-lg">{activity.title}</span>
-            <div className="flex gap-2">
-              <Badge variant={activity.priority === "urgent" ? "destructive" : "secondary"} className="text-xs">
-                {activity.priority}
-              </Badge>
-              <Badge variant={activity.status === "completed" ? "default" : "outline"} className="text-xs">
-                {activity.status}
-              </Badge>
+          <DialogTitle className="flex items-center gap-3">
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold">{activity.title}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge className={getPriorityColor(activity.priority)}>
+                  {activity.priority}
+                </Badge>
+                <Badge className={getStatusColor(activity.status)}>
+                  {activity.status}
+                </Badge>
+                {activity.dueDate && (
+                  <Badge variant="outline" className="text-xs">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Due {format(new Date(activity.dueDate), "MMM d")}
+                  </Badge>
+                )}
+              </div>
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col h-full">
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">{activity.description}</p>
-            {activity.dueDate && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Due: {format(new Date(activity.dueDate), "PPP")}
-              </p>
-            )}
-          </div>
+        <div className="flex-1 overflow-hidden">
+          {activity.description && (
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700">{activity.description}</p>
+            </div>
+          )}
 
-          <Tabs defaultValue="comments" className="flex-1">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-              <TabsTrigger value="comments" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
-                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Comments</span>
-                <span className="sm:hidden">Chat</span>
-                ({comments.length})
-              </TabsTrigger>
-              <TabsTrigger value="participants" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
-                <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Participants</span>
-                <span className="sm:hidden">People</span>
-                ({activity.participants?.length || 0})
-              </TabsTrigger>
-              <TabsTrigger value="quickwins" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
-                <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Quick Wins</span>
-                <span className="sm:hidden">Wins</span>
-                ({quickWins.length})
-              </TabsTrigger>
-              <TabsTrigger value="roadblocks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
-                <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Roadblocks</span>
-                <span className="sm:hidden">Issues</span>
-                ({roadblocks.length})
-              </TabsTrigger>
+          <Tabs defaultValue="comments" className="flex flex-col h-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="comments">Comments</TabsTrigger>
+              <TabsTrigger value="subtasks">Subtasks</TabsTrigger>
             </TabsList>
 
             <TabsContent value="comments" className="flex-1 space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5" />
+                    <MessageSquare className="h-5 w-5" />
                     Add Comment
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Textarea
-                    placeholder="Add a time-stamped comment..."
+                    placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     rows={3}
@@ -267,299 +223,148 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                   <Button 
                     onClick={handleAddComment}
                     disabled={!newComment.trim() || addCommentMutation.isPending}
+                    className="w-full"
                   >
-                    {addCommentMutation.isPending ? "Adding..." : "Add Comment"}
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Comment
                   </Button>
                 </CardContent>
               </Card>
 
-              <ScrollArea className="h-60">
+              <ScrollArea className="flex-1">
                 <div className="space-y-3">
-                  {comments.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No comments yet. Add the first comment above.
-                    </p>
-                  ) : (
-                    comments.map((comment) => (
-                      <Card key={comment.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex items-start gap-3">
-                            <User className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                            <div className="flex-1">
-                              <p className="text-sm">{comment.comment}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {format(new Date(comment.createdAt), "PPp")}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                  {comments.map((comment) => (
+                    <Card key={comment.id}>
+                      <CardContent className="pt-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-medium text-sm">User</span>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                          </span>
+                        </div>
+                        <p className="text-sm">{comment.comment}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {comments.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No comments yet. Be the first to add one!
+                    </div>
                   )}
                 </div>
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="participants" className="flex-1 space-y-4">
-              {activity.participants && activity.participants.length > 0 ? (
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {activity.participants.map((participantId) => {
-                      const participant = contacts?.find(c => c.id === participantId);
-                      if (!participant) return null;
-                      
-                      return (
-                        <Card key={participantId}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                                  <User className="h-4 w-4 text-primary-foreground" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{participant.name}</p>
-                                  <p className="text-sm text-muted-foreground">{participant.email}</p>
-                                  {participant.phone && (
-                                    <p className="text-sm text-muted-foreground">{participant.phone}</p>
-                                  )}
-                                  {participant.company && (
-                                    <p className="text-sm text-muted-foreground">{participant.company}</p>
-                                  )}
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  // Open email modal for this participant
-                                  window.open(`mailto:${participant.email}?subject=Task Update: ${activity.title}&body=Hi ${participant.name},%0D%0A%0D%0AI wanted to update you on the task "${activity.title}".%0D%0A%0D%0AStatus: ${activity.status}%0D%0A${activity.dueDate ? `Due Date: ${format(new Date(activity.dueDate), "PPP")}%0D%0A` : ''}%0D%0ABest regards`);
-                                }}
-                              >
-                                Send Update
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No participants assigned to this task</p>
-                  <p className="text-sm mt-1">Edit the task to add participants</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="quickwins" className="flex-1 space-y-4">
+            <TabsContent value="subtasks" className="flex-1 space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5" />
-                    Add Quick Win to Task
+                    <ListChecks className="h-5 w-5" />
+                    Add Subtask
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Quick wins are small, high-impact actions that can be completed within this task.
+                    Create subtasks that participants can mark as tasks, quick wins, or roadblocks.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Input
-                    placeholder="Quick win title..."
-                    value={newQuickWin.title}
-                    onChange={(e) => setNewQuickWin({ ...newQuickWin, title: e.target.value })}
+                    placeholder="Subtask title..."
+                    value={newSubtask.title}
+                    onChange={(e) => setNewSubtask({ ...newSubtask, title: e.target.value })}
                   />
                   <Textarea
                     placeholder="Description..."
-                    value={newQuickWin.description}
-                    onChange={(e) => setNewQuickWin({ ...newQuickWin, description: e.target.value })}
+                    value={newSubtask.description}
+                    onChange={(e) => setNewSubtask({ ...newSubtask, description: e.target.value })}
                     rows={2}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-sm font-medium">Impact</label>
-                      <Select
-                        value={newQuickWin.impact}
-                        onValueChange={(value: "low" | "medium" | "high") => 
-                          setNewQuickWin({ ...newQuickWin, impact: value })
-                        }
+                      <label className="text-sm font-medium">Priority</label>
+                      <select
+                        value={newSubtask.priority}
+                        onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as "low" | "medium" | "high" })}
+                        className="w-full p-2 border rounded-md"
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Effort</label>
-                      <Select
-                        value={newQuickWin.effort}
-                        onValueChange={(value: "low" | "medium" | "high") => 
-                          setNewQuickWin({ ...newQuickWin, effort: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={handleAddQuickWin}
-                    disabled={!newQuickWin.title.trim() || addQuickWinMutation.isPending}
-                  >
-                    {addQuickWinMutation.isPending ? "Adding..." : "Add Quick Win"}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <ScrollArea className="h-60">
-                <div className="space-y-3">
-                  {quickWins.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No quick wins yet. Add one above.
-                    </p>
-                  ) : (
-                    quickWins.map((quickWin) => (
-                      <Card key={quickWin.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{quickWin.title}</h4>
-                              {quickWin.description && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {quickWin.description}
-                                </p>
-                              )}
-                              <div className="flex gap-2 mt-2">
-                                <Badge variant="outline">Impact: {quickWin.impact}</Badge>
-                                <Badge variant="outline">Effort: {quickWin.effort}</Badge>
-                              </div>
-                            </div>
-                            <Badge variant={quickWin.status === "completed" ? "default" : "secondary"}>
-                              {quickWin.status}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-
-            <TabsContent value="roadblocks" className="flex-1 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Report Roadblock for Task
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Roadblocks are obstacles or issues that are preventing progress on this specific task.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Input
-                    placeholder="Roadblock title..."
-                    value={newRoadblock.title}
-                    onChange={(e) => setNewRoadblock({ ...newRoadblock, title: e.target.value })}
-                  />
-                  <Textarea
-                    placeholder="Describe the roadblock..."
-                    value={newRoadblock.description}
-                    onChange={(e) => setNewRoadblock({ ...newRoadblock, description: e.target.value })}
-                    rows={3}
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-sm font-medium">Severity</label>
-                      <Select
-                        value={newRoadblock.severity}
-                        onValueChange={(value: "low" | "medium" | "high" | "critical") => 
-                          setNewRoadblock({ ...newRoadblock, severity: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Assigned To</label>
+                      <label className="text-sm font-medium">Due Date</label>
                       <Input
-                        placeholder="Person/team..."
-                        value={newRoadblock.assignedTo}
-                        onChange={(e) => setNewRoadblock({ ...newRoadblock, assignedTo: e.target.value })}
+                        type="date"
+                        value={newSubtask.dueDate}
+                        onChange={(e) => setNewSubtask({ ...newSubtask, dueDate: e.target.value })}
                       />
                     </div>
                   </div>
+                  <div>
+                    <label className="text-sm font-medium">Participants (emails, comma-separated)</label>
+                    <Input
+                      placeholder="email1@domain.com, email2@domain.com"
+                      value={newSubtask.participants.join(", ")}
+                      onChange={(e) => setNewSubtask({ 
+                        ...newSubtask, 
+                        participants: e.target.value.split(",").map(email => email.trim()).filter(Boolean)
+                      })}
+                    />
+                  </div>
                   <Button 
-                    onClick={handleAddRoadblock}
-                    disabled={!newRoadblock.title.trim() || !newRoadblock.description.trim() || addRoadblockMutation.isPending}
+                    onClick={handleAddSubtask}
+                    disabled={!newSubtask.title.trim() || addSubtaskMutation.isPending}
+                    className="w-full"
                   >
-                    {addRoadblockMutation.isPending ? "Reporting..." : "Report Roadblock"}
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Subtask
                   </Button>
                 </CardContent>
               </Card>
 
-              <ScrollArea className="h-60">
+              <ScrollArea className="flex-1">
                 <div className="space-y-3">
-                  {roadblocks.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No roadblocks reported yet.
-                    </p>
-                  ) : (
-                    roadblocks.map((roadblock) => (
-                      <Card key={roadblock.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{roadblock.title}</h4>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {roadblock.description}
-                              </p>
-                              {roadblock.assignedTo && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  Assigned to: {roadblock.assignedTo}
-                                </p>
-                              )}
-                              <div className="flex gap-2 mt-2">
-                                <Badge 
-                                  variant={
-                                    roadblock.severity === "critical" ? "destructive" :
-                                    roadblock.severity === "high" ? "destructive" :
-                                    "outline"
-                                  }
-                                >
-                                  {roadblock.severity}
-                                </Badge>
-                                <Badge variant="outline">{roadblock.status}</Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {roadblock.reportedDate ? format(new Date(roadblock.reportedDate), "PP") : "No date"}
-                                </span>
-                              </div>
-                            </div>
+                  {subtasks.map((subtask) => (
+                    <Card key={subtask.id}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {getTaskTypeIcon(subtask.type)}
+                            <h4 className="font-medium">{subtask.title}</h4>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                          <div className="flex gap-2">
+                            <Badge className={getPriorityColor(subtask.priority)}>
+                              {subtask.priority}
+                            </Badge>
+                            <Badge className={getStatusColor(subtask.status)}>
+                              {subtask.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        {subtask.description && (
+                          <p className="text-sm text-gray-600 mb-2">{subtask.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          {subtask.participants.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              <span>{subtask.participants.length} participants</span>
+                            </div>
+                          )}
+                          {subtask.dueDate && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>Due {format(new Date(subtask.dueDate), "MMM d")}</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {subtasks.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No subtasks yet. Add one to get started!
+                    </div>
                   )}
                 </div>
               </ScrollArea>
