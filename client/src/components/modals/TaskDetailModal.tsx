@@ -100,7 +100,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
         ...subtask,
         type: "task", // Default type
         linkedActivityId: activity.id,
-        dueDate: subtask.dueDate ? new Date(subtask.dueDate).toISOString() : null,
+        dueDate: subtask.dueDate ? new Date(subtask.dueDate) : null,
       });
     },
     onSuccess: () => {

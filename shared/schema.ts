@@ -177,6 +177,8 @@ export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
   createdBy: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  dueDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
 });
 
 export const weeklyEthos = pgTable("weekly_ethos", {
