@@ -6,6 +6,7 @@ import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-se
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { dailyScheduler } from "./scheduler";
+import { supabaseService } from "./supabase-service";
 import { z } from "zod";
 import "./types";
 
@@ -124,25 +125,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contacts routes
   app.get("/api/contacts", requireAuth, async (req: any, res) => {
     try {
-      const contacts = await storage.getContacts(req.user.id);
-      res.json(contacts);
+      console.log("[API] Loading contacts - attempting Supabase first...");
+      
+      // Try Supabase first
+      try {
+        const contacts = await supabaseService.loadContacts();
+        console.log(`[API] Successfully loaded ${contacts.length} contacts from Supabase`);
+        res.json(contacts);
+        return;
+      } catch (supabaseError) {
+        console.warn("[API] Supabase failed, falling back to local storage:", supabaseError);
+        
+        // Fallback to local storage
+        const contacts = await storage.getContacts(req.user.id);
+        console.log(`[API] Loaded ${contacts.length} contacts from local storage`);
+        res.json(contacts);
+      }
     } catch (error) {
-      console.error("Get contacts error:", error);
-      res.status(500).json({ message: "Failed to fetch contacts" });
+      console.error("[API] Error fetching contacts from all sources:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch contacts",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
   app.post("/api/contacts", requireAuth, async (req: any, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);
-      const contact = await storage.createContact({
-        ...contactData,
-        createdBy: req.user.id,
-      });
-      res.json(contact);
+      
+      console.log("[API] Creating contact - attempting Supabase first...");
+      
+      // Try Supabase first
+      try {
+        const contact = await supabaseService.createContact({
+          ...contactData,
+          createdBy: req.user.id,
+        });
+        console.log(`[API] Successfully created contact in Supabase: ${contact.id}`);
+        res.status(201).json(contact);
+        return;
+      } catch (supabaseError) {
+        console.warn("[API] Supabase creation failed, falling back to local storage:", supabaseError);
+        
+        // Fallback to local storage
+        const contact = await storage.createContact({
+          ...contactData,
+          createdBy: req.user.id,
+        });
+        console.log(`[API] Created contact in local storage: ${contact.id}`);
+        res.status(201).json(contact);
+      }
     } catch (error) {
-      console.error("Create contact error:", error);
-      res.status(400).json({ message: "Invalid contact data" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid contact data", errors: error.errors });
+      } else {
+        console.error("[API] Error creating contact:", error);
+        res.status(500).json({ 
+          message: "Failed to create contact",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
     }
   });
 
@@ -150,22 +193,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contactId = parseInt(req.params.id);
       const contactData = insertContactSchema.partial().parse(req.body);
-      const contact = await storage.updateContact(contactId, contactData);
-      res.json(contact);
+      
+      console.log(`[API] Updating contact ${contactId} - attempting Supabase first...`);
+      
+      // Try Supabase first
+      try {
+        const contact = await supabaseService.updateContact(contactId, contactData);
+        console.log(`[API] Successfully updated contact in Supabase: ${contact.id}`);
+        res.json(contact);
+        return;
+      } catch (supabaseError) {
+        console.warn("[API] Supabase update failed, falling back to local storage:", supabaseError);
+        
+        // Fallback to local storage
+        const contact = await storage.updateContact(contactId, contactData);
+        if (!contact) {
+          res.status(404).json({ message: "Contact not found" });
+          return;
+        }
+        console.log(`[API] Updated contact in local storage: ${contact.id}`);
+        res.json(contact);
+      }
     } catch (error) {
-      console.error("Update contact error:", error);
-      res.status(400).json({ message: "Invalid contact data" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid contact data", errors: error.errors });
+      } else {
+        console.error("[API] Error updating contact:", error);
+        res.status(500).json({ 
+          message: "Failed to update contact",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
     }
   });
 
   app.delete("/api/contacts/:id", requireAuth, async (req: any, res) => {
     try {
       const contactId = parseInt(req.params.id);
-      await storage.deleteContact(contactId);
-      res.json({ success: true });
+      
+      console.log(`[API] Deleting contact ${contactId} - attempting Supabase first...`);
+      
+      // Try Supabase first
+      try {
+        await supabaseService.deleteContact(contactId);
+        console.log(`[API] Successfully deleted contact from Supabase: ${contactId}`);
+        res.json({ message: "Contact deleted successfully" });
+        return;
+      } catch (supabaseError) {
+        console.warn("[API] Supabase deletion failed, falling back to local storage:", supabaseError);
+        
+        // Fallback to local storage
+        const success = await storage.deleteContact(contactId);
+        if (!success) {
+          res.status(404).json({ message: "Contact not found" });
+          return;
+        }
+        console.log(`[API] Deleted contact from local storage: ${contactId}`);
+        res.json({ message: "Contact deleted successfully" });
+      }
     } catch (error) {
-      console.error("Delete contact error:", error);
-      res.status(500).json({ message: "Failed to delete contact" });
+      console.error("[API] Error deleting contact:", error);
+      res.status(500).json({ 
+        message: "Failed to delete contact",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
