@@ -33,7 +33,7 @@ export default function TodaysTasks() {
   });
 
   const { data: taskCompletions = [] } = useQuery<Array<{activityId: number, completed: boolean}>>({
-    queryKey: ["/api/daily-task-completions", todayString],
+    queryKey: ["/api/daily-task-completions"],
   });
 
   const toggleTaskCompletion = useMutation({
@@ -45,7 +45,7 @@ export default function TodaysTasks() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/daily-task-completions", todayString] });
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-task-completions"] });
       toast({
         title: "Task updated",
         description: "Task completion status updated successfully",
@@ -353,13 +353,38 @@ export default function TodaysTasks() {
                     }}
                   >
                     <div className="space-y-2">
-                      {/* Title and Priority Row */}
-                      <div className="flex items-start justify-between gap-2">
+                      {/* Title Row */}
+                      <div className="w-full">
                         <h4 className={`text-sm font-medium leading-tight ${
                           isCompleted ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-900 dark:text-white'
                         }`}>
                           {task.title}
                         </h4>
+                      </div>
+                      
+                      {/* Priority and Metadata Row */}
+                      <div className="flex flex-wrap items-center gap-2 justify-between">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {task.isSubtask && (
+                            <div className="flex items-center text-blue-600 dark:text-blue-400">
+                              {getTaskTypeIcon(task.taskType)}
+                              <span className="text-xs ml-1">Subtask</span>
+                            </div>
+                          )}
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${getStatusColor(task.status)}`}
+                          >
+                            {task.status}
+                          </Badge>
+                          {task.dueDate && (
+                            <div className="flex items-center text-gray-500 dark:text-gray-400">
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span className="text-xs">{format(new Date(task.dueDate), "MMM d")}</span>
+                            </div>
+                          )}
+                        </div>
+                        
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <Badge
                             variant="outline"
@@ -373,28 +398,6 @@ export default function TodaysTasks() {
                             </span>
                           )}
                         </div>
-                      </div>
-                      
-                      {/* Metadata Row */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {task.isSubtask && (
-                          <div className="flex items-center text-blue-600 dark:text-blue-400">
-                            {getTaskTypeIcon(task.taskType)}
-                            <span className="text-xs ml-1">Subtask</span>
-                          </div>
-                        )}
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs ${getStatusColor(task.status)}`}
-                        >
-                          {task.status}
-                        </Badge>
-                        {task.dueDate && (
-                          <div className="flex items-center text-gray-500 dark:text-gray-400">
-                            <Clock className="h-3 w-3 mr-1" />
-                            <span className="text-xs">{format(new Date(task.dueDate), "MMM d")}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
