@@ -1,6 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { 
+  getCachedActivities, 
+  getCachedContacts, 
+  getCachedQuickWins, 
+  getCachedRoadblocks,
+  getCachedSubtasks,
+  getCachedStats 
+} from "./cache";
 import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema, insertTaskCommentSchema, insertWorkspaceInvitationSchema } from "@shared/schema";
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";

@@ -8,15 +8,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session middleware with memory store to avoid database blocking
-const MemoryStore = require('memorystore')(session);
+// Simple session middleware without external dependencies
 app.use(session({
   secret: process.env.SESSION_SECRET || 'nijhuis-activity-manager-secret-key',
   resave: false,
   saveUninitialized: false,
-  store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  }),
   cookie: {
     secure: false, // Allow non-HTTPS in development
     httpOnly: true,

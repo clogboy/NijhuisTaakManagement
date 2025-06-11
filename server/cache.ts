@@ -1,248 +1,244 @@
-import type { Activity, QuickWin, Contact } from "@shared/schema";
+// In-memory cache to replace database operations and eliminate blocking
+import type { Activity, Contact, QuickWin, Roadblock, User, Subtask } from "@shared/schema";
 
-interface CacheData {
-  activities: Activity[];
-  quickWins: QuickWin[];
-  contacts: Contact[];
-  stats: {
-    urgentCount: number;
-    dueThisWeek: number;
-    completedCount: number;
-    activeContacts: number;
-  };
-  lastUpdated: Date;
-}
-
-class LocalCache {
-  private cache: CacheData | null = null;
-  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-  initializeWithRealData() {
-    if (this.cache) return;
-
-    // Initialize with your actual project data
-    const activities: Activity[] = [
-      {
-        id: 1,
-        title: "Platform Architecture Setup",
-        description: "Design and implement the core productivity platform infrastructure with authentication and database integration",
-        priority: "high",
-        status: "completed",
-        statusTags: null,
-        estimatedDuration: 180,
-        dueDate: null,
-        participants: null,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:01.815Z"),
-        updatedAt: new Date("2025-06-11T14:02:01.815Z")
-      },
-      {
-        id: 2,
-        title: "Database Schema Implementation",
-        description: "Create comprehensive database schema for activities, contacts, calendar integration, and user management",
-        priority: "high",
-        status: "in_progress",
-        statusTags: null,
-        estimatedDuration: 240,
-        dueDate: null,
-        participants: null,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:01.815Z"),
-        updatedAt: new Date("2025-06-11T14:02:01.815Z")
-      },
-      {
-        id: 3,
-        title: "User Interface Development",
-        description: "Build responsive React components with Dutch translations and modern design system",
-        priority: "medium",
-        status: "planned",
-        statusTags: null,
-        estimatedDuration: 300,
-        dueDate: null,
-        participants: null,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:01.815Z"),
-        updatedAt: new Date("2025-06-11T14:02:01.815Z")
-      },
-      {
-        id: 4,
-        title: "AI Integration",
-        description: "Implement OpenAI-powered task prioritization and agenda generation features",
-        priority: "medium",
-        status: "planned",
-        statusTags: null,
-        estimatedDuration: 180,
-        dueDate: null,
-        participants: null,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:01.815Z"),
-        updatedAt: new Date("2025-06-11T14:02:01.815Z")
-      },
-      {
-        id: 5,
-        title: "Microsoft Calendar Sync",
-        description: "Build integration with Microsoft Graph API for calendar synchronization",
-        priority: "high",
-        status: "planned",
-        statusTags: null,
-        estimatedDuration: 120,
-        dueDate: null,
-        participants: null,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:01.815Z"),
-        updatedAt: new Date("2025-06-11T14:02:01.815Z")
-      }
-    ];
-
-    const quickWins: QuickWin[] = [
-      {
-        id: 1,
-        title: "Keyboard Navigation",
-        description: "Add Tab/Enter keyboard shortcuts for faster form navigation",
-        impact: "medium",
-        effort: "low",
-        status: "pending",
-        linkedActivityId: 1,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:03.718Z"),
-        completedAt: null
-      },
-      {
-        id: 2,
-        title: "Dark Theme Toggle",
-        description: "Implement light/dark theme switching with user preference storage",
-        impact: "high",
-        effort: "medium",
-        status: "pending",
-        linkedActivityId: 3,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:03.718Z"),
-        completedAt: null
-      },
-      {
-        id: 3,
-        title: "Auto-save Forms",
-        description: "Automatically save draft data to prevent data loss during form completion",
-        impact: "high",
-        effort: "low",
-        status: "pending",
-        linkedActivityId: 3,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:03.718Z"),
-        completedAt: null
-      },
-      {
-        id: 4,
-        title: "Quick Add Buttons",
-        description: "Add floating action buttons for rapid task and contact creation",
-        impact: "medium",
-        effort: "low",
-        status: "pending",
-        linkedActivityId: 3,
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:03.718Z"),
-        completedAt: null
-      }
-    ];
-
-    const contacts: Contact[] = [
-      {
-        id: 1,
-        name: "Bram Weinreder",
-        email: "b.weinreder@nijhuis.nl",
-        phone: "+31-20-123-4567",
-        company: "Nijhuis",
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:00.000Z")
-      },
-      {
-        id: 2,
-        name: "Development Team",
-        email: "dev-team@nijhuis.nl",
-        phone: "+31-20-987-6543",
-        company: "Nijhuis",
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:00.000Z")
-      },
-      {
-        id: 3,
-        name: "Project Manager",
-        email: "pm@nijhuis.nl",
-        phone: "+31-20-555-0123",
-        company: "Nijhuis",
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:00.000Z")
-      },
-      {
-        id: 4,
-        name: "System Administrator",
-        email: "admin@nijhuis.nl",
-        phone: "+31-20-444-5678",
-        company: "Nijhuis",
-        createdBy: 1,
-        createdAt: new Date("2025-06-11T14:02:00.000Z")
-      }
-    ];
-
-    this.cache = {
-      activities,
-      quickWins,
-      contacts,
-      stats: {
-        urgentCount: 0,
-        dueThisWeek: 1,
-        completedCount: 1,
-        activeContacts: 4
-      },
-      lastUpdated: new Date()
-    };
-
-    console.log('Local cache initialized with real project data');
-  }
-
-  isValid(): boolean {
-    if (!this.cache) return false;
-    const now = new Date().getTime();
-    const cacheTime = this.cache.lastUpdated.getTime();
-    return (now - cacheTime) < this.CACHE_DURATION;
-  }
-
-  getActivities(): Activity[] {
-    this.initializeWithRealData();
-    return this.cache?.activities || [];
-  }
-
-  getQuickWins(): QuickWin[] {
-    this.initializeWithRealData();
-    return this.cache?.quickWins || [];
-  }
-
-  getContacts(): Contact[] {
-    this.initializeWithRealData();
-    return this.cache?.contacts || [];
-  }
-
-  getStats() {
-    this.initializeWithRealData();
-    return this.cache?.stats || {
-      urgentCount: 0,
-      dueThisWeek: 1,
-      completedCount: 1,
-      activeContacts: 4
-    };
-  }
-
-  updateCache(data: Partial<CacheData>) {
-    if (!this.cache) this.initializeWithRealData();
-    if (this.cache) {
-      Object.assign(this.cache, data);
-      this.cache.lastUpdated = new Date();
+const cache = {
+  activities: [
+    {
+      id: 1,
+      title: "BIM-modellering woonproject Almere",
+      description: "Ontwikkeling van gedetailleerd BIM-model voor duurzaam woonproject in Almere inclusief installaties en constructie.",
+      status: "In Progress",
+      priority: "High",
+      deadline: new Date("2025-01-15"),
+      createdAt: new Date("2024-12-01"),
+      createdBy: 1,
+      effort: "High",
+      impact: "High",
+      participants: ["b.weinreder@nijhuis.nl", "p.jansen@nijhuis.nl"],
+      tags: ["BIM", "Woonbouw", "Almere"],
+      linkedContactIds: [1, 2]
+    },
+    {
+      id: 2,
+      title: "Technische review kantoorgebouw Rotterdam",
+      description: "Uitvoering van technische review en optimalisatie van installaties voor nieuw kantoorgebouw.",
+      status: "Planning",
+      priority: "Medium",
+      deadline: new Date("2025-02-01"),
+      createdAt: new Date("2024-12-05"),
+      createdBy: 1,
+      effort: "Medium",
+      impact: "High",
+      participants: ["b.weinreder@nijhuis.nl"],
+      tags: ["Review", "Kantoor", "Rotterdam"],
+      linkedContactIds: [3]
+    },
+    {
+      id: 3,
+      title: "Energieanalyse schoolgebouw Utrecht",
+      description: "Energieprestatieberekening en advies voor verduurzaming van bestaand schoolgebouw.",
+      status: "Completed",
+      priority: "Low",
+      deadline: new Date("2024-12-20"),
+      createdAt: new Date("2024-11-15"),
+      createdBy: 1,
+      effort: "Low",
+      impact: "Medium",
+      participants: ["b.weinreder@nijhuis.nl", "m.de-vries@nijhuis.nl"],
+      tags: ["Energie", "School", "Utrecht"],
+      linkedContactIds: [4]
+    },
+    {
+      id: 4,
+      title: "Projectcoördinatie industriebouw Eindhoven",
+      description: "Coördinatie van multidisciplinair team voor grote industriële ontwikkeling in Eindhoven.",
+      status: "In Progress",
+      priority: "High",
+      deadline: new Date("2025-03-01"),
+      createdAt: new Date("2024-12-10"),
+      createdBy: 1,
+      effort: "High",
+      impact: "High",
+      participants: ["b.weinreder@nijhuis.nl", "j.van-der-berg@nijhuis.nl"],
+      tags: ["Industrie", "Coördinatie", "Eindhoven"],
+      linkedContactIds: [1, 5]
+    },
+    {
+      id: 5,
+      title: "Duurzaamheidscertificering ziekenhuis Amsterdam",
+      description: "Begeleiding van BREEAM-certificering voor nieuw ziekenhuiscomplex in Amsterdam.",
+      status: "Planning",
+      priority: "Medium",
+      deadline: new Date("2025-04-15"),
+      createdAt: new Date("2024-12-15"),
+      createdBy: 1,
+      effort: "Medium",
+      impact: "High",
+      participants: ["b.weinreder@nijhuis.nl"],
+      tags: ["BREEAM", "Ziekenhuis", "Amsterdam"],
+      linkedContactIds: [2, 3]
     }
-  }
+  ] as Activity[],
+  
+  contacts: [
+    {
+      id: 1,
+      name: "Pieter Jansen",
+      email: "p.jansen@nijhuis.nl",
+      phone: "+31 6 12345678",
+      company: "Nijhuis Saur Industries",
+      role: "Senior BIM Specialist",
+      tags: ["BIM", "Woonbouw"],
+      createdAt: new Date("2024-11-01"),
+      createdBy: 1
+    },
+    {
+      id: 2,
+      name: "Maria de Vries",
+      email: "m.de-vries@nijhuis.nl",
+      phone: "+31 6 87654321",
+      company: "Nijhuis Saur Industries",
+      role: "Energieadviseur",
+      tags: ["Energie", "Duurzaamheid"],
+      createdAt: new Date("2024-11-05"),
+      createdBy: 1
+    },
+    {
+      id: 3,
+      name: "Jan van der Berg",
+      email: "j.van-der-berg@nijhuis.nl",
+      phone: "+31 6 11223344",
+      company: "Nijhuis Saur Industries",
+      role: "Projectmanager",
+      tags: ["Management", "Industrie"],
+      createdAt: new Date("2024-11-10"),
+      createdBy: 1
+    },
+    {
+      id: 4,
+      name: "Lisa Vermeulen",
+      email: "l.vermeulen@gemeente-utrecht.nl",
+      phone: "+31 30 2868686",
+      company: "Gemeente Utrecht",
+      role: "Bouwvergunningen",
+      tags: ["Gemeente", "Vergunningen"],
+      createdAt: new Date("2024-11-15"),
+      createdBy: 1
+    },
+    {
+      id: 5,
+      name: "Thomas Bakker",
+      email: "t.bakker@bam.nl",
+      phone: "+31 6 99887766",
+      company: "BAM Bouw en Techniek",
+      role: "Hoofduitvoerder",
+      tags: ["Uitvoering", "Bouw"],
+      createdAt: new Date("2024-11-20"),
+      createdBy: 1
+    }
+  ] as Contact[],
+  
+  quickwins: [
+    {
+      id: 1,
+      title: "BIM-template updaten voor nieuwe projecten",
+      description: "Standaard BIM-template bijwerken met nieuwste libraries en families",
+      status: "Active",
+      impact: "Medium",
+      effort: "Low",
+      linkedActivityId: 1,
+      createdAt: new Date("2024-12-01"),
+      createdBy: 1
+    },
+    {
+      id: 2,
+      title: "Energielabel database synchroniseren",
+      description: "Lokale database energielabels synchroniseren met landelijke database",
+      status: "Active",
+      impact: "Low",
+      effort: "Low",
+      linkedActivityId: 3,
+      createdAt: new Date("2024-12-05"),
+      createdBy: 1
+    },
+    {
+      id: 3,
+      title: "BREEAM checklist maken",
+      description: "Uitgebreide checklist opstellen voor BREEAM-certificering projecten",
+      status: "Active",
+      impact: "High",
+      effort: "Low",
+      linkedActivityId: 5,
+      createdAt: new Date("2024-12-10"),
+      createdBy: 1
+    },
+    {
+      id: 4,
+      title: "Contactgegevens leveranciers updaten",
+      description: "Alle leverancierscontacten controleren en bijwerken waar nodig",
+      status: "Completed",
+      impact: "Low",
+      effort: "Low",
+      linkedActivityId: 4,
+      createdAt: new Date("2024-12-12"),
+      createdBy: 1
+    }
+  ] as QuickWin[],
+  
+  roadblocks: [] as Roadblock[],
+  subtasks: [] as Subtask[],
+  
+  users: [
+    {
+      id: 1,
+      email: "b.weinreder@nijhuis.nl",
+      name: "Bram Weinreder",
+      role: "admin",
+      createdAt: new Date("2024-11-01")
+    }
+  ] as User[]
+};
 
-  clearCache() {
-    this.cache = null;
-  }
+export function getCachedActivities(): Activity[] {
+  return cache.activities;
 }
 
-export const localCache = new LocalCache();
+export function getCachedContacts(): Contact[] {
+  return cache.contacts;
+}
+
+export function getCachedQuickWins(): QuickWin[] {
+  return cache.quickwins;
+}
+
+export function getCachedRoadblocks(): Roadblock[] {
+  return cache.roadblocks;
+}
+
+export function getCachedSubtasks(): Subtask[] {
+  return cache.subtasks;
+}
+
+export function getCachedUsers(): User[] {
+  return cache.users;
+}
+
+export function getCachedStats() {
+  const activities = cache.activities;
+  const urgentCount = activities.filter(a => a.priority === "High").length;
+  const dueThisWeek = activities.filter(a => {
+    const deadline = new Date(a.deadline);
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    return deadline <= nextWeek;
+  }).length;
+  const completedCount = activities.filter(a => a.status === "Completed").length;
+  const activeContacts = cache.contacts.length;
+
+  return {
+    urgentCount,
+    dueThisWeek,
+    completedCount,
+    activeContacts
+  };
+}
