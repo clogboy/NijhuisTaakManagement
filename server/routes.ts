@@ -125,14 +125,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contacts routes
   app.get("/api/contacts", requireAuth, async (req: any, res) => {
     try {
-      console.log("[API] Loading contacts - attempting Supabase first...");
-      
-      // Use local storage directly due to Supabase schema issues
+      console.log(`[API] Loading contacts for user ${req.user.id} from local storage`);
       const contacts = await storage.getContacts(req.user.id);
       console.log(`[API] Loaded ${contacts.length} contacts from local storage`);
       res.json(contacts);
     } catch (error) {
-      console.error("[API] Error fetching contacts from all sources:", error);
+      console.error("[API] Error fetching contacts:", error);
       res.status(500).json({ 
         message: "Failed to fetch contacts",
         error: error instanceof Error ? error.message : "Unknown error"

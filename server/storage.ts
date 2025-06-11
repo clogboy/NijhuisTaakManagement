@@ -164,7 +164,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContacts(createdBy: number): Promise<Contact[]> {
-    return await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
+    console.log(`[STORAGE] Getting contacts for user ${createdBy}`);
+    const result = await db.select().from(contacts).where(eq(contacts.created_by, createdBy)).orderBy(contacts.name);
+    console.log(`[STORAGE] Found ${result.length} contacts`);
+    return result;
   }
 
   async getContact(id: number): Promise<Contact | undefined> {
@@ -178,7 +181,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContact(contact: InsertContact & { createdBy: number }): Promise<Contact> {
-    const [newContact] = await db.insert(contacts).values(contact).returning();
+    const contactData = {
+      ...contact,
+      created_by: contact.createdBy
+    };
+    delete contactData.createdBy;
+    const [newContact] = await db.insert(contacts).values(contactData).returning();
     return newContact;
   }
 
@@ -706,14 +714,21 @@ export class DatabaseStorage implements IStorage {
 
   // Daily task completion methods
   async getDailyTaskCompletions(userId: number, date?: string): Promise<any[]> {
-    const targetDate = date || new Date().toISOString().split('T')[0];
-    const results = await db.select().from(dailyTaskCompletions).where(
-      and(
-        eq(dailyTaskCompletions.userId, userId),
-        eq(dailyTaskCompletions.taskDate, new Date(targetDate))
-      )
-    );
-    return results;
+    if (date) {
+      const results = await db.select().from(dailyTaskCompletions).where(
+        and(
+          eq(dailyTaskCompletions.userId, userId),
+          eq(dailyTaskCompletions.taskDate, new Date(date))
+        )
+      );
+      return results;
+    } else {
+      // Return all completions for the user if no date specified
+      const results = await db.select().from(dailyTaskCompletions).where(
+        eq(dailyTaskCompletions.userId, userId)
+      );
+      return results;
+    }
   }
 
   async createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any> {
