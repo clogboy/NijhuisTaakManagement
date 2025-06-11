@@ -25,7 +25,8 @@ import {
   Lightbulb,
   Settings,
   Play,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 import { Activity, WeeklyEthos } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
