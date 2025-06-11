@@ -36,10 +36,10 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUP
 // Create Supabase client for additional features if available
 export const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
-// Create PostgreSQL connection for Drizzle
+// Create PostgreSQL connection for Drizzle with SSL for Supabase
 const client = postgres(connectionString, { 
   max: 1,
-  ssl: { rejectUnauthorized: false }
+  ssl: connectionString.includes('supabase.co') ? { rejectUnauthorized: false } : true
 });
 
 export const db = drizzle(client, { schema });
