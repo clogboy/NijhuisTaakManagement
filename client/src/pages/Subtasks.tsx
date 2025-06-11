@@ -326,18 +326,12 @@ export default function Subtasks() {
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Subtaken</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Beheer Quick Wins en Wegversperringen gekoppeld aan je activiteiten. 
-              Deelnemers die ook toegang hebben tot het platform zullen deze subtaken zien in hun eigen agenda's.
-            </p>
-          </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nieuwe subtaak
-          </Button>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Subtaken</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Beheer Quick Wins en Wegversperringen gekoppeld aan je activiteiten. 
+            Deelnemers die ook toegang hebben tot het platform zullen deze subtaken zien in hun eigen agenda's.
+          </p>
         </div>
 
         {/* Search and Filters */}

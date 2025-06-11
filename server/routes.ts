@@ -127,20 +127,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("[API] Loading contacts - attempting Supabase first...");
       
-      // Try Supabase first
-      try {
-        const contacts = await supabaseService.loadContacts();
-        console.log(`[API] Successfully loaded ${contacts.length} contacts from Supabase`);
-        res.json(contacts);
-        return;
-      } catch (supabaseError) {
-        console.warn("[API] Supabase failed, falling back to local storage:", supabaseError);
-        
-        // Fallback to local storage
-        const contacts = await storage.getContacts(req.user.id);
-        console.log(`[API] Loaded ${contacts.length} contacts from local storage`);
-        res.json(contacts);
-      }
+      // Use local storage directly due to Supabase schema issues
+      const contacts = await storage.getContacts(req.user.id);
+      console.log(`[API] Loaded ${contacts.length} contacts from local storage`);
+      res.json(contacts);
     } catch (error) {
       console.error("[API] Error fetching contacts from all sources:", error);
       res.status(500).json({ 
@@ -588,6 +578,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!activityId || !taskDate || typeof completed !== 'boolean') {
         return res.status(400).json({ error: "activityId, taskDate, and completed are required" });
+      }
+
+      // Verify activity exists before creating completion
+      const activity = await storage.getActivity(activityId);
+      if (!activity) {
+        return res.status(400).json({ error: `Activity ${activityId} not found` });
       }
 
       const result = await storage.createOrUpdateDailyTaskCompletion(
