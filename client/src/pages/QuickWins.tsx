@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Trophy, Search, Activity as ActivityIcon, AlertCircle } from "lucide-react";
+import { Trophy, Search, Activity as ActivityIcon, AlertCircle, Target, Calendar, Users, AlertTriangle, ListChecks } from "lucide-react";
 import { QuickWin, Activity } from "@shared/schema";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -24,10 +24,17 @@ export default function QuickWins() {
   });
 
   // Filter subtasks that are classified as quick wins by participants
-  const quickWinSubtasks = subtasks.filter((subtask: any) => {
+  const quickWinSubtasks = (subtasks as any[]).filter((subtask: any) => {
     const participantTypes = subtask.participantTypes as Record<string, string> || {};
     return subtask.type === "quick_win" || Object.values(participantTypes).includes("quick_win");
   });
+
+  // Filter quick win subtasks based on search query
+  const filteredQuickWinSubtasks = quickWinSubtasks.filter((subtask: any) =>
+    subtask.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    subtask.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    activityMap[subtask.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const { data: activities } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
@@ -252,6 +259,84 @@ placeholder={t('quickWins.searchPlaceholder')}
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Subtasks Classified as Quick Wins */}
+        {filteredQuickWinSubtasks.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
+              <ListChecks className="h-5 w-5" />
+              Subtaken geclassificeerd als Quick Wins ({filteredQuickWinSubtasks.length})
+            </h2>
+            <div className="space-y-4">
+              {filteredQuickWinSubtasks.map((subtask: any) => {
+                const linkedActivity = activityMap[subtask.linkedActivityId];
+                const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
+                                 subtask.status !== "completed" && subtask.status !== "resolved";
+
+                return (
+                  <Card key={`subtask-${subtask.id}`} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-sm font-medium mb-2">
+                            {subtask.title}
+                          </CardTitle>
+                          <div className="flex gap-2 mb-2">
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              Quick Win
+                            </Badge>
+                            <Badge className={`${
+                              subtask.status === "completed" || subtask.status === "resolved" 
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : subtask.status === "in_progress" 
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                            }`}>
+                              {subtask.status === "pending" ? "In wachtrij" :
+                               subtask.status === "in_progress" ? "In uitvoering" :
+                               subtask.status === "completed" ? "Voltooid" : "Opgelost"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {subtask.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                          {subtask.description}
+                        </p>
+                      )}
+                      
+                      <div className="space-y-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <ActivityIcon className="h-3 w-3" />
+                          <span>Gekoppeld aan: {linkedActivity?.title || "Onbekende activiteit"}</span>
+                        </div>
+                        
+                        {subtask.dueDate && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-3 w-3" />
+                            <span className={isOverdue ? "text-red-600 font-medium" : ""}>
+                              Vervaldatum: {format(new Date(subtask.dueDate), "dd/MM/yyyy")}
+                            </span>
+                            {isOverdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
+                          </div>
+                        )}
+                        
+                        {subtask.participants && subtask.participants.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Users className="h-3 w-3" />
+                            <span>Deelnemers: {subtask.participants.length}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
