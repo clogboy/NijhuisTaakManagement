@@ -41,6 +41,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslations();
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -192,7 +193,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Urgent</p>
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.urgentTasks")}</p>
                   <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
                 </div>
               </div>
@@ -208,7 +209,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Due Week</p>
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.dueThisWeek")}</p>
                   <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
                 </div>
               </div>
@@ -224,7 +225,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Done</p>
+                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.completedTasks")}</p>
                   <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
                 </div>
               </div>
@@ -245,7 +246,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Contacts</p>
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.activeContacts")}</p>
                     <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
                   </div>
                 </div>

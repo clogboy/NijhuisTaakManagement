@@ -9,12 +9,14 @@ import { Trash2, Plus, Edit, Eye } from "lucide-react";
 import { Activity, ActivityLog } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 import { format } from "date-fns";
 import NewActivityModal from "@/components/modals/NewActivityModal";
 import EditActivityModal from "@/components/modals/EditActivityModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 
 export default function Activities() {
+  const { t } = useTranslations();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
