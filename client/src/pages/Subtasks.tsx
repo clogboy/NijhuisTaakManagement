@@ -145,7 +145,7 @@ export default function Subtasks() {
 
   const updateSubtaskMutation = useMutation({
     mutationFn: (data: { id: number; updates: Partial<Subtask> }) =>
-      apiRequest("PUT", `/api/subtasks/${data.id}`, data.updates),
+      apiRequest(`/api/subtasks/${data.id}`, "PUT", data.updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       toast({
