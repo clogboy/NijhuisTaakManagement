@@ -335,6 +335,57 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                               </label>
                             </div>
                           ))}
+                          <div className="mt-3 pt-3 border-t">
+                            <Input
+                              placeholder="Type email address to add new participant..."
+                              value=""
+                              onChange={(e) => {
+                                const email = e.target.value.trim();
+                                if (email && email.includes('@') && !newSubtask.participants.includes(email)) {
+                                  setNewSubtask({
+                                    ...newSubtask,
+                                    participants: [...newSubtask.participants, email]
+                                  });
+                                  e.target.value = '';
+                                }
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  const email = e.target.value.trim();
+                                  if (email && email.includes('@') && !newSubtask.participants.includes(email)) {
+                                    setNewSubtask({
+                                      ...newSubtask,
+                                      participants: [...newSubtask.participants, email]
+                                    });
+                                    e.target.value = '';
+                                  }
+                                }
+                              }}
+                              className="text-sm"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Press Enter to add email. New contacts will be auto-imported from Microsoft if available.
+                            </p>
+                            {newSubtask.participants.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {newSubtask.participants.map((email) => (
+                                  <Badge 
+                                    key={email} 
+                                    variant="secondary" 
+                                    className="text-xs cursor-pointer"
+                                    onClick={() => {
+                                      setNewSubtask({
+                                        ...newSubtask,
+                                        participants: newSubtask.participants.filter(p => p !== email)
+                                      });
+                                    }}
+                                  >
+                                    {email} ×
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button 

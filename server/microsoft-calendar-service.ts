@@ -35,6 +35,20 @@ interface MicrosoftCalendarEvent {
   isAllDay: boolean;
 }
 
+interface MicrosoftContact {
+  id: string;
+  displayName: string;
+  emailAddresses: Array<{
+    address: string;
+    name?: string;
+  }>;
+  businessPhones: string[];
+  mobilePhone?: string;
+  jobTitle?: string;
+  companyName?: string;
+  department?: string;
+}
+
 interface CalendarSyncResult {
   events: MicrosoftCalendarEvent[];
   conflicts: string[];
