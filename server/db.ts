@@ -1,45 +1,46 @@
-import { createClient } from '@supabase/supabase-js';
-import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from "@shared/schema";
+import { createClient } from '@supabase/supabase-js';
 
-// Database configuration - prioritize Supabase if available
 let connectionString: string;
 let supabaseUrl: string | undefined;
 let supabaseKey: string | undefined;
 
-// Force Supabase connection if credentials are available
-if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_DB_PASSWORD) {
-  // Use Supabase - override any existing DATABASE_URL
+// OVERRIDE: Always use Supabase if credentials are available
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_DATABASE_PASSWORD) {
+  console.log("=== FORCING SUPABASE CONNECTION ===");
+  
   supabaseUrl = process.env.SUPABASE_URL;
   supabaseKey = process.env.SUPABASE_ANON_KEY;
   
-  // Convert Supabase API URL to PostgreSQL connection string
+  // Extract project reference from Supabase URL
   const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
   if (!projectRef) {
     throw new Error("Invalid SUPABASE_URL format");
   }
   
-  // Use Supabase's PostgreSQL connection format with pooler (recommended)
+  // Use direct connection to Supabase database
   const dbPassword = process.env.SUPABASE_DATABASE_PASSWORD;
-  connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
-  console.log(`Forcing Supabase PostgreSQL connection for project: ${projectRef}`);
-  console.log(`Connection string: postgresql://postgres.${projectRef}:***@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`);
+  connectionString = `postgresql://postgres:${dbPassword}@db.${projectRef}.supabase.co:5432/postgres`;
+  
+  console.log(`Project: ${projectRef}`);
+  console.log(`Direct Supabase connection: postgresql://postgres:***@db.${projectRef}.supabase.co:5432/postgres`);
+  console.log("=== SUPABASE CONNECTION FORCED ===");
 } else if (process.env.DATABASE_URL) {
-  // Fallback to existing DATABASE_URL
   connectionString = process.env.DATABASE_URL;
-  console.log("Using DATABASE_URL connection (fallback)");
+  console.log("Using DATABASE_URL connection");
 } else {
-  throw new Error("No database connection configured. Set SUPABASE_URL + SUPABASE_ANON_KEY + SUPABASE_DB_PASSWORD or DATABASE_URL");
+  throw new Error("No database connection configured");
 }
 
-// Create Supabase client for additional features if available
+// Create Supabase client
 export const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
-// Create PostgreSQL connection for Drizzle with SSL for Supabase
+// Create PostgreSQL connection using postgres-js (not neon)
 const client = postgres(connectionString, { 
   max: 1,
-  ssl: connectionString.includes('supabase.co') ? { rejectUnauthorized: false } : true
+  ssl: 'require'
 });
 
 export const db = drizzle(client, { schema });
