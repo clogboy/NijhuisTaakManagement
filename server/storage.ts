@@ -11,10 +11,13 @@ import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
 
 // Temporary in-memory storage to bypass database issues
 const tempData = {
+  users: [
+    { id: 1, email: "b.weinreder@nijhuis.nl", name: "Bram Weinreder", role: "admin", password_hash: "$2b$10$xJ8mZQWqD9H6hOjKm5nFvOVGQKWr3yHt2mNgBvCwXzL4pQ8rS1jEm", microsoftId: null, createdAt: new Date() }
+  ],
   activities: [
-    { id: 1, title: "Setup Project Foundation", description: "Initialize the productivity platform with core features", priority: "high", status: "completed", estimatedDuration: 120, createdBy: 1, createdAt: new Date(), updatedAt: new Date() },
-    { id: 2, title: "Calendar Integration", description: "Implement Microsoft Calendar sync and deadline management", priority: "high", status: "in_progress", estimatedDuration: 180, createdBy: 1, createdAt: new Date(), updatedAt: new Date() },
-    { id: 3, title: "Contact Management", description: "Build contact database with email capabilities", priority: "medium", status: "planned", estimatedDuration: 90, createdBy: 1, createdAt: new Date(), updatedAt: new Date() }
+    { id: 1, title: "Setup Project Foundation", description: "Initialize the productivity platform with core features", priority: "high", status: "completed", statusTags: null, estimatedDuration: 120, dueDate: null, participants: null, createdBy: 1, createdAt: new Date(), updatedAt: new Date() },
+    { id: 2, title: "Calendar Integration", description: "Implement Microsoft Calendar sync and deadline management", priority: "high", status: "in_progress", statusTags: null, estimatedDuration: 180, dueDate: null, participants: null, createdBy: 1, createdAt: new Date(), updatedAt: new Date() },
+    { id: 3, title: "Contact Management", description: "Build contact database with email capabilities", priority: "medium", status: "planned", statusTags: null, estimatedDuration: 90, dueDate: null, participants: null, createdBy: 1, createdAt: new Date(), updatedAt: new Date() }
   ],
   quickWins: [
     { id: 1, title: "Add keyboard shortcuts", description: "Implement common keyboard shortcuts for navigation", impact: "medium", effort: "low", status: "pending", linkedActivityId: 1, createdBy: 1, createdAt: new Date() },
