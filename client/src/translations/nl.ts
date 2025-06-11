@@ -48,6 +48,7 @@ export const nlTranslations = {
     formParticipants: "Deelnemers",
     formStatusTags: "Status labels",
     save: "Opslaan",
+    update: "Bijwerken",
     cancel: "Annuleren",
     edit: "Bewerken",
     delete: "Verwijderen",
@@ -59,7 +60,7 @@ export const nlTranslations = {
     logEntryAdded: "Logboekvermelding succesvol toegevoegd",
     logEntryFailed: "Logboekvermelding toevoegen mislukt",
     viewDetails: "Details bekijken",
-    editActivity: "Activiteit bewerken",
+
     deleteActivity: "Activiteit verwijderen",
     addLogEntry: "Logboekvermelding toevoegen",
     logEntry: "Logboekvermelding",
@@ -332,6 +333,15 @@ export const nlTranslations = {
     high: "Hoog",
     urgent: "Urgent",
     due: "Vervalt"
+  },
+  email: {
+    sendEmail: "E-mail verzenden",
+    selectRecipients: "Ontvangers selecteren",
+    selectedRecipients: "Geselecteerde ontvangers",
+    subject: "Onderwerp",
+    message: "Bericht",
+    enterSubject: "Voer onderwerp in",
+    enterMessage: "Voer uw bericht in"
   },
   login: {
     title: "Inloggen",
