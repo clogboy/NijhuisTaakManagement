@@ -58,6 +58,7 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const [location] = useLocation();
   const queryClient = useQueryClient();
+  const { t } = useTranslations();
   const { data: userPreferences } = useQuery<any>({
     queryKey: ["/api/user/preferences"],
   });
@@ -122,13 +123,13 @@ export default function AppLayout({
   };
 
   const navItems = [
-    { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/activities", icon: CheckSquare, label: "Activities" },
-    { path: "/contacts", icon: Users, label: "Contacts" },
-    { path: "/quickwins", icon: Trophy, label: "Quick Wins" },
-    { path: "/roadblocks", icon: AlertTriangle, label: "Roadblocks" },
-    { path: "/agenda", icon: Calendar, label: "AI Agenda" },
-    // { path: "/timeblocking", icon: Clock, label: "Time Blocking" }, // Temporarily disabled
+    { path: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
+    { path: "/activities", icon: CheckSquare, label: t("nav.activities") },
+    { path: "/contacts", icon: Users, label: t("nav.contacts") },
+    { path: "/quickwins", icon: Trophy, label: t("nav.quickWins") },
+    { path: "/roadblocks", icon: AlertTriangle, label: t("nav.roadblocks") },
+    { path: "/agenda", icon: Calendar, label: t("nav.agenda") },
+    // { path: "/timeblocking", icon: Clock, label: t("nav.timeBlocking") }, // Temporarily disabled
     { path: "/reports", icon: BarChart3, label: "Reports" },
   ];
 
