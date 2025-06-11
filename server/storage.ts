@@ -165,7 +165,7 @@ export class DatabaseStorage implements IStorage {
 
   async getContacts(createdBy: number): Promise<Contact[]> {
     console.log(`[STORAGE] Getting contacts for user ${createdBy}`);
-    const result = await db.select().from(contacts).where(eq(contacts.created_by, createdBy)).orderBy(contacts.name);
+    const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
     console.log(`[STORAGE] Found ${result.length} contacts`);
     return result;
   }
@@ -181,12 +181,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContact(contact: InsertContact & { createdBy: number }): Promise<Contact> {
-    const contactData = {
-      ...contact,
-      created_by: contact.createdBy
-    };
-    delete contactData.createdBy;
-    const [newContact] = await db.insert(contacts).values(contactData).returning();
+    const [newContact] = await db.insert(contacts).values(contact).returning();
     return newContact;
   }
 
