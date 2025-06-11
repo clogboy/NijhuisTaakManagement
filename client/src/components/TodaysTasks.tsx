@@ -323,111 +323,153 @@ export default function TodaysTasks() {
           <div className="space-y-3">
             {allTodaysTasks.map((task: any) => {
               const isCompleted = completionMap[task.id] || false;
+              const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "completed";
+              
+              const getTypeColor = (type: string) => {
+                switch (type) {
+                  case 'quick_win': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+                  case 'roadblock': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+                  default: return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+                }
+              };
+
+              const getStatusColor = (status: string) => {
+                switch (status) {
+                  case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                  case 'in_progress': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+                  case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                  default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+                }
+              };
+
+              const getPriorityColor = (priority: string) => {
+                switch (priority) {
+                  case 'urgent': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+                  case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+                  case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+                  default: return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                }
+              };
               
               return (
-                <div
+                <Card 
                   key={`${task.isSubtask ? 'subtask' : 'activity'}-${task.id}`}
-                  className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}
                 >
-                  <Checkbox
-                    checked={isCompleted}
-                    onCheckedChange={(checked) => {
-                      // First update the daily completion
-                      toggleTaskCompletion.mutate({
-                        activityId: task.id,
-                        completed: !!checked,
-                      });
-                      
-                      // Then update the task status
-                      if (checked) {
-                        updateTaskStatus.mutate({
-                          taskId: task.id,
-                          status: 'completed',
-                          isSubtask: task.isSubtask
-                        });
-                      }
-                    }}
-                    className="flex-shrink-0"
-                  />
-                  
-                  <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {task.taskType === 'quick_win' && <Zap className="h-4 w-4 text-yellow-500" />}
-                      {task.taskType === 'roadblock' && <Construction className="h-4 w-4 text-red-500" />}
-                      {task.taskType === 'task' && <Target className="h-4 w-4 text-blue-500" />}
-                      <h3 className="font-medium text-sm truncate">{task.title}</h3>
-                      {task.priority === 'urgent' && (
-                        <Badge variant="destructive" className="text-xs">Urgent</Badge>
-                      )}
-                    </div>
-                    {task.dueDate && (
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(task.dueDate), "MMM d")}
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <Checkbox
+                            checked={isCompleted}
+                            onCheckedChange={(checked) => {
+                              toggleTaskCompletion.mutate({
+                                activityId: task.id,
+                                completed: !!checked,
+                              });
+                              
+                              if (checked) {
+                                updateTaskStatus.mutate({
+                                  taskId: task.id,
+                                  status: 'completed',
+                                  isSubtask: task.isSubtask
+                                });
+                              }
+                            }}
+                            className="flex-shrink-0"
+                          />
+                          <span className={isCompleted ? "line-through text-gray-500" : ""}>
+                            {task.title}
+                          </span>
+                        </CardTitle>
+                        <div className="flex gap-2 mb-2">
+                          <Badge className={getTypeColor(task.taskType || 'task')}>
+                            {task.taskType === "quick_win" ? "Quick Win" : 
+                             task.taskType === "roadblock" ? "Roadblock" : "Task"}
+                          </Badge>
+                          <Badge className={getStatusColor(task.status)}>
+                            {task.status === "pending" ? "Pending" :
+                             task.status === "in_progress" ? "In Progress" :
+                             task.status === "completed" ? "Completed" : "Resolved"}
+                          </Badge>
+                          <Badge className={getPriorityColor(task.priority)}>
+                            {task.priority === "urgent" ? "Urgent" :
+                             task.priority === "high" ? "High" :
+                             task.priority === "medium" ? "Medium" : "Low"}
+                          </Badge>
+                        </div>
                       </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {task.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        {task.description}
+                      </p>
                     )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Select
-                      value={task.status}
-                      onValueChange={(status) => {
-                        updateTaskStatus.mutate({
-                          taskId: task.id,
-                          status,
-                          isSubtask: task.isSubtask
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-28 h-8 text-xs">
-                        <SelectValue>
-                          {task.isSubtask ? (
-                            task.status === 'pending' ? 'Pending' :
-                            task.status === 'in_progress' ? 'In Progress' :
-                            task.status === 'completed' ? 'Completed' :
-                            task.status === 'resolved' ? 'Resolved' :
-                            task.status
-                          ) : (
-                            task.status === 'pending' ? 'Pending' :
-                            task.status === 'in_progress' ? 'In Progress' :
-                            task.status === 'completed' ? 'Completed' :
-                            task.status
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {task.isSubtask ? (
-                          <>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="resolved">Resolved</SelectItem>
-                          </>
-                        ) : (
-                          <>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
                     
-                    {!task.isSubtask && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedTask(task);
-                          setIsTaskDetailModalOpen(true);
-                        }}
-                        className="h-8 w-8 p-0"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                    <div className="space-y-2 text-xs text-gray-500">
+                      {task.dueDate && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3 w-3" />
+                          <span className={isOverdue ? "text-red-600 font-medium" : ""}>
+                            Due: {format(new Date(task.dueDate), "dd/MM/yyyy")}
+                          </span>
+                          {isOverdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={task.status}
+                            onValueChange={(status) => {
+                              updateTaskStatus.mutate({
+                                taskId: task.id,
+                                status,
+                                isSubtask: task.isSubtask
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-32 h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {task.isSubtask ? (
+                                <>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="in_progress">In Progress</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="resolved">Resolved</SelectItem>
+                                </>
+                              ) : (
+                                <>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="in_progress">In Progress</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {!task.isSubtask && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setIsTaskDetailModalOpen(true);
+                            }}
+                            className="h-7 px-3 text-xs"
+                          >
+                            View Details
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })}
             
