@@ -117,8 +117,12 @@ export interface IStorage {
   // BimCollab Integration
   getBimcollabProjects(userId: number): Promise<BimcollabProject[]>;
   getBimcollabIssues(projectId: string): Promise<BimcollabIssue[]>;
+  getBimcollabProjectByProjectId(projectId: string): Promise<BimcollabProject | undefined>;
+  getBimcollabIssueByIssueId(issueId: string): Promise<BimcollabIssue | undefined>;
   createBimcollabProject(project: InsertBimcollabProject & { userId: number }): Promise<BimcollabProject>;
   createBimcollabIssue(issue: InsertBimcollabIssue): Promise<BimcollabIssue>;
+  updateBimcollabProject(id: number, project: Partial<InsertBimcollabProject>): Promise<BimcollabProject>;
+  updateBimcollabIssue(id: number, issue: Partial<InsertBimcollabIssue>): Promise<BimcollabIssue>;
 
   // Teams Integration
   getTeamsBoards(userId: number): Promise<TeamsBoard[]>;
@@ -768,6 +772,105 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // BimCollab Integration methods
+  async getBimcollabProjects(userId: number): Promise<BimcollabProject[]> {
+    return await db.select().from(bimcollabProjects).where(eq(bimcollabProjects.createdBy, userId));
+  }
+
+  async getBimcollabProjectByProjectId(projectId: string): Promise<BimcollabProject | undefined> {
+    const [project] = await db.select().from(bimcollabProjects).where(eq(bimcollabProjects.projectId, projectId));
+    return project || undefined;
+  }
+
+  async getBimcollabIssues(projectId: string): Promise<BimcollabIssue[]> {
+    // Find the project first to get the internal ID
+    const [project] = await db.select().from(bimcollabProjects).where(eq(bimcollabProjects.projectId, projectId));
+    if (!project) return [];
+    
+    return await db.select().from(bimcollabIssues).where(eq(bimcollabIssues.projectId, project.id));
+  }
+
+  async getBimcollabIssueByIssueId(issueId: string): Promise<BimcollabIssue | undefined> {
+    const [issue] = await db.select().from(bimcollabIssues).where(eq(bimcollabIssues.issueId, issueId));
+    return issue || undefined;
+  }
+
+  async createBimcollabProject(project: InsertBimcollabProject & { userId: number }): Promise<BimcollabProject> {
+    const { userId, ...projectData } = project;
+    const [created] = await db.insert(bimcollabProjects).values({
+      ...projectData,
+      createdBy: userId
+    }).returning();
+    return created;
+  }
+
+  async updateBimcollabProject(id: number, projectUpdate: Partial<InsertBimcollabProject>): Promise<BimcollabProject> {
+    const [updated] = await db.update(bimcollabProjects)
+      .set(projectUpdate)
+      .where(eq(bimcollabProjects.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createBimcollabIssue(issue: InsertBimcollabIssue): Promise<BimcollabIssue> {
+    const [created] = await db.insert(bimcollabIssues).values(issue).returning();
+    return created;
+  }
+
+  async updateBimcollabIssue(id: number, issueUpdate: Partial<InsertBimcollabIssue>): Promise<BimcollabIssue> {
+    const [updated] = await db.update(bimcollabIssues)
+      .set(issueUpdate)
+      .where(eq(bimcollabIssues.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Teams Integration methods
+  async getTeamsBoards(userId: number): Promise<TeamsBoard[]> {
+    return await db.select().from(teamsBoards).where(eq(teamsBoards.createdBy, userId));
+  }
+
+  async getTeamsCards(boardId: string): Promise<TeamsCard[]> {
+    // Find the board first to get the internal ID
+    const [board] = await db.select().from(teamsBoards).where(eq(teamsBoards.boardId, boardId));
+    if (!board) return [];
+    
+    return await db.select().from(teamsCards).where(eq(teamsCards.boardId, board.id));
+  }
+
+  async createTeamsBoard(board: InsertTeamsBoard & { userId: number }): Promise<TeamsBoard> {
+    const { userId, ...boardData } = board;
+    const [created] = await db.insert(teamsBoards).values({
+      ...boardData,
+      createdBy: userId
+    }).returning();
+    return created;
+  }
+
+  async createTeamsCard(card: InsertTeamsCard): Promise<TeamsCard> {
+    const [created] = await db.insert(teamsCards).values(card).returning();
+    return created;
+  }
+
+  // Integration Settings methods
+  async getIntegrationSettings(userId: number): Promise<IntegrationSettings | undefined> {
+    const [settings] = await db.select().from(integrationSettings).where(eq(integrationSettings.userId, userId));
+    return settings || undefined;
+  }
+
+  async createIntegrationSettings(settings: InsertIntegrationSettings & { userId: number }): Promise<IntegrationSettings> {
+    const [created] = await db.insert(integrationSettings).values(settings).returning();
+    return created;
+  }
+
+  async updateIntegrationSettings(userId: number, settingsUpdate: Partial<InsertIntegrationSettings>): Promise<IntegrationSettings> {
+    const [updated] = await db.update(integrationSettings)
+      .set(settingsUpdate)
+      .where(eq(integrationSettings.userId, userId))
+      .returning();
+    return updated;
   }
 }
 
