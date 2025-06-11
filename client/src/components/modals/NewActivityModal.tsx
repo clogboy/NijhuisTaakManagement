@@ -104,8 +104,8 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
-        title: "Success",
-        description: "Activity created successfully",
+        title: t('common.success'),
+        description: t('activities.createSuccess'),
       });
       form.reset();
       setStatusTags([]);
@@ -114,8 +114,8 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create activity",
+        title: t('common.error'),
+        description: error.message || t('activities.createFailed'),
         variant: "destructive",
       });
     },
@@ -130,7 +130,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
       <DialogContent className="max-w-2xl max-h-screen w-[95vw] sm:w-full overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-base sm:text-lg font-semibold text-neutral-dark">
-            Create New Activity
+{t('activities.addNew')}
           </DialogTitle>
         </DialogHeader>
 
@@ -142,9 +142,9 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Activity Title</FormLabel>
+                    <FormLabel>{t('activities.formTitle')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter activity title" {...field} />
+                      <Input placeholder={t('forms.enterText')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -156,17 +156,17 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>{t('activities.formPriority')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder={t('forms.selectOption')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="low">{t('activities.priorityLow')}</SelectItem>
+                        <SelectItem value="normal">{t('activities.priorityNormal')}</SelectItem>
+                        <SelectItem value="urgent">{t('activities.priorityUrgent')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -180,10 +180,10 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('activities.formDescription')}</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the activity..." 
+                      placeholder={t('forms.enterText')} 
                       rows={3}
                       {...field} 
                       value={field.value || ""}
@@ -197,7 +197,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
             {/* Status Tags */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-neutral-dark">
-                Status Tags
+{t('activities.formStatusTags')}
               </label>
               
               {/* Current Tags */}
@@ -300,7 +300,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+{t('activities.cancel')}
               </Button>
               <Button 
                 type="submit" 

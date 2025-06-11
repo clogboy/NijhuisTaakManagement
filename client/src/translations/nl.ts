@@ -54,6 +54,7 @@ export const nlTranslations = {
     deleteConfirm: "Weet je zeker dat je deze activiteit wilt verwijderen?",
     deleteSuccess: "Activiteit succesvol verwijderd",
     createSuccess: "Activiteit succesvol aangemaakt",
+    createFailed: "Activiteit aanmaken mislukt",
     updateSuccess: "Activiteit succesvol bijgewerkt",
     logEntryAdded: "Logboekvermelding succesvol toegevoegd",
     logEntryFailed: "Logboekvermelding toevoegen mislukt",
