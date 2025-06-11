@@ -5,6 +5,38 @@ import { Activity, WeeklyEthos, Subtask } from "@shared/schema";
 let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 let usingBackupKey = false;
 
+// API usage logging
+let apiUsageLog = {
+  dailyCount: 0,
+  lastResetDate: new Date().toDateString(),
+  totalTokens: 0,
+  requestTypes: {} as Record<string, number>
+};
+
+function logApiUsage(requestType: string, tokens?: number) {
+  const today = new Date().toDateString();
+  
+  // Reset daily count if it's a new day
+  if (apiUsageLog.lastResetDate !== today) {
+    apiUsageLog.dailyCount = 0;
+    apiUsageLog.lastResetDate = today;
+    apiUsageLog.requestTypes = {};
+  }
+  
+  apiUsageLog.dailyCount++;
+  if (tokens) {
+    apiUsageLog.totalTokens += tokens;
+  }
+  
+  apiUsageLog.requestTypes[requestType] = (apiUsageLog.requestTypes[requestType] || 0) + 1;
+  
+  console.log(`[API Usage] ${requestType} - Daily: ${apiUsageLog.dailyCount}, Total tokens: ${apiUsageLog.totalTokens}`);
+}
+
+export function getApiUsageStats() {
+  return { ...apiUsageLog };
+}
+
 // Function to get current key status
 export function getKeyStatus() {
   return {
@@ -127,6 +159,7 @@ Return a JSON object with this exact structure:
 }
 `;
 
+    logApiUsage('eisenhower_categorization');
     const workingOpenAI = await getWorkingOpenAI();
     const response = await workingOpenAI.chat.completions.create({
       model: "gpt-4o",
@@ -142,6 +175,10 @@ Return a JSON object with this exact structure:
       ],
       response_format: { type: "json_object" },
     });
+
+    // Log token usage
+    const tokens = response.usage?.total_tokens || 0;
+    logApiUsage('eisenhower_categorization_tokens', tokens);
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
     
@@ -422,6 +459,7 @@ Provide insights on:
 Keep response concise and actionable.
 `;
 
+    logApiUsage('productivity_analysis');
     const workingOpenAI = await getWorkingOpenAI();
     const response = await workingOpenAI.chat.completions.create({
       model: "gpt-4o",
@@ -436,6 +474,10 @@ Keep response concise and actionable.
         }
       ],
     });
+
+    // Log token usage
+    const tokens = response.usage?.total_tokens || 0;
+    logApiUsage('productivity_analysis_tokens', tokens);
 
     return response.choices[0].message.content || 'Great work today! Keep focusing on your priorities.';
 

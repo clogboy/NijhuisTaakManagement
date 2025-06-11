@@ -130,23 +130,35 @@ export default function Settings() {
     },
   });
 
-  // Scheduler trigger mutation
-  const triggerSchedulerMutation = useMutation({
-    mutationFn: () => apiRequest("/api/scheduler/trigger", "POST"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/scheduler/status"] });
+  // Convert overdue subtasks to roadblocks (admin only)
+  const convertOverdueSubtasksMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("/api/admin/convert-overdue-subtasks", "POST");
+    },
+    onSuccess: (data) => {
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
+      
       toast({
-        title: "Scheduler triggered",
-        description: "Daily sync has been initiated manually.",
+        title: "Conversion Complete",
+        description: `Converted ${data.totalConverted} overdue subtasks to roadblocks across ${data.usersProcessed} users`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to trigger scheduler. Please try again.",
+        description: error.message || "Failed to convert overdue subtasks",
         variant: "destructive",
       });
     },
+  });
+
+  // Get API usage statistics (admin only)
+  const { data: apiUsageStats } = useQuery({
+    queryKey: ["/api/admin/api-usage"],
+    enabled: user?.user?.role === 'admin',
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
@@ -558,6 +570,58 @@ export default function Settings() {
                   }
                 />
               </div>
+              
+              {user?.user?.role === 'admin' && (
+                <>
+                  <Separator />
+                  <div>
+                    <Label className="text-sm font-medium">Convert Overdue Subtasks</Label>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Manually trigger conversion of overdue subtasks to roadblocks. This normally happens automatically at midnight.
+                    </p>
+                    <Button 
+                      onClick={() => convertOverdueSubtasksMutation.mutate()}
+                      disabled={convertOverdueSubtasksMutation.isPending}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      {convertOverdueSubtasksMutation.isPending ? "Converting..." : "Convert Overdue Subtasks"}
+                    </Button>
+                  </div>
+                  
+                  {apiUsageStats && (
+                    <>
+                      <Separator />
+                      <div>
+                        <Label className="text-sm font-medium">API Usage Statistics</Label>
+                        <p className="text-sm text-gray-500 mb-3">
+                          Monitor OpenAI API usage to manage costs effectively
+                        </p>
+                        <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div>
+                            <div className="text-sm font-medium">Daily Requests</div>
+                            <div className="text-lg">{apiUsageStats.dailyCount}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">Total Tokens</div>
+                            <div className="text-lg">{apiUsageStats.totalTokens?.toLocaleString()}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="text-sm font-medium mb-2">Request Types</div>
+                            {Object.entries(apiUsageStats.requestTypes || {}).map(([type, count]) => (
+                              <div key={type} className="flex justify-between text-xs">
+                                <span>{type}</span>
+                                <span>{count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
 

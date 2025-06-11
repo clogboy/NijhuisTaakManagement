@@ -208,6 +208,11 @@ export default function TodaysTasks() {
           <div className="flex items-center">
             <Calendar className="mr-2 h-5 w-5 text-ms-blue" />
             Today's Tasks
+            {hasOverdueWarning && (
+              <Badge variant="destructive" className="ml-2 text-xs">
+                {overdueSubtasks.length} overdue
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button
