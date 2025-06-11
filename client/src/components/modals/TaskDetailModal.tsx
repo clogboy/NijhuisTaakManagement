@@ -169,7 +169,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className="flex-1">
@@ -192,7 +192,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        <ScrollArea className="flex-1 max-h-[70vh]">
           {activity.description && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700">{activity.description}</p>
@@ -231,28 +231,26 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                 </CardContent>
               </Card>
 
-              <ScrollArea className="flex-1">
-                <div className="space-y-3">
-                  {comments.map((comment) => (
-                    <Card key={comment.id}>
-                      <CardContent className="pt-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-medium text-sm">User</span>
-                          <span className="text-xs text-gray-500">
-                            {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                          </span>
-                        </div>
-                        <p className="text-sm">{comment.comment}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {comments.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      Nog geen opmerkingen. Voeg de eerste toe!
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+              <div className="space-y-3">
+                {comments.map((comment) => (
+                  <Card key={comment.id}>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-sm">User</span>
+                        <span className="text-xs text-gray-500">
+                          {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                        </span>
+                      </div>
+                      <p className="text-sm">{comment.comment}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+                {comments.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    Nog geen opmerkingen. Voeg de eerste toe!
+                  </div>
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="subtasks" className="flex-1 space-y-4">
@@ -278,13 +276,13 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                     onChange={(e) => setNewSubtask({ ...newSubtask, description: e.target.value })}
                     rows={2}
                   />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-sm font-medium">Prioriteit</label>
                       <select
                         value={newSubtask.priority}
                         onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as "low" | "medium" | "high" })}
-                        className="w-full p-2 border rounded-md"
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                       >
                         <option value="low">Laag</option>
                         <option value="medium">Gemiddeld</option>
@@ -292,24 +290,45 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Einddatum</label>
+                      <label className="text-sm font-medium">Vervaldatum</label>
                       <Input
                         type="date"
                         value={newSubtask.dueDate}
                         onChange={(e) => setNewSubtask({ ...newSubtask, dueDate: e.target.value })}
+                        className="mt-1"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Deelnemers (emails, komma gescheiden)</label>
-                    <Input
-                      placeholder="email1@domein.com, email2@domein.com"
-                      value={newSubtask.participants.join(", ")}
-                      onChange={(e) => setNewSubtask({ 
-                        ...newSubtask, 
-                        participants: e.target.value.split(",").map(email => email.trim()).filter(Boolean)
-                      })}
-                    />
+                    <label className="text-sm font-medium mb-2 block">Deelnemers</label>
+                    <div className="space-y-2">
+                      {contacts.map((contact) => (
+                        <div key={contact.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`contact-${contact.id}`}
+                            checked={newSubtask.participants.includes(contact.email)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewSubtask({
+                                  ...newSubtask,
+                                  participants: [...newSubtask.participants, contact.email]
+                                });
+                              } else {
+                                setNewSubtask({
+                                  ...newSubtask,
+                                  participants: newSubtask.participants.filter(p => p !== contact.email)
+                                });
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <label htmlFor={`contact-${contact.id}`} className="text-sm">
+                            {contact.name} ({contact.email})
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <Button 
                     onClick={handleAddSubtask}
@@ -322,55 +341,53 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                 </CardContent>
               </Card>
 
-              <ScrollArea className="flex-1">
-                <div className="space-y-3">
-                  {subtasks.map((subtask) => (
-                    <Card key={subtask.id}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getTaskTypeIcon(subtask.type)}
-                            <h4 className="font-medium">{subtask.title}</h4>
-                          </div>
-                          <div className="flex gap-2">
-                            <Badge className={getPriorityColor(subtask.priority)}>
-                              {subtask.priority}
-                            </Badge>
-                            <Badge className={getStatusColor(subtask.status)}>
-                              {subtask.status}
-                            </Badge>
-                          </div>
+              <div className="space-y-3">
+                {subtasks.map((subtask) => (
+                  <Card key={subtask.id}>
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {getTaskTypeIcon(subtask.type)}
+                          <h4 className="font-medium">{subtask.title}</h4>
                         </div>
-                        {subtask.description && (
-                          <p className="text-sm text-gray-600 mb-2">{subtask.description}</p>
+                        <div className="flex gap-2">
+                          <Badge className={getPriorityColor(subtask.priority)}>
+                            {subtask.priority}
+                          </Badge>
+                          <Badge className={getStatusColor(subtask.status)}>
+                            {subtask.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      {subtask.description && (
+                        <p className="text-sm text-gray-600 mb-2">{subtask.description}</p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        {subtask.participants.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            <span>{subtask.participants.length} deelnemers</span>
+                          </div>
                         )}
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          {subtask.participants.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              <span>{subtask.participants.length} deelnemers</span>
-                            </div>
-                          )}
-                          {subtask.dueDate && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>Vervalt {format(new Date(subtask.dueDate), "d MMM")}</span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {subtasks.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      Nog geen subtaken. Voeg er een toe om te beginnen!
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                        {subtask.dueDate && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>Vervalt {format(new Date(subtask.dueDate), "d MMM")}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {subtasks.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    Nog geen subtaken. Voeg er een toe om te beginnen!
+                  </div>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -110,6 +110,21 @@ export default function TodaysTasks() {
   const activitiesToday = activities.filter(activity => {
     const dueDate = activity.dueDate ? format(new Date(activity.dueDate), "yyyy-MM-dd") : null;
     return dueDate === todayString || activity.status === "in-progress";
+  }).sort((a, b) => {
+    // Eisenhower Matrix priority order (descending importance)
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    const urgencyOrder = { urgent: 3, in_progress: 2, pending: 1, completed: 0 };
+    
+    const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 1;
+    const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 1;
+    const aUrgency = urgencyOrder[a.status as keyof typeof urgencyOrder] || 1;
+    const bUrgency = urgencyOrder[b.status as keyof typeof urgencyOrder] || 1;
+    
+    // Primary sort: urgent + important (high priority + urgent status)
+    const aScore = aPriority + aUrgency;
+    const bScore = bPriority + bUrgency;
+    
+    return bScore - aScore; // Descending order
   });
 
   // Combine prioritized subtasks and today's activities
