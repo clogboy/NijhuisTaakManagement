@@ -115,11 +115,12 @@ export const subtasks = pgTable("subtasks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type").notNull(), // 'quick_win', 'roadblock'
+  type: text("type").notNull(), // 'quick_win', 'roadblock', 'task'
   status: text("status").notNull().default("pending"), // 'pending', 'in_progress', 'completed', 'resolved'
   priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high'
   dueDate: timestamp("due_date"),
   participants: text("participants").array().notNull().default([]), // array of contact names/emails
+  participantTypes: json("participant_types").notNull().default({}), // { "email@domain.com": "task", "other@domain.com": "quick_win" }
   linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   completedDate: timestamp("completed_date"),
   createdBy: integer("created_by").notNull().references(() => users.id),

@@ -13,6 +13,7 @@ import Activities from "@/pages/Activities";
 import Contacts from "@/pages/Contacts";
 import QuickWins from "@/pages/QuickWins";
 import Roadblocks from "@/pages/Roadblocks";
+import Subtasks from "@/pages/Subtasks";
 import Agenda from "@/pages/Agenda";
 import TimeBlocking from "@/pages/TimeBlocking";
 import Profile from "@/pages/Profile";
@@ -51,6 +52,7 @@ function AuthenticatedApp() {
       </Route>
       <Route path="/quickwins" component={QuickWins} />
       <Route path="/roadblocks" component={Roadblocks} />
+      <Route path="/subtasks" component={Subtasks} />
       <Route path="/agenda" component={Agenda} />
       <Route path="/timeblocking" component={TimeBlocking} />
       <Route path="/reports">

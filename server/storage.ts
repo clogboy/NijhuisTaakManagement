@@ -169,13 +169,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createActivity(activity: InsertActivity & { createdBy: number }): Promise<Activity> {
-    // Ensure the author is always included as a participant
-    const authorUser = await this.getUser(activity.createdBy);
-    const authorEmail = authorUser?.email || '';
-    
+    // Ensure the author is always included as a participant (using contact ID)
     const participants = activity.participants || [];
-    if (authorEmail && !participants.includes(authorEmail)) {
-      participants.unshift(authorEmail); // Add author at the beginning
+    if (!participants.includes(activity.createdBy)) {
+      participants.unshift(activity.createdBy); // Add author at the beginning
     }
 
     const [newActivity] = await db.insert(activities).values({
