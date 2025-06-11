@@ -416,6 +416,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update participant's task type for a subtask
+  app.patch("/api/subtasks/:id/participant-type", requireAuth, async (req: any, res) => {
+    try {
+      const subtaskId = parseInt(req.params.id);
+      const { participantEmail, taskType } = req.body;
+      
+      if (!participantEmail || !taskType) {
+        return res.status(400).json({ error: "participantEmail and taskType are required" });
+      }
+
+      if (!["task", "quick_win", "roadblock"].includes(taskType)) {
+        return res.status(400).json({ error: "taskType must be 'task', 'quick_win', or 'roadblock'" });
+      }
+
+      const updatedSubtask = await storage.updateSubtaskParticipantType(subtaskId, participantEmail, taskType);
+      res.json(updatedSubtask);
+    } catch (error) {
+      console.error("Error updating participant task type:", error);
+      res.status(500).json({ error: "Failed to update participant task type" });
+    }
+  });
+
   // Task Comments routes
   app.get("/api/activities/:id/comments", requireAuth, async (req: any, res) => {
     try {

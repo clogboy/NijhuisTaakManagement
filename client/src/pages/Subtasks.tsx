@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar } from "lucide-react";
+import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Roadblock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Subtask, Activity, Contact } from "@shared/schema";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -30,6 +31,38 @@ export default function Subtasks() {
 
   const { data: contacts } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
+  });
+
+  const { data: currentUser } = useQuery<{ user: any }>({
+    queryKey: ["/api/auth/me"],
+  });
+
+  const updateParticipantTypeMutation = useMutation({
+    mutationFn: async ({ subtaskId, participantEmail, taskType }: { 
+      subtaskId: number; 
+      participantEmail: string; 
+      taskType: string; 
+    }) => {
+      return apiRequest(`/api/subtasks/${subtaskId}/participant-type`, {
+        method: "PATCH",
+        body: JSON.stringify({ participantEmail, taskType }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      toast({
+        title: t("success"),
+        description: t("subtaskTypeUpdated"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("error"),
+        description: t("failedToUpdateSubtaskType"),
+        variant: "destructive",
+      });
+    },
   });
 
   // Create maps for lookup

@@ -54,6 +54,7 @@ export interface IStorage {
   createSubtask(subtask: InsertSubtask & { createdBy: number }): Promise<Subtask>;
   updateSubtask(id: number, subtask: Partial<InsertSubtask>): Promise<Subtask>;
   deleteSubtask(id: number): Promise<void>;
+  updateSubtaskParticipantType(subtaskId: number, participantEmail: string, taskType: string): Promise<Subtask>;
 
   // Stats
   getActivityStats(userId: number, isAdmin: boolean): Promise<{
@@ -616,9 +617,18 @@ export class DatabaseStorage implements IStorage {
       participants.unshift(authorEmail); // Add author at the beginning
     }
 
+    // Initialize participant types with default type for all participants
+    const participantTypes = (subtask.participantTypes as Record<string, string>) || {};
+    participants.forEach(email => {
+      if (!participantTypes[email]) {
+        participantTypes[email] = subtask.type; // Default to the subtask's main type
+      }
+    });
+
     const [newSubtask] = await db.insert(subtasks).values({
       ...subtask,
-      participants
+      participants,
+      participantTypes
     }).returning();
     return newSubtask;
   }
@@ -633,6 +643,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSubtask(id: number): Promise<void> {
     await db.delete(subtasks).where(eq(subtasks.id, id));
+  }
+
+  async updateSubtaskParticipantType(subtaskId: number, participantEmail: string, taskType: string): Promise<Subtask> {
+    // Get current subtask
+    const subtask = await this.getSubtask(subtaskId);
+    if (!subtask) {
+      throw new Error("Subtask not found");
+    }
+
+    // Update participant types
+    const participantTypes = subtask.participantTypes as Record<string, string> || {};
+    participantTypes[participantEmail] = taskType;
+
+    const [updatedSubtask] = await db.update(subtasks)
+      .set({ 
+        participantTypes,
+        updatedAt: new Date() 
+      })
+      .where(eq(subtasks.id, subtaskId))
+      .returning();
+    
+    return updatedSubtask;
   }
 }
 
