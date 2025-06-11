@@ -116,22 +116,7 @@ placeholder={t('roadblocks.searchPlaceholder')}
           />
         </div>
 
-        {/* Info Banner */}
-        <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-red-800 dark:text-red-200">
-{t('roadblocks.taskSpecific')}
-                </h3>
-                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-{t('roadblocks.taskSpecificDescription')}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
 
         {roadblocksLoading ? (
           <div className="text-center py-12">
@@ -151,7 +136,10 @@ placeholder={t('roadblocks.searchPlaceholder')}
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-8">
+            {/* Traditional Roadblocks */}
+            {filteredRoadblocks.length > 0 && (
+              <div className="grid gap-6 lg:grid-cols-3">
             {/* Open Roadblocks */}
             <div>
               <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
