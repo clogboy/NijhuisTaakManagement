@@ -31,7 +31,7 @@ export const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl,
 // Create PostgreSQL connection for Drizzle
 const client = postgres(connectionString, { 
   max: 1,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: true
 });
 
 export const db = drizzle(client, { schema });
