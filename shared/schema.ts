@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   role: text("role").notNull().default("user"), // 'admin' or 'user'
+  password_hash: text("password_hash"),
   microsoftId: text("microsoft_id").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
