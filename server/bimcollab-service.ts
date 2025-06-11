@@ -205,8 +205,11 @@ export class BimcollabService {
     
     if (!credentials) {
       console.log('BimCollab API not configured - updating local issue only');
-      // Update local issue when API is not available
-      await storage.updateBimcollabIssue(issueId, { status });
+      // Find issue by issueId first to get the internal ID
+      const issue = await storage.getBimcollabIssueByIssueId(issueId);
+      if (issue) {
+        await storage.updateBimcollabIssue(issue.id, { status });
+      }
       return true;
     }
 
@@ -227,7 +230,10 @@ export class BimcollabService {
       }
 
       // Update local storage
-      await storage.updateBimcollabIssue(issueId, { status });
+      const issue = await storage.getBimcollabIssueByIssueId(issueId);
+      if (issue) {
+        await storage.updateBimcollabIssue(issue.id, { status });
+      }
       return true;
     } catch (error) {
       console.error('Failed to update BimCollab issue:', error);
@@ -286,7 +292,7 @@ export class BimcollabService {
         description: project.description || '',
         serverUrl,
         lastSyncAt: new Date(),
-        createdBy: userId,
+        userId: userId,
       });
     }
   }
