@@ -15,6 +15,7 @@ export default function QuickWins() {
 
   const { data: quickWins, isLoading: quickWinsLoading } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
+    queryFn: () => fetch("/api/quickwins", { credentials: "include" }).then(res => res.json()),
   });
 
   const { data: activities } = useQuery<Activity[]>({

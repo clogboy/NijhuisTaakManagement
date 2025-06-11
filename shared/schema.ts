@@ -111,6 +111,22 @@ export const roadblocks = pgTable("roadblocks", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const subtasks = pgTable("subtasks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: text("type").notNull(), // 'quick_win', 'roadblock'
+  status: text("status").notNull().default("pending"), // 'pending', 'in_progress', 'completed', 'resolved'
+  priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high'
+  dueDate: timestamp("due_date"),
+  participants: text("participants").array().notNull().default([]), // array of contact names/emails
+  linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
+  completedDate: timestamp("completed_date"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -149,6 +165,13 @@ export const insertQuickWinSchema = createInsertSchema(quickWins).omit({
 });
 
 export const insertRoadblockSchema = createInsertSchema(roadblocks).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
   id: true,
   createdBy: true,
   createdAt: true,
@@ -218,6 +241,9 @@ export type InsertQuickWin = z.infer<typeof insertQuickWinSchema>;
 
 export type Roadblock = typeof roadblocks.$inferSelect;
 export type InsertRoadblock = z.infer<typeof insertRoadblockSchema>;
+
+export type Subtask = typeof subtasks.$inferSelect;
+export type InsertSubtask = z.infer<typeof insertSubtaskSchema>;
 
 export type WeeklyEthos = typeof weeklyEthos.$inferSelect;
 export type InsertWeeklyEthos = z.infer<typeof insertWeeklyEthosSchema>;
