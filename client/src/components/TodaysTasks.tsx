@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction, ArrowUpDown } from "lucide-react";
+import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { Activity, Subtask } from "@shared/schema";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import { apiRequest } from "@/lib/queryClient";
@@ -106,6 +106,18 @@ export default function TodaysTasks() {
       return bScore - aScore; // Higher score first
     });
   };
+
+  // Filter overdue subtasks that will be converted to roadblocks
+  const overdueSubtasks = subtasks.filter(subtask => {
+    if (!subtask.dueDate || subtask.completed) return false;
+    const dueDate = new Date(subtask.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(23, 59, 59, 999);
+    return dueDate < today;
+  });
+
+  const hasOverdueWarning = overdueSubtasks.length > 0;
 
   // Filter activities for today (due today or in progress)
   const activitiesToday = activities.filter(activity => {

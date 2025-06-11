@@ -135,14 +135,14 @@ export default function Settings() {
     mutationFn: async () => {
       return apiRequest("/api/admin/convert-overdue-subtasks", "POST");
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
       
       toast({
         title: "Conversion Complete",
-        description: `Converted ${data.totalConverted} overdue subtasks to roadblocks across ${data.usersProcessed} users`,
+        description: `Converted ${data.totalConverted || 0} overdue subtasks to roadblocks across ${data.usersProcessed || 0} users`,
       });
     },
     onError: (error: any) => {
@@ -601,18 +601,18 @@ export default function Settings() {
                         <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                           <div>
                             <div className="text-sm font-medium">Daily Requests</div>
-                            <div className="text-lg">{apiUsageStats.dailyCount}</div>
+                            <div className="text-lg">{(apiUsageStats as any)?.dailyCount || 0}</div>
                           </div>
                           <div>
                             <div className="text-sm font-medium">Total Tokens</div>
-                            <div className="text-lg">{apiUsageStats.totalTokens?.toLocaleString()}</div>
+                            <div className="text-lg">{((apiUsageStats as any)?.totalTokens || 0).toLocaleString()}</div>
                           </div>
                           <div className="col-span-2">
                             <div className="text-sm font-medium mb-2">Request Types</div>
-                            {Object.entries(apiUsageStats.requestTypes || {}).map(([type, count]) => (
+                            {Object.entries((apiUsageStats as any)?.requestTypes || {}).map(([type, count]) => (
                               <div key={type} className="flex justify-between text-xs">
                                 <span>{type}</span>
-                                <span>{count}</span>
+                                <span>{String(count)}</span>
                               </div>
                             ))}
                           </div>
