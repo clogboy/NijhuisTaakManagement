@@ -22,6 +22,26 @@ export default function Subtasks() {
 
   const { data: subtasks = [], isLoading: subtasksLoading, error: subtasksError } = useQuery<Subtask[]>({
     queryKey: ["/api/subtasks"],
+    queryFn: async () => {
+      console.log("Fetching subtasks with GET method");
+      const response = await fetch("/api/subtasks", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Subtasks fetch error:", response.status, errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Subtasks data received:", data);
+      return Array.isArray(data) ? data : [];
+    },
     retry: 3,
     retryDelay: 1000,
   });
