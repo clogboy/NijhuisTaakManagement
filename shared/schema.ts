@@ -270,6 +270,16 @@ export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 export type MoodReminder = typeof moodReminders.$inferSelect;
 export type InsertMoodReminder = z.infer<typeof insertMoodReminderSchema>;
 
+export const dailyTaskCompletions = pgTable("daily_task_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  activityId: integer("activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
+  taskDate: timestamp("task_date").notNull(),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const timeBlocks = pgTable("time_blocks", {
   id: serial("id").primaryKey(),
   activityId: integer("activity_id").references(() => activities.id),
@@ -299,6 +309,15 @@ export const insertUserPreferencesSchema = createInsertSchema(userPreferences).o
   createdAt: true,
   updatedAt: true,
 });
+
+export const insertDailyTaskCompletionSchema = createInsertSchema(dailyTaskCompletions).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
+export type DailyTaskCompletion = typeof dailyTaskCompletions.$inferSelect;
+export type InsertDailyTaskCompletion = z.infer<typeof insertDailyTaskCompletionSchema>;
 
 export type TimeBlock = typeof timeBlocks.$inferSelect;
 export type InsertTimeBlock = z.infer<typeof insertTimeBlockSchema>;
