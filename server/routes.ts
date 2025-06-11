@@ -987,6 +987,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teams Integration endpoints
+  app.get("/api/teams/boards", requireAuth, async (req, res) => {
+    try {
+      const { teamsService } = await import("./teams-service");
+      const boards = await teamsService.getTeamsBoards(req.user!.id);
+      res.json(boards);
+    } catch (error) {
+      console.error("Teams boards error:", error);
+      res.status(500).json({ message: "Failed to fetch Teams boards" });
+    }
+  });
+
+  app.get("/api/teams/boards/:boardId/tasks", requireAuth, async (req, res) => {
+    try {
+      const { teamsService } = await import("./teams-service");
+      const tasks = await teamsService.getTeamsTasks(req.params.boardId, req.user!.id);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Teams tasks error:", error);
+      res.status(500).json({ message: "Failed to fetch Teams tasks" });
+    }
+  });
+
+  app.post("/api/teams/boards/:boardId/tasks", requireAuth, async (req, res) => {
+    try {
+      const { teamsService } = await import("./teams-service");
+      const task = await teamsService.createTeamsTask(req.params.boardId, req.body, req.user!.id);
+      res.json(task);
+    } catch (error) {
+      console.error("Teams task creation error:", error);
+      res.status(500).json({ message: "Failed to create Teams task" });
+    }
+  });
+
+  app.patch("/api/teams/tasks/:taskId/status", requireAuth, async (req, res) => {
+    try {
+      const { teamsService } = await import("./teams-service");
+      const success = await teamsService.updateTeamsTaskStatus(
+        req.params.taskId, 
+        req.body.status, 
+        req.user!.id
+      );
+      res.json({ success });
+    } catch (error) {
+      console.error("Teams task update error:", error);
+      res.status(500).json({ message: "Failed to update Teams task" });
+    }
+  });
+
+  app.get("/api/teams/status", requireAuth, async (req, res) => {
+    try {
+      const { teamsService } = await import("./teams-service");
+      const status = await teamsService.getIntegrationStatus(req.user!.id);
+      res.json(status);
+    } catch (error) {
+      console.error("Teams status error:", error);
+      res.status(500).json({ message: "Failed to get Teams status" });
+    }
+  });
+
+  // BimCollab Integration endpoints
+  app.get("/api/bimcollab/projects", requireAuth, async (req, res) => {
+    try {
+      const { bimcollabService } = await import("./bimcollab-service");
+      const projects = await bimcollabService.getBimcollabProjects(req.user!.id);
+      res.json(projects);
+    } catch (error) {
+      console.error("BimCollab projects error:", error);
+      res.status(500).json({ message: "Failed to fetch BimCollab projects" });
+    }
+  });
+
+  app.get("/api/bimcollab/projects/:projectId/issues", requireAuth, async (req, res) => {
+    try {
+      const { bimcollabService } = await import("./bimcollab-service");
+      const issues = await bimcollabService.getBimcollabIssues(req.params.projectId, req.user!.id);
+      res.json(issues);
+    } catch (error) {
+      console.error("BimCollab issues error:", error);
+      res.status(500).json({ message: "Failed to fetch BimCollab issues" });
+    }
+  });
+
+  app.post("/api/bimcollab/projects/:projectId/issues", requireAuth, async (req, res) => {
+    try {
+      const { bimcollabService } = await import("./bimcollab-service");
+      const issue = await bimcollabService.createBimcollabIssue(req.params.projectId, req.body, req.user!.id);
+      res.json(issue);
+    } catch (error) {
+      console.error("BimCollab issue creation error:", error);
+      res.status(500).json({ message: "Failed to create BimCollab issue" });
+    }
+  });
+
+  app.patch("/api/bimcollab/issues/:issueId/status", requireAuth, async (req, res) => {
+    try {
+      const { bimcollabService } = await import("./bimcollab-service");
+      const success = await bimcollabService.updateBimcollabIssueStatus(
+        req.params.issueId, 
+        req.body.status, 
+        req.user!.id
+      );
+      res.json({ success });
+    } catch (error) {
+      console.error("BimCollab issue update error:", error);
+      res.status(500).json({ message: "Failed to update BimCollab issue" });
+    }
+  });
+
+  app.post("/api/bimcollab/issues/:issueId/convert-to-roadblock", requireAuth, async (req, res) => {
+    try {
+      const { bimcollabService } = await import("./bimcollab-service");
+      const success = await bimcollabService.convertIssueToRoadblock(req.params.issueId, req.user!.id);
+      res.json({ success });
+    } catch (error) {
+      console.error("BimCollab issue conversion error:", error);
+      res.status(500).json({ message: "Failed to convert issue to roadblock" });
+    }
+  });
+
+  app.get("/api/bimcollab/status", requireAuth, async (req, res) => {
+    try {
+      const { bimcollabService } = await import("./bimcollab-service");
+      const status = await bimcollabService.getIntegrationStatus(req.user!.id);
+      res.json(status);
+    } catch (error) {
+      console.error("BimCollab status error:", error);
+      res.status(500).json({ message: "Failed to get BimCollab status" });
+    }
+  });
+
+  // Integration Settings endpoints
+  app.get("/api/integrations/:type/settings", requireAuth, async (req, res) => {
+    try {
+      const settings = await storage.getIntegrationSettings(req.user!.id, req.params.type);
+      res.json(settings || {});
+    } catch (error) {
+      console.error("Integration settings error:", error);
+      res.status(500).json({ message: "Failed to get integration settings" });
+    }
+  });
+
+  app.post("/api/integrations/:type/settings", requireAuth, async (req, res) => {
+    try {
+      const existingSettings = await storage.getIntegrationSettings(req.user!.id, req.params.type);
+      
+      if (existingSettings) {
+        const updated = await storage.updateIntegrationSettings(existingSettings.id, req.body);
+        res.json(updated);
+      } else {
+        const created = await storage.createIntegrationSettings({
+          userId: req.user!.id,
+          integrationType: req.params.type,
+          ...req.body
+        });
+        res.json(created);
+      }
+    } catch (error) {
+      console.error("Integration settings update error:", error);
+      res.status(500).json({ message: "Failed to update integration settings" });
+    }
+  });
+
   // Health check endpoint for Fly.io
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
