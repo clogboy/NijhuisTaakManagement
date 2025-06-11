@@ -9,6 +9,7 @@ import { calendarService } from "./calendar-service";
 import { dailyScheduler } from "./scheduler";
 import { z } from "zod";
 import "./types";
+import { authenticateUser, getUserById } from "./simple-auth";
 
 const loginUserSchema = z.object({
   email: z.string().email(),
@@ -30,18 +31,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { email, password } = simpleLoginSchema.parse(req.body);
         console.log('Simple login attempt for:', email);
         
-        // Direct authentication bypass for admin user
-        if (email === "b.weinreder@nijhuis.nl" && password === "admin123") {
-          const user = {
-            id: 1,
-            email: "b.weinreder@nijhuis.nl",
-            name: "Bram Weinreder",
-            role: "admin"
-          };
-
+        const user = authenticateUser(email, password);
+        if (user) {
           (req as any).session.userId = user.id;
-          console.log('Direct login successful for admin user:', user.id);
-          
+          console.log('Login successful for user:', user.id);
           return res.json({ user });
         }
         
@@ -127,13 +120,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    if (userId === 1) {
-      const user = {
-        id: 1,
-        email: "b.weinreder@nijhuis.nl",
-        name: "Bram Weinreder",
-        role: "admin"
-      };
+    const user = getUserById(userId);
+    if (user) {
       return res.json({ user });
     }
 
@@ -147,14 +135,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    // Direct user object for admin
-    if (userId === 1) {
-      req.user = {
-        id: 1,
-        email: "b.weinreder@nijhuis.nl",
-        name: "Bram Weinreder",
-        role: "admin"
-      };
+    const user = getUserById(userId);
+    if (user) {
+      req.user = user;
       return next();
     }
 
