@@ -7,8 +7,10 @@ import { FolderOpen } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { mockMicrosoftLogin } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function Login() {
+  const { t } = useTranslations();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,17 +62,17 @@ export default function Login() {
               Dossier Manager
             </CardTitle>
             <p className="text-sm text-neutral-medium mt-2">
-              Activity Management System
+              Activiteiten Beheer Systeem
             </p>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <div className="text-center">
               <h2 className="text-lg font-semibold text-neutral-dark mb-2">
-                Sign in to your account
+                {t("login.title")}
               </h2>
               <p className="text-sm text-neutral-medium">
-                Use your Microsoft account to access the application
+                Gebruik je Microsoft account om toegang te krijgen tot de applicatie
               </p>
             </div>
 
@@ -82,7 +84,7 @@ export default function Login() {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+                  Bezig met inloggen...
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
@@ -92,7 +94,7 @@ export default function Login() {
                     <rect x="1" y="12" width="9" height="9" fill="#ffb900"/>
                     <rect x="12" y="12" width="9" height="9" fill="#7fba00"/>
                   </svg>
-                  Sign in with Microsoft
+                  {t("login.microsoftSignIn")}
                 </div>
               )}
             </Button>

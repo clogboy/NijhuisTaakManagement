@@ -7,10 +7,12 @@ import { Plus, Search, Edit, Trash2, Mail, Phone, Building } from "lucide-react"
 import { Contact } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 import NewContactModal from "@/components/modals/NewContactModal";
 import EmailModal from "@/components/modals/EmailModal";
 
 export default function Contacts() {
+  const { t } = useTranslations();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
