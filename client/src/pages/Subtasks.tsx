@@ -20,16 +20,10 @@ export default function Subtasks() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "quick_win" | "roadblock">("all");
 
-  const { data: subtasks, isLoading: subtasksLoading } = useQuery<Subtask[]>({
+  const { data: subtasks = [], isLoading: subtasksLoading, error: subtasksError } = useQuery<Subtask[]>({
     queryKey: ["/api/subtasks"],
-    queryFn: async () => {
-      const res = await fetch("/api/subtasks", { credentials: "include" });
-      if (!res.ok) {
-        throw new Error("Failed to fetch subtasks");
-      }
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
-    },
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const { data: activities } = useQuery<Activity[]>({
@@ -361,7 +355,24 @@ export default function Subtasks() {
           </div>
         </div>
 
-        {subtasksLoading ? (
+        {subtasksError ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <h3 className="text-lg font-medium text-red-600 mb-2">
+                Fout bij laden van subtaken
+              </h3>
+              <p className="text-red-500 text-sm mb-4">
+                {subtasksError.message || "Onbekende fout"}
+              </p>
+              <Button 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] })}
+                variant="outline"
+              >
+                Opnieuw proberen
+              </Button>
+            </CardContent>
+          </Card>
+        ) : subtasksLoading ? (
           <div className="flex justify-center py-8">
             <div className="text-gray-500">Subtaken laden...</div>
           </div>
