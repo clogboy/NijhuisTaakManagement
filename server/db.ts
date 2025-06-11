@@ -13,10 +13,17 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   supabaseUrl = process.env.SUPABASE_URL;
   supabaseKey = process.env.SUPABASE_ANON_KEY;
   
-  // For Supabase, we'll use the existing DATABASE_URL which should be configured to point to Supabase
-  // The SUPABASE_URL is for the REST API, DATABASE_URL is for direct PostgreSQL connection
-  connectionString = process.env.DATABASE_URL!;
-  console.log("Using Supabase database via DATABASE_URL");
+  // Convert Supabase API URL to PostgreSQL connection string
+  const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  if (!projectRef) {
+    throw new Error("Invalid SUPABASE_URL format");
+  }
+  
+  // Use Supabase's PostgreSQL connection format
+  // Note: You'll need to provide the actual database password from your Supabase project settings
+  const dbPassword = process.env.SUPABASE_DB_PASSWORD || 'your-database-password';
+  connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
+  console.log("Using Supabase PostgreSQL connection");
 } else if (process.env.DATABASE_URL) {
   // Fallback to existing DATABASE_URL
   connectionString = process.env.DATABASE_URL;
