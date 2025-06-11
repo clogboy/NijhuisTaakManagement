@@ -3,13 +3,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Edit, Trash2, Mail, Phone, Building } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Edit, Trash2, Mail, Phone, Building, MoreVertical, Users, Download } from "lucide-react";
 import { Contact } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/hooks/useTranslations";
+import AppLayout from "@/components/layout/AppLayout";
 import NewContactModal from "@/components/modals/NewContactModal";
 import EmailModal from "@/components/modals/EmailModal";
+import { WorkspaceInviteModal } from "@/components/modals/WorkspaceInviteModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Contacts() {
   const { t } = useTranslations();
@@ -17,8 +26,10 @@ export default function Contacts() {
   const queryClient = useQueryClient();
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isWorkspaceInviteModalOpen, setIsWorkspaceInviteModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
+  const [selectedContactForInvite, setSelectedContactForInvite] = useState<Contact | null>(null);
 
   const { data: contacts, isLoading } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
@@ -42,6 +53,32 @@ export default function Contacts() {
       });
     },
   });
+
+  // Microsoft contacts sync mutation
+  const syncMicrosoftContactsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("/api/contacts/sync-microsoft", "POST");
+    },
+    onSuccess: (result: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Microsoft Contacts Synced",
+        description: `Imported ${result.imported} new contacts, updated ${result.updated} existing contacts`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync Microsoft contacts",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleInviteToWorkspace = (contact: Contact) => {
+    setSelectedContactForInvite(contact);
+    setIsWorkspaceInviteModalOpen(true);
+  };
 
   const filteredContacts = contacts?.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
