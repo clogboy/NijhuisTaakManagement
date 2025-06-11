@@ -368,6 +368,25 @@ export default function Agenda() {
               </CardContent>
             </Card>
 
+            {/* API Key Status Warning */}
+            {!agendaSuggestion && (
+              <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-amber-800 dark:text-amber-200">
+                        AI Service Currently Unavailable
+                      </h3>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        The OpenAI API keys have exceeded their quota. Please check your API billing status or provide updated keys to access AI-powered agenda generation and Eisenhower matrix categorization.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* AI Suggestions */}
             {agendaSuggestion && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -381,16 +400,16 @@ export default function Agenda() {
                   <CardContent className="space-y-4">
                     <div>
                       <h4 className="font-medium text-sm text-neutral-medium mb-2">Daily Strategy</h4>
-                      <p className="text-sm">{agendaSuggestion.suggestions}</p>
+                      <p className="text-sm">{agendaSuggestion?.suggestions || "AI service currently unavailable. Please check API key status."}</p>
                     </div>
                     <div>
                       <h4 className="font-medium text-sm text-neutral-medium mb-2">Task Switch Optimization</h4>
-                      <p className="text-sm">{agendaSuggestion.taskSwitchOptimization}</p>
+                      <p className="text-sm">{agendaSuggestion?.taskSwitchOptimization || "Optimization analysis unavailable"}</p>
                     </div>
                     <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
                       <span className="text-sm font-medium">Estimated Task Switches</span>
-                      <Badge variant={agendaSuggestion.estimatedTaskSwitches <= maxTaskSwitches ? "default" : "destructive"}>
-                        {agendaSuggestion.estimatedTaskSwitches} / {maxTaskSwitches}
+                      <Badge variant={(agendaSuggestion?.estimatedTaskSwitches || 0) <= maxTaskSwitches ? "default" : "destructive"}>
+                        {agendaSuggestion?.estimatedTaskSwitches || 0} / {maxTaskSwitches}
                       </Badge>
                     </div>
                   </CardContent>
@@ -405,7 +424,7 @@ export default function Agenda() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {agendaSuggestion.scheduledActivities.map((activityId, index) => {
+                      {agendaSuggestion?.scheduledActivities?.map((activityId, index) => {
                         const activity = activities?.find(a => a.id === activityId);
                         if (!activity) return null;
                         
@@ -432,6 +451,25 @@ export default function Agenda() {
           </TabsContent>
 
           <TabsContent value="eisenhower" className="space-y-4 md:space-y-6">
+            {/* API Key Status Warning for Eisenhower */}
+            {!eisenhowerMatrix && (
+              <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-amber-800 dark:text-amber-200">
+                        Eisenhower Matrix Unavailable
+                      </h3>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        AI categorization is currently unavailable due to API quota limits. Your activities are listed below without prioritization.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {eisenhowerMatrix && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 {Object.entries(eisenhowerMatrix).map(([quadrant, quadrantActivities]) => (
