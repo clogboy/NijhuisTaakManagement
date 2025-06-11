@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema } from "@shared/schema";
+import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema, insertTaskCommentSchema } from "@shared/schema";
 import { generateDailyAgenda, categorizeActivitiesWithEisenhower } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
@@ -479,10 +479,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/task-comments", requireAuth, async (req: any, res) => {
     try {
-      const { activityId, comment } = req.body;
+      const commentData = insertTaskCommentSchema.parse(req.body);
       const newComment = await storage.createTaskComment({
-        activityId,
-        comment,
+        ...commentData,
         createdBy: req.user.id,
       });
       res.json(newComment);
