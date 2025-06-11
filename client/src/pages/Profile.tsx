@@ -50,14 +50,14 @@ export default function Profile() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700">Full Name</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.fullName')}</label>
                 <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50">
                   {user.user.name}
                 </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">Email Address</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.email')}</label>
                 <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50 flex items-center">
                   <Mail className="mr-2 h-4 w-4 text-gray-500" />
                   {user.user.email}
@@ -65,20 +65,20 @@ export default function Profile() {
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">Role</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.role')}</label>
                 <div className="mt-1">
                   <Badge 
                     variant={user.user.role === "admin" ? "default" : "secondary"}
                     className="flex items-center w-fit"
                   >
                     <Shield className="mr-1 h-3 w-3" />
-                    {user.user.role === "admin" ? "Administrator" : "User"}
+                    {user.user.role === "admin" ? t('profile.admin') : t('profile.user')}
                   </Badge>
                 </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">Member Since</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.memberSince')}</label>
                 <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50 flex items-center">
                   <Calendar className="mr-2 h-4 w-4 text-gray-500" />
                   {new Date(user.user.createdAt).toLocaleDateString()}
@@ -88,10 +88,10 @@ export default function Profile() {
             
             <div className="pt-4 border-t">
               <Button variant="outline" disabled>
-                Edit Profile
+{t('profile.updateProfile')}
               </Button>
               <p className="text-xs text-gray-500 mt-2">
-                Profile editing is currently managed through Microsoft SSO
+Profiel bewerken wordt momenteel beheerd via Microsoft SSO
               </p>
             </div>
           </CardContent>

@@ -34,6 +34,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertActivitySchema } from "@shared/schema";
 import { Contact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 
 const formSchema = insertActivitySchema.extend({
   dueDate: z.string().optional(),
@@ -45,6 +46,7 @@ interface NewActivityModalProps {
 }
 
 export default function NewActivityModal({ open, onOpenChange }: NewActivityModalProps) {
+  const { t } = useTranslations();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [statusTags, setStatusTags] = useState<string[]>([]);
