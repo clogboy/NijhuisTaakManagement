@@ -127,14 +127,14 @@ export default function Activities() {
       <div className="w-full md:w-1/2 border-r-0 md:border-r border-gray-200 overflow-y-auto">
         <div className="p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
-          <h2 className="text-lg md:text-xl font-semibold text-neutral-dark">Activities</h2>
+          <h2 className="text-lg md:text-xl font-semibold text-neutral-dark">{t('activities.title')}</h2>
           <Button
             onClick={() => setIsNewActivityModalOpen(true)}
             className="bg-ms-blue hover:bg-ms-blue-dark text-white w-full sm:w-auto micro-button-press micro-ripple micro-hover-lift"
             size="sm"
           >
             <Plus size={16} className="mr-2" />
-            New Activity
+{t('activities.addNew')}
           </Button>
         </div>
 
@@ -163,7 +163,7 @@ export default function Activities() {
                         setIsTaskDetailModalOpen(true);
                       }}
                       className="text-ms-blue hover:text-ms-blue-dark"
-                      title="View Details"
+                      title={t('activities.viewDetails')}
                     >
                       <Eye size={16} />
                     </Button>
@@ -214,12 +214,12 @@ export default function Activities() {
 
           {!activities?.length && (
             <div className="text-center py-12">
-              <p className="text-neutral-medium">No activities found</p>
+              <p className="text-neutral-medium">{t('activities.noActivitiesFound')}</p>
               <Button
                 onClick={() => setIsNewActivityModalOpen(true)}
                 className="mt-4 bg-ms-blue hover:bg-ms-blue-dark text-white"
               >
-                Create your first activity
+                {t('activities.createFirst')}
               </Button>
             </div>
           )}
@@ -256,12 +256,12 @@ export default function Activities() {
             {/* Add Log Entry */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Add Log Entry</CardTitle>
+                <CardTitle className="text-lg">{t('activities.addLogEntry')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-dark mb-2">
-                    Entry Date
+{t('activities.entryDate')}
                   </label>
                   <Input
                     type="date"
