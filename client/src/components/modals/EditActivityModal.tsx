@@ -30,6 +30,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { insertActivitySchema, Activity, Contact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 
 const formSchema = insertActivitySchema.extend({
   dueDate: z.string().optional(),
@@ -44,6 +45,7 @@ interface EditActivityModalProps {
 export default function EditActivityModal({ open, onOpenChange, activity }: EditActivityModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslations();
 
   const { data: contacts } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
@@ -57,8 +59,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
       priority: "normal",
       status: "planned",
       dueDate: "",
-      assignedTo: undefined,
-      assignedUsers: [],
+      participants: [],
     },
   });
 
@@ -71,8 +72,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
         priority: activity.priority as "low" | "normal" | "urgent",
         status: activity.status as "planned" | "in_progress" | "completed",
         dueDate: activity.dueDate ? new Date(activity.dueDate).toISOString().split('T')[0] : "",
-        assignedTo: activity.assignedTo || undefined,
-        assignedUsers: activity.assignedUsers || [],
+        participants: activity.participants || [],
       });
     }
   }, [activity, form]);
@@ -114,7 +114,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
       <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-neutral-dark">
-            Edit Activity
+            {t('activities.editActivity')}
           </DialogTitle>
         </DialogHeader>
 
@@ -167,9 +167,10 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the activity..." 
+                      placeholder={t('forms.enterText')}
                       rows={3}
-                      {...field} 
+                      {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -217,14 +218,20 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
 
               <FormField
                 control={form.control}
-                name="assignedTo"
+                name="participants"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Contact</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value?.toString()}>
+                    <FormLabel>{t('activities.formParticipants')}</FormLabel>
+                    <Select onValueChange={(value) => {
+                      const participantId = parseInt(value);
+                      const currentParticipants = field.value || [];
+                      if (!currentParticipants.includes(participantId)) {
+                        field.onChange([...currentParticipants, participantId]);
+                      }
+                    }}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select contact..." />
+                          <SelectValue placeholder={t('forms.selectOption')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

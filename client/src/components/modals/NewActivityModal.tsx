@@ -307,7 +307,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                 disabled={createActivityMutation.isPending}
                 className="bg-ms-blue hover:bg-ms-blue-dark text-white"
               >
-                {createActivityMutation.isPending ? "Creating..." : "Create Activity"}
+{createActivityMutation.isPending ? t('common.loading') : t('activities.save')}
               </Button>
             </div>
           </form>
