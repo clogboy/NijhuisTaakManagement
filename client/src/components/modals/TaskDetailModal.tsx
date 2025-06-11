@@ -201,8 +201,8 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
 
           <Tabs defaultValue="comments" className="flex flex-col h-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="subtasks">Subtasks</TabsTrigger>
+              <TabsTrigger value="comments">Opmerkingen</TabsTrigger>
+              <TabsTrigger value="subtasks">Subtaken</TabsTrigger>
             </TabsList>
 
             <TabsContent value="comments" className="flex-1 space-y-4">
@@ -210,12 +210,12 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    Add Comment
+                    Opmerking toevoegen
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Textarea
-                    placeholder="Add a comment..."
+                    placeholder="Voeg een opmerking toe..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     rows={3}
@@ -226,7 +226,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                     className="w-full"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Comment
+                    Opmerking toevoegen
                   </Button>
                 </CardContent>
               </Card>
@@ -248,7 +248,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                   ))}
                   {comments.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
-                      No comments yet. Be the first to add one!
+                      Nog geen opmerkingen. Voeg de eerste toe!
                     </div>
                   )}
                 </div>
@@ -260,39 +260,39 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ListChecks className="h-5 w-5" />
-                    Add Subtask
+                    Subtaak toevoegen
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Create subtasks that participants can mark as tasks, quick wins, or roadblocks.
+                    Maak subtaken die deelnemers kunnen markeren als taken, quick wins of wegversperringen.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Input
-                    placeholder="Subtask title..."
+                    placeholder="Subtaak titel..."
                     value={newSubtask.title}
                     onChange={(e) => setNewSubtask({ ...newSubtask, title: e.target.value })}
                   />
                   <Textarea
-                    placeholder="Description..."
+                    placeholder="Beschrijving..."
                     value={newSubtask.description}
                     onChange={(e) => setNewSubtask({ ...newSubtask, description: e.target.value })}
                     rows={2}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-sm font-medium">Priority</label>
+                      <label className="text-sm font-medium">Prioriteit</label>
                       <select
                         value={newSubtask.priority}
                         onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as "low" | "medium" | "high" })}
                         className="w-full p-2 border rounded-md"
                       >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
+                        <option value="low">Laag</option>
+                        <option value="medium">Gemiddeld</option>
+                        <option value="high">Hoog</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Due Date</label>
+                      <label className="text-sm font-medium">Einddatum</label>
                       <Input
                         type="date"
                         value={newSubtask.dueDate}
@@ -301,9 +301,9 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Participants (emails, comma-separated)</label>
+                    <label className="text-sm font-medium">Deelnemers (emails, komma gescheiden)</label>
                     <Input
-                      placeholder="email1@domain.com, email2@domain.com"
+                      placeholder="email1@domein.com, email2@domein.com"
                       value={newSubtask.participants.join(", ")}
                       onChange={(e) => setNewSubtask({ 
                         ...newSubtask, 
@@ -317,7 +317,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                     className="w-full"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Subtask
+                    Subtaak toevoegen
                   </Button>
                 </CardContent>
               </Card>
@@ -348,13 +348,13 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                           {subtask.participants.length > 0 && (
                             <div className="flex items-center gap-1">
                               <Users className="h-3 w-3" />
-                              <span>{subtask.participants.length} participants</span>
+                              <span>{subtask.participants.length} deelnemers</span>
                             </div>
                           )}
                           {subtask.dueDate && (
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              <span>Due {format(new Date(subtask.dueDate), "MMM d")}</span>
+                              <span>Vervalt {format(new Date(subtask.dueDate), "d MMM")}</span>
                             </div>
                           )}
                         </div>
@@ -363,7 +363,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                   ))}
                   {subtasks.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
-                      No subtasks yet. Add one to get started!
+                      Nog geen subtaken. Voeg er een toe om te beginnen!
                     </div>
                   )}
                 </div>
