@@ -114,6 +114,15 @@ export default function Contacts() {
           <p className="text-xs md:text-sm text-neutral-medium">Manage your contact database</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button 
+            onClick={() => syncMicrosoftContactsMutation.mutate()}
+            disabled={syncMicrosoftContactsMutation.isPending}
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {syncMicrosoftContactsMutation.isPending ? "Syncing..." : "Sync Microsoft"}
+          </Button>
           <Button
             onClick={handleSendEmailToAll}
             variant="outline"
@@ -251,6 +260,16 @@ export default function Contacts() {
         open={isEmailModalOpen}
         onOpenChange={setIsEmailModalOpen}
         contacts={selectedContacts}
+      />
+
+      <WorkspaceInviteModal
+        isOpen={isWorkspaceInviteModalOpen}
+        onClose={() => {
+          setIsWorkspaceInviteModalOpen(false);
+          setSelectedContactForInvite(null);
+        }}
+        contactEmail={selectedContactForInvite?.email}
+        contactName={selectedContactForInvite?.name}
       />
     </div>
   );

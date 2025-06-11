@@ -282,13 +282,13 @@ export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvit
   updatedAt: true,
 });
 
-export type WorkspaceInvitation = typeof workspaceInvitations.$inferSelect;
-export type InsertWorkspaceInvitation = z.infer<typeof insertWorkspaceInvitationSchema>;
-
 export const insertWorkspaceAccessSchema = createInsertSchema(workspaceAccess).omit({
   id: true,
   grantedAt: true,
 });
+
+export type WorkspaceInvitation = typeof workspaceInvitations.$inferSelect;
+export type InsertWorkspaceInvitation = z.infer<typeof insertWorkspaceInvitationSchema>;
 
 export type WorkspaceAccess = typeof workspaceAccess.$inferSelect;
 export type InsertWorkspaceAccess = z.infer<typeof insertWorkspaceAccessSchema>;
