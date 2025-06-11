@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslations } from "@/hooks/useTranslations";
+import { downloadXMLFile } from "@/utils/xmlExport";
 
 import {
   User as UserIcon,
@@ -205,7 +206,7 @@ export default function Settings() {
     <div className="flex-1 overflow-y-auto">
       <div className="p-3 sm:p-4">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t('settings.title')}</h1>
           <Badge variant="outline" className="text-xs">
             User ID: {user?.user.id}
           </Badge>
@@ -498,29 +499,57 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Data Management */}
+          {/* Translation Management */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                Data Management
+                <Globe className="h-5 w-5" />
+                {t('settings.translationManagement')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Export your data</p>
-                  <p className="text-sm text-gray-500">Download all your activities, contacts, and settings</p>
+                  <p className="font-medium">{t('settings.currentLanguage')}</p>
+                  <p className="text-sm text-gray-500">Nederlands (Dutch)</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{t('settings.exportTranslations')}</p>
+                  <p className="text-sm text-gray-500">Download vertalingen als XML-bestand voor handmatige bewerking</p>
+                </div>
+                <Button onClick={downloadXMLFile} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  {t('settings.exportXML')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="h-5 w-5" />
+                {t('settings.exportData')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Exporteer je gegevens</p>
+                  <p className="text-sm text-gray-500">Download al je activiteiten, contacten en instellingen</p>
                 </div>
                 <Button onClick={handleExportData} variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  Exporteren
                 </Button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Smart suggestions</p>
-                  <p className="text-sm text-gray-500">Enable intelligent productivity recommendations</p>
+                  <p className="font-medium">{t('settings.aiSuggestions')}</p>
+                  <p className="text-sm text-gray-500">Intelligente productiviteitsaanbevelingen inschakelen</p>
                 </div>
                 <Switch 
                   checked={preferences.aiSuggestions}
