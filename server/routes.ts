@@ -8,6 +8,8 @@ import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { dailyScheduler } from "./scheduler";
 import { supabaseService } from "./supabase-service";
 import { z } from "zod";
+import { performanceMiddleware } from "./utils/performance";
+import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import "./types";
 
 const loginUserSchema = z.object({
@@ -17,8 +19,12 @@ const loginUserSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
+  // Add global middleware
+  app.use(performanceMiddleware());
+  app.use("/api", apiLimiter.middleware());
+
+  // Authentication routes with stricter rate limiting
+  app.post("/api/auth/login", authLimiter.middleware(), async (req, res) => {
     try {
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
       
