@@ -614,10 +614,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "activityId, taskDate, and completed are required" });
       }
 
-      // Verify activity exists before creating completion
+      // Verify either activity or subtask exists before creating completion
       const activity = await storage.getActivity(activityId);
-      if (!activity) {
-        return res.status(400).json({ error: `Activity ${activityId} not found` });
+      const subtask = activity ? null : await storage.getSubtask(activityId);
+      
+      if (!activity && !subtask) {
+        console.log(`[API] Task completion failed: Neither activity nor subtask found for ID ${activityId}`);
+        return res.status(400).json({ error: `Task ${activityId} not found` });
+      }
+
+      // Check user has access to this task
+      if (activity && activity.createdBy !== req.user.id) {
+        return res.status(403).json({ error: "Not authorized to update this task" });
+      }
+      
+      if (subtask) {
+        const userEmail = req.user.email;
+        if (!subtask.participants.includes(userEmail)) {
+          return res.status(403).json({ error: "Not authorized to update this subtask" });
+        }
       }
 
       const result = await storage.createOrUpdateDailyTaskCompletion(
