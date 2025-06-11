@@ -16,10 +16,59 @@ const loginUserSchema = z.object({
   microsoftId: z.string(),
 });
 
+const simpleLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
+      // Check if this is a simple email/password login
+      if (req.body.password && !req.body.microsoftId) {
+        const bcrypt = await import('bcrypt');
+        const { email, password } = simpleLoginSchema.parse(req.body);
+        console.log('Simple login attempt for:', email);
+        
+        const user = await storage.getUserByUsername(email);
+        console.log('User found:', !!user);
+        
+        if (!user) {
+          console.log('No user found with email:', email);
+          return res.status(400).json({ message: "Invalid login data" });
+        }
+
+        // Check password field that exists in Supabase
+        const userPassword = user.password || user.password_hash || user.encrypted_password;
+        console.log('User has password:', !!userPassword);
+        
+        if (!userPassword) {
+          console.log('No password field found for user');
+          return res.status(400).json({ message: "Invalid login data" });
+        }
+
+        const isValid = await bcrypt.compare(password, userPassword);
+        console.log('Password valid:', isValid);
+        
+        if (!isValid) {
+          return res.status(400).json({ message: "Invalid login data" });
+        }
+
+        (req as any).session.userId = user.id;
+        console.log('Login successful for user:', user.id);
+        
+        return res.json({ 
+          user: { 
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            role: user.role 
+          } 
+        });
+      }
+      
+      // Microsoft login
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
       
       // First try to find by Microsoft ID
