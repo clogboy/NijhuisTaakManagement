@@ -109,7 +109,7 @@ export default function TodaysTasks() {
 
   // Filter overdue subtasks that will be converted to roadblocks
   const overdueSubtasks = subtasks.filter(subtask => {
-    if (!subtask.dueDate || subtask.completed) return false;
+    if (!subtask.dueDate || subtask.completedDate) return false;
     const dueDate = new Date(subtask.dueDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -124,7 +124,7 @@ export default function TodaysTasks() {
     const dueDate = activity.dueDate ? format(new Date(activity.dueDate), "yyyy-MM-dd") : null;
     return dueDate === todayString || activity.status === "in-progress";
   }).sort((a, b) => {
-    // Eisenhower Matrix priority order (descending importance)
+    // Eisenhower Matrix priority order
     const priorityOrder = { high: 3, medium: 2, low: 1 };
     const urgencyOrder = { urgent: 3, in_progress: 2, pending: 1, completed: 0 };
     
@@ -142,13 +142,20 @@ export default function TodaysTasks() {
 
   // Combine prioritized subtasks and today's activities
   const prioritizedSubtasks = prioritizeSubtasks(assignedSubtasks);
-  const allTodaysTasks = [
-    ...activitiesToday.map(activity => ({ ...activity, isSubtask: false })),
+  
+  // Create combined list with proper sorting
+  const combinedTasks = [
+    ...activitiesToday.map(activity => ({ 
+      ...activity, 
+      isSubtask: false,
+      taskType: 'activity',
+      urgencyScore: getPriorityScore(activity.priority) + getStatusScore(activity.status)
+    })),
     ...prioritizedSubtasks.slice(0, 5).map(subtask => {
-      // Find the linked activity for this subtask
       const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
+      const isUrgent = subtask.dueDate ? new Date(subtask.dueDate) <= new Date() : false;
       return {
-        ...linkedActivity!, // Use the full activity structure
+        ...linkedActivity!,
         id: subtask.id,
         title: subtask.title,
         priority: subtask.priority,
@@ -156,10 +163,27 @@ export default function TodaysTasks() {
         status: subtask.status,
         description: subtask.description,
         isSubtask: true,
-        taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type
+        taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type,
+        urgencyScore: getPriorityScore(subtask.priority) + (isUrgent ? 3 : 0)
       };
     })
-  ].slice(0, 8);
+  ];
+
+  // Sort combined list by urgency score
+  const allTodaysTasks = combinedTasks
+    .sort((a, b) => sortOrder === "desc" ? b.urgencyScore - a.urgencyScore : a.urgencyScore - b.urgencyScore)
+    .slice(0, 8);
+
+  // Helper functions for scoring
+  function getPriorityScore(priority: string): number {
+    const scores = { high: 3, medium: 2, low: 1 };
+    return scores[priority as keyof typeof scores] || 1;
+  }
+
+  function getStatusScore(status: string): number {
+    const scores = { urgent: 3, in_progress: 2, pending: 1, completed: 0 };
+    return scores[status as keyof typeof scores] || 1;
+  }
 
   // Create completion status map
   const completionMap = taskCompletions.reduce((acc, completion) => {

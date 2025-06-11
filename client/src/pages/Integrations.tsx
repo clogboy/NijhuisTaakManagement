@@ -15,7 +15,7 @@ import {
   Clock, 
   Settings,
   ExternalLink,
-  Sync,
+  RefreshCw,
   Plus,
   ArrowRight
 } from "lucide-react";

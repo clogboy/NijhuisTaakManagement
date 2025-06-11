@@ -18,6 +18,7 @@ import Agenda from "@/pages/Agenda";
 import TimeBlocking from "@/pages/TimeBlocking";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
+import Integrations from "@/pages/Integrations";
 import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/AppLayout";
 
