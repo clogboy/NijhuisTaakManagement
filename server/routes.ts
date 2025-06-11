@@ -41,36 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid login data" });
       }
       
-      // Microsoft login
-      const { email, name, microsoftId } = loginUserSchema.parse(req.body);
-      
-      // First try to find by Microsoft ID
-      let user = await storage.getUserByMicrosoftId(microsoftId);
-      
-      // If not found, try to find by email and update with Microsoft ID
-      if (!user) {
-        user = await storage.getUserByEmail(email);
-        if (user && !user.microsoftId) {
-          // Update existing user with Microsoft ID and correct name
-          user = await storage.updateUser(user.id, { microsoftId, name });
-        }
-      }
-      
-      if (!user) {
-        // Create new user
-        const role = email === "b.weinreder@nijhuis.nl" ? "admin" : "user";
-        user = await storage.createUser({
-          email,
-          name,
-          microsoftId,
-          role,
-        });
-      }
-
-      // Set user session
-      (req as any).session.userId = user.id;
-      
-      res.json({ user: { ...user } });
+      res.status(400).json({ message: "Microsoft login not implemented" });
     } catch (error) {
       console.error("Login error:", error);
       res.status(400).json({ message: "Invalid login data" });

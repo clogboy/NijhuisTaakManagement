@@ -23,15 +23,15 @@ export function authenticateUser(email: string, password: string) {
 }
 
 export function getUserById(id: number) {
-  for (const [email, user] of validUsers) {
-    if (user.id === id) {
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      };
-    }
+  const userArray = Array.from(validUsers.values());
+  const user = userArray.find(u => u.id === id);
+  if (user) {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    };
   }
   return null;
 }
