@@ -169,7 +169,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className="flex-1">

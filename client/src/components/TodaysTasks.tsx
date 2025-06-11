@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction } from "lucide-react";
+import { CheckSquare, Clock, Calendar, ArrowRight, Target, Zap, Construction, ArrowUpDown } from "lucide-react";
 import { Activity, Subtask } from "@shared/schema";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,6 +14,7 @@ import { format } from "date-fns";
 export default function TodaysTasks() {
   const [selectedTask, setSelectedTask] = useState<Activity | null>(null);
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const today = new Date();
@@ -124,7 +125,7 @@ export default function TodaysTasks() {
     const aScore = aPriority + aUrgency;
     const bScore = bPriority + bUrgency;
     
-    return bScore - aScore; // Descending order
+    return sortOrder === "desc" ? bScore - aScore : aScore - bScore;
   });
 
   // Combine prioritized subtasks and today's activities
@@ -208,9 +209,20 @@ export default function TodaysTasks() {
             <Calendar className="mr-2 h-5 w-5 text-ms-blue" />
             Today's Tasks
           </div>
-          <Badge variant="secondary" className="text-xs">
-            {allTodaysTasks.length} tasks
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+              className="flex items-center gap-2"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+              {sortOrder === "desc" ? "Hoog → Laag" : "Laag → Hoog"}
+            </Button>
+            <Badge variant="secondary" className="text-xs">
+              {allTodaysTasks.length} taken
+            </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
