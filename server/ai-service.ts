@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { Activity, WeeklyEthos } from "@shared/schema";
+import { Activity, WeeklyEthos, Subtask } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -247,6 +247,8 @@ Return a JSON object with this exact structure:
 
 export async function generateDailyAgenda(
   activities: Activity[],
+  subtasks?: Subtask[],
+  participantEmail?: string,
   ethos?: WeeklyEthos,
   maxTaskSwitches: number = 3
 ): Promise<AgendaSuggestion> {
@@ -257,11 +259,33 @@ export async function generateDailyAgenda(
       `Today's ethos: "${ethos.ethos}" - ${ethos.description}. Focus areas: ${ethos.focusAreas?.join(', ')}. Preferred work blocks: ${ethos.preferredWorkBlocks}` : 
       'No specific ethos defined for today';
 
+    // Filter subtasks for the participant and categorize by their preferred types
+    const participantSubtasks = subtasks?.filter(subtask => 
+      participantEmail && subtask.participants.includes(participantEmail)
+    ) || [];
+
+    const subtasksByType = participantSubtasks.reduce((acc, subtask) => {
+      const participantTypes = subtask.participantTypes as Record<string, string> || {};
+      const taskType = participantTypes[participantEmail || ''] || subtask.type;
+      
+      if (!acc[taskType]) acc[taskType] = [];
+      acc[taskType].push(subtask);
+      return acc;
+    }, {} as Record<string, Subtask[]>);
+
+    const subtaskContext = participantSubtasks.length > 0 ? `
+Participant Subtasks (${participantEmail}):
+- Quick Wins: ${(subtasksByType.quick_win || []).map(s => `${s.id}: ${s.title}`).join(', ') || 'None'}
+- Roadblocks: ${(subtasksByType.roadblock || []).map(s => `${s.id}: ${s.title}`).join(', ') || 'None'}  
+- Regular Tasks: ${(subtasksByType.task || []).map(s => `${s.id}: ${s.title}`).join(', ') || 'None'}
+` : '';
+
     const prompt = `
 You are an AI productivity assistant. Create an optimal daily agenda that minimizes task switching and maximizes focus.
 
 Context: ${ethosContext}
 Maximum allowed task switches: ${maxTaskSwitches}
+${subtaskContext}
 
 Eisenhower Matrix Categories:
 - Urgent & Important: ${eisenhowerMatrix.urgentImportant.map(a => `${a.id}: ${a.title}`).join(', ')}

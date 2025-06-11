@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Roadblock } from "lucide-react";
+import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Construction } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Subtask, Activity, Contact } from "@shared/schema";
 import { format } from "date-fns";
@@ -43,10 +43,9 @@ export default function Subtasks() {
       participantEmail: string; 
       taskType: string; 
     }) => {
-      return apiRequest(`/api/subtasks/${subtaskId}/participant-type`, {
-        method: "PATCH",
-        body: JSON.stringify({ participantEmail, taskType }),
-        headers: { "Content-Type": "application/json" },
+      return apiRequest(`/api/subtasks/${subtaskId}/participant-type`, "PATCH", { 
+        participantEmail, 
+        taskType 
       });
     },
     onSuccess: () => {
@@ -224,9 +223,56 @@ export default function Subtasks() {
             )}
             
             {subtask.participants && subtask.participants.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Users className="h-3 w-3" />
-                <span>Deelnemers: {subtask.participants.length}</span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Users className="h-3 w-3" />
+                  <span>Deelnemers: {subtask.participants.length}</span>
+                </div>
+                
+                {/* Participant Task Type Selection */}
+                {currentUser?.user?.email && subtask.participants.includes(currentUser.user.email) && (
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="h-4 w-4" />
+                      <span className="text-sm font-medium">Jouw taaktype voor AI planning:</span>
+                    </div>
+                    <Select
+                      value={(subtask.participantTypes as Record<string, string>)?.[currentUser.user.email] || subtask.type}
+                      onValueChange={(value) => {
+                        updateParticipantTypeMutation.mutate({
+                          subtaskId: subtask.id,
+                          participantEmail: currentUser.user.email,
+                          taskType: value,
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="task">
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4" />
+                            Normale Taak
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="quick_win">
+                          <div className="flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            Quick Win
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="roadblock">
+                          <div className="flex items-center gap-2">
+                            <Construction className="h-4 w-4" />
+                            Wegversperring
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
                 <div className="flex gap-1">
                   {subtask.participants.slice(0, 3).map((email, idx) => {
                     const contact = contactMap[email];
