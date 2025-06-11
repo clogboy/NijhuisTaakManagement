@@ -174,7 +174,28 @@ export default function Subtasks() {
         completedDate: (newStatus === "completed" || newStatus === "resolved") ? new Date() : null
       }
     });
+    
+    // Also update daily task completion to sync with Today's Tasks
+    const todayString = format(new Date(), "yyyy-MM-dd");
+    toggleTaskCompletion.mutate({
+      activityId: subtask.id,
+      completed: newStatus === "completed" || newStatus === "resolved"
+    });
   };
+
+  const toggleTaskCompletion = useMutation({
+    mutationFn: async ({ activityId, completed }: { activityId: number; completed: boolean }) => {
+      const todayString = format(new Date(), "yyyy-MM-dd");
+      return apiRequest(`/api/daily-task-completions`, "POST", {
+        activityId,
+        taskDate: todayString,
+        completed,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-task-completions"] });
+    },
+  });
 
   const renderSubtaskCard = (subtask: Subtask) => {
     const linkedActivity = activityMap[subtask.linkedActivityId];

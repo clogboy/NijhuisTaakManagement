@@ -86,11 +86,21 @@ export default function TodaysTasks() {
     },
   });
 
+  // Create completion status map first
+  const completionMap = taskCompletions.reduce((acc, completion: any) => {
+    acc[completion.activityId] = completion.completed;
+    return acc;
+  }, {} as Record<number, boolean>);
+
   // Get user's assigned subtasks from active activities and exclude completed
   const userEmail = currentUser?.user?.email;
   const assignedSubtasks = subtasks.filter(subtask => {
     if (!userEmail || !subtask.participants.includes(userEmail)) return false;
-    if (subtask.status === "completed") return false;
+    if (subtask.status === "completed" || subtask.status === "resolved") return false;
+    
+    // Also check if it's marked as completed in daily completions
+    const isCompletedDaily = completionMap[subtask.id];
+    if (isCompletedDaily) return false;
     
     // Find the linked activity
     const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
@@ -233,11 +243,7 @@ export default function TodaysTasks() {
     return scores[status as keyof typeof scores] || 1;
   }
 
-  // Create completion status map  
-  const completionMap = taskCompletions.reduce((acc, completion: any) => {
-    acc[completion.activityId] = completion.completed;
-    return acc;
-  }, {} as Record<number, boolean>);
+
 
   if (activitiesLoading || subtasksLoading) {
     return (
