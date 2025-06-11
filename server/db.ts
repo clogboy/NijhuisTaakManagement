@@ -20,12 +20,12 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUP
     throw new Error("Invalid SUPABASE_URL format");
   }
   
-  // Use direct connection to Supabase database
+  // Use pooler connection to Supabase database (correct hostname)
   const dbPassword = process.env.SUPABASE_DATABASE_PASSWORD;
-  connectionString = `postgresql://postgres:${dbPassword}@db.${projectRef}.supabase.co:5432/postgres`;
+  connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
   
   console.log(`Project: ${projectRef}`);
-  console.log(`Direct Supabase connection: postgresql://postgres:***@db.${projectRef}.supabase.co:5432/postgres`);
+  console.log(`Pooler Supabase connection: postgresql://postgres.${projectRef}:***@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`);
   console.log("=== SUPABASE CONNECTION FORCED ===");
 } else if (process.env.DATABASE_URL) {
   connectionString = process.env.DATABASE_URL;
