@@ -69,7 +69,7 @@ export default function NewRoadblockModal({ open, onOpenChange, linkedActivityId
         reportedDate: data.reportedDate ? new Date(data.reportedDate) : new Date(),
         resolvedDate: null,
       };
-      return apiRequest("POST", "/api/roadblocks", roadblockData);
+      return apiRequest("/api/roadblocks", "POST", roadblockData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });

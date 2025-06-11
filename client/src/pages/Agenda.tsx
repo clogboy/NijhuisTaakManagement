@@ -100,7 +100,7 @@ export default function Agenda() {
 
   const generateAgendaMutation = useMutation({
     mutationFn: async (data: { date: string; maxTaskSwitches: number }) => {
-      const response = await apiRequest("POST", "/api/agenda/generate", data);
+      const response = await apiRequest("/api/agenda/generate", "POST", data);
       return response as unknown as AgendaSuggestion;
     },
     onSuccess: (data: AgendaSuggestion) => {
@@ -120,7 +120,7 @@ export default function Agenda() {
   });
 
   const createEthosMutation = useMutation({
-    mutationFn: (ethos: typeof newEthos) => apiRequest("POST", "/api/ethos", ethos),
+    mutationFn: (ethos: typeof newEthos) => apiRequest("/api/ethos", "POST", ethos),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ethos"] });
       setNewEthos({
@@ -147,7 +147,7 @@ export default function Agenda() {
 
   const updateEthosMutation = useMutation({
     mutationFn: ({ id, ...ethos }: { id: number } & Partial<WeeklyEthos>) =>
-      apiRequest("PUT", `/api/ethos/${id}`, ethos),
+      apiRequest(`/api/ethos/${id}`, "PUT", ethos),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ethos"] });
       setEditingEthos(null);

@@ -25,7 +25,7 @@ export default function Contacts() {
   });
 
   const deleteContactMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/contacts/${id}`),
+    mutationFn: (id: number) => apiRequest(`/api/contacts/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });

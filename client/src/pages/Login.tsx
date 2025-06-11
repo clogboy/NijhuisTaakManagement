@@ -23,7 +23,7 @@ export default function Login() {
         // In production, this would use MSAL library
         const microsoftUser = await mockMicrosoftLogin();
         
-        const response = await apiRequest("POST", "/api/auth/login", microsoftUser);
+        const response = await apiRequest("/api/auth/login", "POST", microsoftUser);
         return await response.json();
       } finally {
         setIsLoading(false);

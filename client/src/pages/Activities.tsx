@@ -36,7 +36,7 @@ export default function Activities() {
   });
 
   const deleteActivityMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/activities/${id}`),
+    mutationFn: (id: number) => apiRequest(`/api/activities/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       toast({
@@ -58,7 +58,7 @@ export default function Activities() {
 
   const addLogMutation = useMutation({
     mutationFn: ({ activityId, entry, entryDate }: { activityId: number; entry: string; entryDate: string }) =>
-      apiRequest("POST", `/api/activities/${activityId}/logs`, {
+      apiRequest(`/api/activities/${activityId}/logs`, "POST", {
         entry,
         entryDate: new Date(entryDate),
       }),

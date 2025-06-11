@@ -112,7 +112,7 @@ export default function Settings() {
 
   const updatePreferencesMutation = useMutation({
     mutationFn: (newPreferences: Partial<UserPreferences>) => 
-      apiRequest("PATCH", "/api/user/preferences", newPreferences),
+      apiRequest("/api/user/preferences", "PATCH", newPreferences),
     onSuccess: () => {
       // Invalidate and refetch preferences
       queryClient.invalidateQueries({ queryKey: ["/api/user/preferences"] });
