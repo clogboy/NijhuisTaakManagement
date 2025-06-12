@@ -244,7 +244,7 @@ export default function TodaysTasks() {
         <CardHeader>
           <CardTitle className="flex items-center text-lg">
             <Calendar className="mr-2 h-5 w-5" />
-            Vandaag's Actiepunten
+            Mijn acties
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -264,7 +264,7 @@ export default function TodaysTasks() {
         <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-lg">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-ms-blue flex-shrink-0" />
-            <span>Vandaag's Actiepunten</span>
+            <span>Mijn acties</span>
             {hasOverdueWarning && (
               <Badge variant="destructive" className="text-xs">
                 {overdueSubtasks.length} overdue
