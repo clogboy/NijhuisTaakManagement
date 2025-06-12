@@ -134,7 +134,7 @@ export default function AppLayout({
       icon: CheckSquare, 
       label: t("nav.activities"),
       subItems: [
-        { path: "/subtasks", icon: ListChecks, label: t("subtasks") },
+        { path: "/subtasks", icon: ListChecks, label: "Actiepunten" },
         { path: "/quickwins", icon: Trophy, label: t("nav.quickWins") },
         { path: "/roadblocks", icon: AlertTriangle, label: t("nav.roadblocks") },
       ]

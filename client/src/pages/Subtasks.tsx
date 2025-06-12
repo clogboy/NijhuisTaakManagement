@@ -422,10 +422,10 @@ export default function Subtasks() {
     <AppLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Subtaken</h1>
+          <h1 className="text-3xl font-bold">Actiepunten</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Beheer Quick Wins en Wegversperringen gekoppeld aan je activiteiten. 
-            Deelnemers die ook toegang hebben tot het platform zullen deze subtaken zien in hun eigen agenda's.
+            Deelnemers die ook toegang hebben tot het platform zullen deze actiepunten zien in hun eigen agenda's.
           </p>
         </div>
 
@@ -434,7 +434,7 @@ export default function Subtasks() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Zoek subtaken..."
+              placeholder="Zoek actiepunten..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"

@@ -462,8 +462,8 @@ export class DatabaseStorage implements IStorage {
     // Get due this week count
     const dueThisWeekActivities = await db.select().from(activities).where(
       and(
-        sql`${activities.dueDate} <= ${weekFromNow}`,
-        sql`${activities.dueDate} >= ${now}`,
+        sql`${activities.dueDate} <= ${weekFromNow.toISOString()}`,
+        sql`${activities.dueDate} >= ${now.toISOString()}`,
         !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
     );
