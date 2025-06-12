@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +27,9 @@ import {
   Trophy,
   Filter,
   X,
-  Download
+  Download,
+  Archive,
+  ArchiveRestore
 } from "lucide-react";
 import { Activity, Contact, QuickWin } from "@shared/schema";
 import NewActivityModal from "@/components/modals/NewActivityModal";
@@ -120,6 +122,7 @@ export default function Dashboard() {
       case "completed": return "bg-green-100 text-green-800";
       case "in_progress": return "bg-yellow-100 text-yellow-800";
       case "planned": return "bg-blue-100 text-blue-800";
+      case "archived": return "bg-gray-200 text-gray-700";
       default: return "bg-gray-100 text-gray-800";
     }
   };

@@ -367,6 +367,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Archive/Unarchive activity routes
+  app.patch("/api/activities/:id/archive", requireAuth, async (req: any, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const activity = await storage.updateActivity(activityId, { status: "archived" });
+      res.json(activity);
+    } catch (error) {
+      console.error("Archive activity error:", error);
+      res.status(500).json({ message: "Failed to archive activity" });
+    }
+  });
+
+  app.patch("/api/activities/:id/unarchive", requireAuth, async (req: any, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const activity = await storage.updateActivity(activityId, { status: "pending" });
+      res.json(activity);
+    } catch (error) {
+      console.error("Unarchive activity error:", error);
+      res.status(500).json({ message: "Failed to unarchive activity" });
+    }
+  });
+
   // Activity logs routes
   app.get("/api/activities/:id/logs", requireAuth, async (req: any, res) => {
     try {

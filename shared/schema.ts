@@ -83,7 +83,7 @@ export const activities = pgTable("activities", {
   title: text("title").notNull(),
   description: text("description"),
   priority: text("priority").notNull().default("normal"), // 'low', 'normal', 'urgent'
-  status: text("status").notNull().default("pending"), // 'pending', 'in_progress', 'completed'
+  status: text("status").notNull().default("pending"), // 'pending', 'in_progress', 'completed', 'archived'
   statusTags: text("status_tags").array(),
   estimatedDuration: integer("estimated_duration"), // in minutes
   dueDate: timestamp("due_date"),
