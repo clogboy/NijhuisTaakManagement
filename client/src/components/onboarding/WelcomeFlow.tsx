@@ -28,11 +28,11 @@ export default function WelcomeFlow({ isOpen, onClose }: WelcomeFlowProps) {
 
   const welcomeSlides = [
     {
-      title: "Welkom bij Nijhuis",
+      title: "Welkom bij Dossier Manager",
       subtitle: "Je persoonlijke productiviteitsplatform",
       description: "Ontdek hoe je efficiënter kunt werken met onze slimme tools en AI-ondersteuning.",
       icon: Building2,
-      character: "nijhuis" as const,
+      character: "productivity" as const,
       color: "from-red-500 to-red-600"
     },
     {
@@ -46,7 +46,7 @@ export default function WelcomeFlow({ isOpen, onClose }: WelcomeFlowProps) {
     {
       title: "AI-Gestuurde Planning",
       subtitle: "Laat kunstmatige intelligentie je helpen",
-      description: "Onze AI analyseert je werkpatronen en stelt optimale schema's voor gebaseerd op de Eisenhower matrix.",
+      description: "Onze AI analyseert je werkpatronen en stelt optimale schema's voor met slimme prioritering.",
       icon: Sparkles,
       character: "expert" as const,
       color: "from-purple-500 to-purple-600"
@@ -56,7 +56,7 @@ export default function WelcomeFlow({ isOpen, onClose }: WelcomeFlowProps) {
       subtitle: "Verbind met je bestaande tools",
       description: "Synchroniseer met Microsoft Calendar, Teams en BimCollab voor een complete werkervaring.",
       icon: Users,
-      character: "nijhuis" as const,
+      character: "productivity" as const,
       color: "from-green-500 to-green-600"
     }
   ];

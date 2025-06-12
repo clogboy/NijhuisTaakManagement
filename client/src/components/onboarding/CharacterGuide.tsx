@@ -66,7 +66,7 @@ export default function CharacterGuide({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
   
-  const charData = characterData[character];
+  const charData = characterData[character] || characterData.productivity;
 
   useEffect(() => {
     if (isVisible) {

@@ -6,7 +6,7 @@ interface OnboardingState {
   isFirstVisit: boolean;
   showCharacterGuide: boolean;
   guidanceMessage: string;
-  guideCharacter: "nijhuis" | "helper" | "expert";
+  guideCharacter: "productivity" | "helper" | "expert";
 }
 
 interface OnboardingContextType {
@@ -14,7 +14,7 @@ interface OnboardingContextType {
   startTutorial: () => void;
   completeTutorial: () => void;
   skipTutorial: () => void;
-  showGuide: (character: "nijhuis" | "helper" | "expert", message: string) => void;
+  showGuide: (character: "productivity" | "helper" | "expert", message: string) => void;
   hideGuide: () => void;
   updateTutorialStep: (step: number) => void;
   resetOnboarding: () => void;
@@ -30,7 +30,7 @@ const defaultState: OnboardingState = {
   isFirstVisit: true,
   showCharacterGuide: false,
   guidanceMessage: "",
-  guideCharacter: "nijhuis"
+  guideCharacter: "productivity"
 };
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
@@ -85,7 +85,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     }));
   };
 
-  const showGuide = (character: "nijhuis" | "helper" | "expert", message: string) => {
+  const showGuide = (character: "productivity" | "helper" | "expert", message: string) => {
     setState(prev => ({
       ...prev,
       showCharacterGuide: true,
