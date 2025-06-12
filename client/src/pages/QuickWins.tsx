@@ -359,6 +359,35 @@ export default function QuickWins() {
                               </div>
                             )}
                           </div>
+                          
+                          {/* Edit and Delete Actions */}
+                          <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingSubtask(subtask);
+                                setIsEditModalOpen(true);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                              {t('common.edit')}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm(t('subtasks.deleteConfirm'))) {
+                                  deleteSubtaskMutation.mutate(subtask.id);
+                                }
+                              }}
+                              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              {t('common.delete')}
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     );
@@ -369,6 +398,13 @@ export default function QuickWins() {
           </div>
         )}
       </div>
+
+      {/* Edit Subtask Modal */}
+      <EditSubtaskModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        subtask={editingSubtask}
+      />
     </AppLayout>
   );
 }
