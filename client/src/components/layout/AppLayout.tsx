@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTranslations } from "@/hooks/useTranslations";
+import TutorialButton from "@/components/onboarding/TutorialButton";
 import { 
   FolderOpen, 
   LayoutDashboard, 
@@ -354,6 +355,9 @@ export default function AppLayout({
           </div>
         </main>
       </div>
+
+      {/* Tutorial Button - Always Available */}
+      <TutorialButton />
     </div>
   );
 }

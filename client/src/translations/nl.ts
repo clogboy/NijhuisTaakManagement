@@ -524,6 +524,57 @@ export const nlTranslations = {
     priorityNormal: "Normaal",
     priorityUrgent: "Urgent"
   },
+  onboarding: {
+    welcome: "Welkom bij Nijhuis",
+    personalGuide: "Je persoonlijke gids",
+    getStarted: "Laten we samen ontdekken hoe je het meeste uit dit platform haalt.",
+    skipTutorial: "Tutorial overslaan",
+    startTutorial: "Start Tutorial",
+    nextStep: "Volgende stap",
+    previousStep: "Vorige stap",
+    complete: "Voltooien",
+    progress: "voortgang",
+    step: "Stap",
+    of: "van",
+    tutorialOptions: "Tutorial Opties",
+    welcomeTour: "Welkom Tour",
+    interactiveTutorial: "Interactieve Tutorial", 
+    askHelp: "Vraag Hulp",
+    resetTutorial: "Reset Tutorial",
+    notNow: "Niet nu",
+    newFeature: "Nieuw",
+    characterGuides: {
+      nijhuis: "Nijhuis Assistent",
+      helper: "AI Helper",
+      expert: "Productiviteit Expert"
+    },
+    steps: {
+      dashboard: {
+        title: "Je Dashboard Overzicht",
+        description: "Dit is je hoofddashboard waar je alle belangrijke informatie ziet."
+      },
+      activities: {
+        title: "Activiteiten Beheren", 
+        description: "In de Activiteiten sectie beheer je al je taken."
+      },
+      subtasks: {
+        title: "Subtaken Organiseren",
+        description: "Elke activiteit kan subtaken hebben voor betere organisatie."
+      },
+      timeBlocking: {
+        title: "Slimme Tijdplanning",
+        description: "Gebruik tijdblokken om je dag te plannen."
+      },
+      aiAgenda: {
+        title: "AI-Gestuurde Agenda",
+        description: "Laat onze AI je helpen met dagelijkse planning."
+      },
+      contacts: {
+        title: "Contacten & Samenwerking",
+        description: "Beheer je contacten en werk samen met collega's."
+      }
+    }
+  },
   email: {
     sendEmail: "E-mail verzenden",
     selectRecipients: "Ontvangers selecteren",
