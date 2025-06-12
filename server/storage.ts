@@ -1,10 +1,10 @@
 import { 
   users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions,
-  teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings,
+  teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences,
   type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder,
   type TeamsBoard, type InsertTeamsBoard, type TeamsCard, type InsertTeamsCard,
   type BimcollabProject, type InsertBimcollabProject, type BimcollabIssue, type InsertBimcollabIssue,
-  type IntegrationSettings, type InsertIntegrationSettings
+  type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
@@ -135,6 +135,11 @@ export interface IStorage {
   getIntegrationSettings(userId: number): Promise<IntegrationSettings | undefined>;
   createIntegrationSettings(settings: InsertIntegrationSettings & { userId: number }): Promise<IntegrationSettings>;
   updateIntegrationSettings(userId: number, settings: Partial<InsertIntegrationSettings>): Promise<IntegrationSettings>;
+
+  // Document References
+  getDocumentReferences(filter: { activityId?: number; subtaskId?: number; quickWinId?: number; roadblockId?: number }): Promise<DocumentReference[]>;
+  createDocumentReference(reference: InsertDocumentReference): Promise<DocumentReference>;
+  deleteDocumentReference(id: number, userId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1002,6 +1007,60 @@ export class DatabaseStorage implements IStorage {
       .where(eq(integrationSettings.userId, userId))
       .returning();
     return updated;
+  }
+
+  // Document References
+  async getDocumentReferences(filter: { activityId?: number; subtaskId?: number; quickWinId?: number; roadblockId?: number }): Promise<DocumentReference[]> {
+    let whereConditions: any[] = [];
+    
+    if (filter.activityId) {
+      whereConditions.push(eq(documentReferences.activityId, filter.activityId));
+    }
+    if (filter.subtaskId) {
+      whereConditions.push(eq(documentReferences.subtaskId, filter.subtaskId));
+    }
+    if (filter.quickWinId) {
+      whereConditions.push(eq(documentReferences.quickWinId, filter.quickWinId));
+    }
+    if (filter.roadblockId) {
+      whereConditions.push(eq(documentReferences.roadblockId, filter.roadblockId));
+    }
+
+    if (whereConditions.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select()
+      .from(documentReferences)
+      .where(or(...whereConditions))
+      .orderBy(desc(documentReferences.createdAt));
+
+    return results;
+  }
+
+  async createDocumentReference(reference: InsertDocumentReference): Promise<DocumentReference> {
+    const [created] = await db
+      .insert(documentReferences)
+      .values({
+        ...reference,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return created;
+  }
+
+  async deleteDocumentReference(id: number, userId: number): Promise<boolean> {
+    const result = await db
+      .delete(documentReferences)
+      .where(and(
+        eq(documentReferences.id, id),
+        eq(documentReferences.createdBy, userId)
+      ));
+
+    return result.rowCount > 0;
   }
 }
 

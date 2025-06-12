@@ -475,3 +475,34 @@ export type InsertTimeBlock = z.infer<typeof insertTimeBlockSchema>;
 
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+
+export const documentReferences = pgTable("document_references", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").references(() => activities.id, { onDelete: "cascade" }),
+  subtaskId: integer("subtask_id").references(() => subtasks.id, { onDelete: "cascade" }),
+  quickWinId: integer("quick_win_id").references(() => quickWins.id, { onDelete: "cascade" }),
+  roadblockId: integer("roadblock_id").references(() => roadblocks.id, { onDelete: "cascade" }),
+  documentId: text("document_id").notNull(), // DigiOffice document ID
+  documentName: text("document_name").notNull(),
+  documentPath: text("document_path"),
+  documentUrl: text("document_url"),
+  documentType: text("document_type"), // file extension or mime type
+  fileSize: integer("file_size"), // in bytes
+  version: text("version"),
+  description: text("description"),
+  isCheckedOut: boolean("is_checked_out").notNull().default(false),
+  checkedOutBy: integer("checked_out_by").references(() => users.id),
+  checkedOutAt: timestamp("checked_out_at"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDocumentReferenceSchema = createInsertSchema(documentReferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DocumentReference = typeof documentReferences.$inferSelect;
+export type InsertDocumentReference = z.infer<typeof insertDocumentReferenceSchema>;

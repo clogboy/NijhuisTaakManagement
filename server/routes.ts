@@ -11,6 +11,7 @@ import { emailService } from "./email-service";
 import { analyticsService } from "./analytics-service";
 import { auditService } from "./audit-service";
 import { azureMigrationService } from "./azure-migration-service";
+import { digiOfficeService } from "./digioffice-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
@@ -1626,6 +1627,199 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Migration rollback error:", error);
       res.status(500).json({ message: "Failed to rollback migration" });
+    }
+  });
+
+  // DigiOffice Integration endpoints
+  app.get("/api/digioffice/status", requireAuth, async (req, res) => {
+    try {
+      const status = await digiOfficeService.getIntegrationStatus(req.user!.id);
+      res.json(status);
+    } catch (error) {
+      console.error("DigiOffice status error:", error);
+      res.status(500).json({ message: "Failed to get DigiOffice status" });
+    }
+  });
+
+  app.get("/api/digioffice/test-connection", requireAuth, async (req, res) => {
+    try {
+      const connected = await digiOfficeService.testConnection();
+      res.json({ connected });
+    } catch (error) {
+      console.error("DigiOffice connection test error:", error);
+      res.status(500).json({ message: "Failed to test DigiOffice connection" });
+    }
+  });
+
+  app.get("/api/digioffice/search", requireAuth, async (req, res) => {
+    try {
+      const { query, folderId, pageSize = 50, pageToken } = req.query;
+      
+      if (!query) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      const results = await digiOfficeService.searchDocuments(
+        req.user!.id,
+        query as string,
+        folderId as string,
+        parseInt(pageSize as string),
+        pageToken as string
+      );
+      
+      res.json(results);
+    } catch (error) {
+      console.error("DigiOffice search error:", error);
+      res.status(500).json({ message: "Failed to search DigiOffice documents" });
+    }
+  });
+
+  app.get("/api/digioffice/folders", requireAuth, async (req, res) => {
+    try {
+      const { parentId } = req.query;
+      const folders = await digiOfficeService.getFolders(req.user!.id, parentId as string);
+      res.json(folders);
+    } catch (error) {
+      console.error("DigiOffice folders error:", error);
+      res.status(500).json({ message: "Failed to get DigiOffice folders" });
+    }
+  });
+
+  app.get("/api/digioffice/folders/:folderId/documents", requireAuth, async (req, res) => {
+    try {
+      const { pageSize = 50, pageToken } = req.query;
+      const results = await digiOfficeService.getFolderDocuments(
+        req.user!.id,
+        req.params.folderId,
+        parseInt(pageSize as string),
+        pageToken as string
+      );
+      res.json(results);
+    } catch (error) {
+      console.error("DigiOffice folder documents error:", error);
+      res.status(500).json({ message: "Failed to get folder documents" });
+    }
+  });
+
+  app.get("/api/digioffice/documents/:documentId", requireAuth, async (req, res) => {
+    try {
+      const document = await digiOfficeService.getDocument(req.user!.id, req.params.documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      console.error("DigiOffice document error:", error);
+      res.status(500).json({ message: "Failed to get document" });
+    }
+  });
+
+  app.post("/api/digioffice/documents/:documentId/checkout", requireAuth, async (req, res) => {
+    try {
+      const result = await digiOfficeService.checkOutDocument(req.user!.id, req.params.documentId);
+      res.json(result);
+    } catch (error) {
+      console.error("DigiOffice checkout error:", error);
+      res.status(500).json({ message: "Failed to checkout document" });
+    }
+  });
+
+  app.post("/api/digioffice/documents/:documentId/checkin", requireAuth, async (req, res) => {
+    try {
+      const { comment } = req.body;
+      const result = await digiOfficeService.checkInDocument(
+        req.user!.id, 
+        req.params.documentId, 
+        comment
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("DigiOffice checkin error:", error);
+      res.status(500).json({ message: "Failed to checkin document" });
+    }
+  });
+
+  app.get("/api/digioffice/documents/:documentId/download-url", requireAuth, async (req, res) => {
+    try {
+      const downloadUrl = await digiOfficeService.getDocumentDownloadUrl(req.user!.id, req.params.documentId);
+      
+      if (!downloadUrl) {
+        return res.status(404).json({ message: "Download URL not available" });
+      }
+      
+      res.json({ downloadUrl });
+    } catch (error) {
+      console.error("DigiOffice download URL error:", error);
+      res.status(500).json({ message: "Failed to get download URL" });
+    }
+  });
+
+  app.post("/api/digioffice/document-references", requireAuth, async (req, res) => {
+    try {
+      const { activityId, subtaskId, quickWinId, roadblockId, documentId, description } = req.body;
+      
+      if (!documentId) {
+        return res.status(400).json({ message: "Document ID is required" });
+      }
+
+      // Get document details from DigiOffice
+      const document = await digiOfficeService.getDocument(req.user!.id, documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found in DigiOffice" });
+      }
+
+      // Create document reference in database
+      const reference = await storage.createDocumentReference({
+        activityId,
+        subtaskId,
+        quickWinId,
+        roadblockId,
+        documentId: document.id,
+        documentName: document.name,
+        documentPath: document.path,
+        documentUrl: document.url,
+        documentType: document.mimeType,
+        fileSize: document.fileSize,
+        version: document.version,
+        description,
+        isCheckedOut: document.isCheckedOut,
+        checkedOutBy: document.checkedOutBy ? req.user!.id : null,
+        checkedOutAt: document.checkedOutAt ? new Date(document.checkedOutAt) : null,
+        createdBy: req.user!.id
+      });
+
+      res.json(reference);
+    } catch (error) {
+      console.error("Document reference creation error:", error);
+      res.status(500).json({ message: "Failed to create document reference" });
+    }
+  });
+
+  app.get("/api/activities/:activityId/document-references", requireAuth, async (req, res) => {
+    try {
+      const references = await storage.getDocumentReferences({ activityId: parseInt(req.params.activityId) });
+      res.json(references);
+    } catch (error) {
+      console.error("Document references error:", error);
+      res.status(500).json({ message: "Failed to get document references" });
+    }
+  });
+
+  app.delete("/api/document-references/:referenceId", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteDocumentReference(parseInt(req.params.referenceId), req.user!.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Document reference not found or not authorized" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Document reference deletion error:", error);
+      res.status(500).json({ message: "Failed to delete document reference" });
     }
   });
 
