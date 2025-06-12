@@ -965,7 +965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get activities and ethos
       const user = await storage.getUser(req.session.userId);
-      const activities = await storage.getActivities(req.session.userId, user?.role === 'admin');
+      const activities = await storage.getActivities(req.session.userId, user?.email || '', user?.role === 'admin');
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
       
       // Categorize activities using priority matrix
@@ -1201,7 +1201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all user data for export
       const [activities, contacts, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks] = await Promise.all([
-        storage.getActivities(req.user.id, isAdmin),
+        storage.getActivities(req.user.id, req.user.email, isAdmin),
         storage.getContacts(req.user.id),
         storage.getQuickWins(req.user.id),
         storage.getRoadblocks(req.user.id, isAdmin),

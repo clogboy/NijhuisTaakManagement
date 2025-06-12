@@ -734,7 +734,10 @@ export class DatabaseStorage implements IStorage {
   // Subtasks methods
   async getSubtasks(userId: number): Promise<Subtask[]> {
     // Get subtasks for activities the user created or is a participant in
-    const userActivities = await this.getActivities(userId, false);
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    const userActivities = await this.getActivities(userId, user.email, false);
     const activityIds = userActivities.map(a => a.id);
     
     if (activityIds.length === 0) return [];

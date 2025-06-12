@@ -667,7 +667,7 @@ export default function Dashboard() {
                           </span>
                         </div>
                       )}
-                      {win.isSubtask && (
+                      {'isSubtask' in win && win.isSubtask && (
                         <div className="flex items-center mt-1">
                           <Badge className="bg-blue-100 text-blue-800 text-xs">
                             From Subtask

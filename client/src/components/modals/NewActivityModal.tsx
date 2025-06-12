@@ -40,6 +40,8 @@ import { useTranslations } from "@/hooks/useTranslations";
 
 const formSchema = insertActivitySchema.extend({
   dueDate: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  collaborators: z.array(z.string()).optional(),
 });
 
 interface NewActivityModalProps {
@@ -70,6 +72,8 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
       statusTags: [],
       dueDate: "",
       participants: [],
+      isPublic: false,
+      collaborators: [],
     },
   });
 
