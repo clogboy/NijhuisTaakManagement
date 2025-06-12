@@ -69,6 +69,10 @@ export default function Dashboard() {
     queryKey: ["/api/quickwins"],
   });
 
+  const { data: subtasks } = useQuery<any[]>({
+    queryKey: ["/api/subtasks"],
+  });
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent": return "bg-red-500";
@@ -170,6 +174,28 @@ export default function Dashboard() {
     if (!activityId) return null;
     return activities?.find(a => a.id === activityId)?.title || "Unknown Activity";
   };
+
+  // Filter subtasks that are classified as quick wins
+  const quickWinSubtasks = (subtasks || []).filter((subtask: any) => {
+    const participantTypes = subtask.participantTypes as Record<string, string> || {};
+    return subtask.type === "quick_win" || Object.values(participantTypes).includes("quick_win");
+  });
+
+  // Combine traditional quick wins with quick win subtasks for display
+  const allQuickWins = [
+    ...(quickWins || []),
+    ...quickWinSubtasks.map((subtask: any) => ({
+      id: `subtask-${subtask.id}`,
+      title: subtask.title,
+      description: subtask.description,
+      linkedActivityId: subtask.linkedActivityId,
+      createdAt: subtask.createdAt,
+      status: subtask.status === "resolved" || subtask.status === "completed" ? "completed" : "pending",
+      impact: "medium", // Default for subtasks
+      effort: "low", // Default for subtasks
+      isSubtask: true
+    }))
+  ];
 
   if (statsLoading || activitiesLoading || contactsLoading) {
     return (
@@ -495,7 +521,7 @@ export default function Dashboard() {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {quickWins?.slice(0, 6).map((win) => (
+              {allQuickWins?.slice(0, 6).map((win) => (
                 <div
                   key={win.id}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -512,14 +538,26 @@ export default function Dashboard() {
                           </span>
                         </div>
                       )}
+                      {win.isSubtask && (
+                        <div className="flex items-center mt-1">
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">
+                            From Subtask
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="flex items-center mt-2 gap-1">
+                        <Badge className={`text-xs ${win.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {win.status === 'completed' ? 'Completed' : 'Pending'}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="ml-2">
-                      <Trophy className="text-yellow-500" size={16} />
+                      <Trophy className={win.status === 'completed' ? 'text-green-500' : 'text-yellow-500'} size={16} />
                     </div>
                   </div>
                 </div>
               ))}
-              {!quickWins?.length && (
+              {!allQuickWins?.length && (
                 <div className="col-span-full text-center text-neutral-medium py-8">
                   No quick wins created yet
                 </div>
