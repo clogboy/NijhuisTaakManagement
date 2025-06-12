@@ -266,15 +266,16 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                     <div className="space-y-2">
                       {contacts?.map((contact) => (
                         <div key={contact.id} className="flex items-center space-x-2">
-                          <Checkbox
+                          <input
+                            type="checkbox"
                             id={`contact-${contact.id}`}
-                            checked={field.value?.includes(contact.id) || false}
-                            onCheckedChange={(checked) => {
+                            checked={field.value?.includes(contact.email) || false}
+                            onChange={(e) => {
                               const currentParticipants = field.value || [];
-                              if (checked) {
-                                field.onChange([...currentParticipants, contact.id]);
+                              if (e.target.checked) {
+                                field.onChange([...currentParticipants, contact.email]);
                               } else {
-                                field.onChange(currentParticipants.filter(id => id !== contact.id));
+                                field.onChange(currentParticipants.filter(email => email !== contact.email));
                               }
                             }}
                           />
