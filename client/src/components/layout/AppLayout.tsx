@@ -179,8 +179,8 @@ export default function AppLayout({
                   <FolderOpen className="text-white" size={16} />
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-sidebar-foreground">Dossier Manager</h1>
-                  <p className="text-xs text-muted-foreground">Activity Management</p>
+                  <h1 className="text-lg font-semibold text-sidebar-foreground">NijFlow</h1>
+                  <p className="text-xs text-muted-foreground">Smart Productivity Platform</p>
                 </div>
               </div>
             )}

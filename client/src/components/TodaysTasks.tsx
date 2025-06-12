@@ -181,34 +181,26 @@ export default function TodaysTasks() {
   // Combine prioritized subtasks and today's activities
   const prioritizedSubtasks = prioritizeSubtasks(assignedSubtasks);
   
-  // Create combined list with proper sorting
-  const combinedTasks = [
-    ...activitiesToday.map(activity => ({ 
-      ...activity, 
-      isSubtask: false,
-      taskType: 'activity',
-      urgencyScore: getPriorityScore(activity.priority) + getStatusScore(activity.status)
-    })),
-    ...prioritizedSubtasks.slice(0, 5).map(subtask => {
-      const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
-      const isUrgent = subtask.dueDate ? new Date(subtask.dueDate) <= new Date() : false;
-      return {
-        ...linkedActivity!,
-        id: subtask.id,
-        title: subtask.title,
-        priority: subtask.priority,
-        dueDate: subtask.dueDate,
-        status: subtask.status,
-        description: subtask.description,
-        isSubtask: true,
-        taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type,
-        urgencyScore: getPriorityScore(subtask.priority) + (isUrgent ? 3 : 0)
-      };
-    })
-  ];
+  // Only show subtasks (tasks) - exclude activities from Today's Tasks
+  const todaysTasks = prioritizedSubtasks.slice(0, 10).map(subtask => {
+    const linkedActivity = activities.find(activity => activity.id === subtask.linkedActivityId);
+    const isUrgent = subtask.dueDate ? new Date(subtask.dueDate) <= new Date() : false;
+    return {
+      ...linkedActivity!,
+      id: subtask.id,
+      title: subtask.title,
+      priority: subtask.priority,
+      dueDate: subtask.dueDate,
+      status: subtask.status,
+      description: subtask.description,
+      isSubtask: true,
+      taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type,
+      urgencyScore: getPriorityScore(subtask.priority) + (isUrgent ? 3 : 0)
+    };
+  });
 
-  // Sort combined list by urgency score with better priority handling
-  const allTodaysTasks = combinedTasks
+  // Sort tasks by urgency score with better priority handling
+  const allTodaysTasks = todaysTasks
     .sort((a, b) => {
       // Primary sort by urgency score
       const scoreDiff = sortOrder === "desc" 

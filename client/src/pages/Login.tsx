@@ -59,10 +59,10 @@ export default function Login() {
               <FolderOpen className="text-white" size={32} />
             </div>
             <CardTitle className="text-2xl font-semibold text-neutral-dark">
-              Dossier Manager
+              NijFlow
             </CardTitle>
             <p className="text-sm text-neutral-medium mt-2">
-              Activiteiten Beheer Systeem
+              Smart Productivity Platform
             </p>
           </CardHeader>
 

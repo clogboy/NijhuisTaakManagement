@@ -124,6 +124,27 @@ export default function Dashboard() {
     }
   };
 
+  const getDeadlineWarningColor = (dueDate: string | null) => {
+    if (!dueDate) return "";
+    
+    const today = new Date();
+    const deadline = new Date(dueDate);
+    const diffInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays < 0) {
+      // Overdue - red background
+      return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
+    } else if (diffInDays <= 1) {
+      // Due today or tomorrow - orange background
+      return "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800";
+    } else if (diffInDays <= 3) {
+      // Due within 3 days - yellow background
+      return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
+    }
+    
+    return "";
+  };
+
   const filteredActivities = activities?.filter(activity => {
     // Priority filter
     if (!priorityFilters.includes(activity.priority)) return false;
