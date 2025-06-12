@@ -306,7 +306,7 @@ export default function Roadblocks() {
                     
                     {roadblocksByStatus.in_progress.length === 0 && (
                       <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
-                        No roadblocks in progress
+                        Geen wegversperringen in behandeling
                       </div>
                     )}
                   </div>
@@ -316,7 +316,7 @@ export default function Roadblocks() {
                 <div>
                   <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
                     <span className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-sm">
-                      Resolved ({roadblocksByStatus.resolved.length})
+                      Opgelost ({roadblocksByStatus.resolved.length})
                     </span>
                   </h2>
                   <div className="space-y-4">
