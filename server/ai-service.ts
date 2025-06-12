@@ -324,11 +324,11 @@ Context: ${ethosContext}
 Maximum allowed task switches: ${maxTaskSwitches}
 ${subtaskContext}
 
-Eisenhower Matrix Categories:
-- Urgent & Important: ${eisenhowerMatrix.urgentImportant.map(a => `${a.id}: ${a.title}`).join(', ')}
-- Important but Not Urgent: ${eisenhowerMatrix.importantNotUrgent.map(a => `${a.id}: ${a.title}`).join(', ')}
-- Urgent but Not Important: ${eisenhowerMatrix.urgentNotImportant.map(a => `${a.id}: ${a.title}`).join(', ')}
-- Neither: ${eisenhowerMatrix.neitherUrgentNorImportant.map(a => `${a.id}: ${a.title}`).join(', ')}
+Priority Categories:
+- Urgent & Important: ${priorityMatrix.urgentImportant.map((a: Activity) => `${a.id}: ${a.title}`).join(', ')}
+- Important but Not Urgent: ${priorityMatrix.importantNotUrgent.map((a: Activity) => `${a.id}: ${a.title}`).join(', ')}
+- Urgent but Not Important: ${priorityMatrix.urgentNotImportant.map((a: Activity) => `${a.id}: ${a.title}`).join(', ')}
+- Neither: ${priorityMatrix.neitherUrgentNorImportant.map((a: Activity) => `${a.id}: ${a.title}`).join(', ')}
 
 Create a daily schedule that:
 1. Prioritizes urgent & important tasks first
@@ -375,7 +375,7 @@ Return JSON with this structure:
 
     return {
       scheduledActivities: result.scheduledActivities || [],
-      eisenhowerMatrix,
+      priorityMatrix,
       suggestions: result.suggestions || 'Schedule optimized for productivity',
       taskSwitchOptimization: result.taskSwitchOptimization || 'Tasks grouped by context',
       estimatedTaskSwitches: result.estimatedTaskSwitches || maxTaskSwitches
@@ -384,7 +384,7 @@ Return JSON with this structure:
   } catch (error) {
     console.error('Error generating daily agenda:', error);
     // Fallback to simple scheduling
-    const fallbackMatrix = simpleEisenhowerCategorization(activities);
+    const fallbackMatrix = simplePriorityCategorization(activities);
     return generateFallbackAgenda(activities, fallbackMatrix, maxTaskSwitches);
   }
 }
@@ -415,18 +415,18 @@ function simplePriorityCategorization(activities: Activity[]): PriorityMatrix {
 
 function generateFallbackAgenda(
   activities: Activity[], 
-  eisenhowerMatrix: EisenhowerMatrix, 
+  priorityMatrix: PriorityMatrix, 
   maxTaskSwitches: number
 ): AgendaSuggestion {
   // Simple fallback: prioritize urgent & important, then important
   const scheduledActivities = [
-    ...eisenhowerMatrix.urgentImportant.map(a => a.id),
-    ...eisenhowerMatrix.importantNotUrgent.slice(0, maxTaskSwitches).map(a => a.id)
+    ...priorityMatrix.urgentImportant.map((a: Activity) => a.id),
+    ...priorityMatrix.importantNotUrgent.slice(0, maxTaskSwitches).map((a: Activity) => a.id)
   ];
 
   return {
     scheduledActivities,
-    eisenhowerMatrix,
+    priorityMatrix,
     suggestions: 'Focus on urgent and important tasks first, then move to important but not urgent items.',
     taskSwitchOptimization: 'Tasks ordered by priority to minimize context switching.',
     estimatedTaskSwitches: Math.min(scheduledActivities.length - 1, maxTaskSwitches)

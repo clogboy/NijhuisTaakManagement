@@ -902,7 +902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       res.json({
-        eisenhowerMatrix: agendaSuggestion.eisenhowerMatrix,
+        priorityMatrix: agendaSuggestion.priorityMatrix,
         suggestions: agendaSuggestion.suggestions,
         taskSwitchOptimization: agendaSuggestion.taskSwitchOptimization,
         estimatedTaskSwitches: agendaSuggestion.estimatedTaskSwitches,
