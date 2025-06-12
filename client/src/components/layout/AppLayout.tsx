@@ -72,8 +72,6 @@ export default function AppLayout({
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [submenuClickedRecently, setSubmenuClickedRecently] = useState(false);
-  const [userOverrideSidebar, setUserOverrideSidebar] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -92,8 +90,7 @@ export default function AppLayout({
   // Sync sidebar state and theme with user preferences when preferences load
   useEffect(() => {
     if (userPreferences) {
-      // Only sync compactSidebar if user hasn't manually overridden it
-      if (userPreferences.compactSidebar !== undefined && !userOverrideSidebar) {
+      if (userPreferences.compactSidebar !== undefined) {
         setIsSidebarCollapsed(userPreferences.compactSidebar);
       }
       
@@ -105,7 +102,7 @@ export default function AppLayout({
         }
       }
     }
-  }, [userPreferences, userOverrideSidebar]);
+  }, [userPreferences]);
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
@@ -198,7 +195,6 @@ export default function AppLayout({
                 size="sm"
                 onClick={() => {
                   setIsSidebarCollapsed(!isSidebarCollapsed);
-                  setUserOverrideSidebar(true);
                 }}
                 className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
               >
@@ -282,7 +278,7 @@ export default function AppLayout({
                   )}
 
                   {/* Sub-items popover for collapsed sidebar */}
-                  {item.subItems && isSidebarCollapsed && !submenuClickedRecently && (
+                  {item.subItems && isSidebarCollapsed && (
                     <div className="absolute left-full top-0 ml-2 z-50 group/submenu">
                       <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover/submenu:opacity-100 group-hover/submenu:visible transition-all duration-300 delay-75 bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px] transform scale-95 group-hover:scale-100 group-hover/submenu:scale-100">
                         <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border mb-1">
@@ -304,10 +300,6 @@ export default function AppLayout({
                                   if (isMobile) {
                                     setIsMobileMenuOpen(false);
                                   }
-                                  // Mark that submenu was clicked to prevent it from showing again
-                                  setSubmenuClickedRecently(true);
-                                  // Reset the flag after a delay to allow normal hover behavior later
-                                  setTimeout(() => setSubmenuClickedRecently(false), 2000);
                                 }}
                               >
                                 <SubIcon size={16} className="mr-3" />
