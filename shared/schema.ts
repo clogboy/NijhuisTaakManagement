@@ -170,6 +170,8 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   createdBy: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  dueDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({

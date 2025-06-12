@@ -235,13 +235,36 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {contacts?.map((contact) => (
+                        {contacts?.filter(contact => !(field.value || []).includes(contact.id)).map((contact) => (
                           <SelectItem key={contact.id} value={contact.id.toString()}>
                             {contact.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {/* Show selected participants */}
+                    {field.value && field.value.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {field.value.map((participantId: number) => {
+                          const contact = contacts?.find(c => c.id === participantId);
+                          return contact ? (
+                            <div key={participantId} className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm">
+                              <span>{contact.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newParticipants = field.value.filter((id: number) => id !== participantId);
+                                  field.onChange(newParticipants);
+                                }}
+                                className="ml-2 text-gray-500 hover:text-gray-700"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
