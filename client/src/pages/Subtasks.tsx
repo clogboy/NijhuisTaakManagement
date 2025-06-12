@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Construction } from "lucide-react";
+import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Construction, Edit, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Subtask, Activity, Contact } from "@shared/schema";
 import { format } from "date-fns";
@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/hooks/useTranslations";
 import AppLayout from "@/components/layout/AppLayout";
+import EditSubtaskModal from "@/components/modals/EditSubtaskModal";
 
 export default function Subtasks() {
   const { t } = useTranslations();
@@ -19,6 +20,8 @@ export default function Subtasks() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "quick_win" | "roadblock">("all");
+  const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { data: subtasks = [], isLoading: subtasksLoading, error: subtasksError } = useQuery<Subtask[]>({
     queryKey: ["/api/subtasks"],
@@ -349,6 +352,35 @@ export default function Subtasks() {
                 <span>Voltooid: {format(new Date(subtask.completedDate), "dd/MM/yyyy")}</span>
               </div>
             )}
+          </div>
+          
+          {/* Edit and Delete Actions */}
+          <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditingSubtask(subtask);
+                setIsEditModalOpen(true);
+              }}
+              className="flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              {t('common.edit')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm(t('subtasks.deleteConfirm'))) {
+                  deleteSubtaskMutation.mutate(subtask.id);
+                }
+              }}
+              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t('common.delete')}
+            </Button>
           </div>
         </CardContent>
       </Card>
