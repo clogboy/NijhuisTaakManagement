@@ -73,6 +73,7 @@ export default function AppLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [submenuClickedRecently, setSubmenuClickedRecently] = useState(false);
+  const [userOverrideSidebar, setUserOverrideSidebar] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -91,7 +92,8 @@ export default function AppLayout({
   // Sync sidebar state and theme with user preferences when preferences load
   useEffect(() => {
     if (userPreferences) {
-      if (userPreferences.compactSidebar !== undefined) {
+      // Only sync compactSidebar if user hasn't manually overridden it
+      if (userPreferences.compactSidebar !== undefined && !userOverrideSidebar) {
         setIsSidebarCollapsed(userPreferences.compactSidebar);
       }
       
@@ -103,7 +105,7 @@ export default function AppLayout({
         }
       }
     }
-  }, [userPreferences]);
+  }, [userPreferences, userOverrideSidebar]);
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
@@ -194,7 +196,10 @@ export default function AppLayout({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onClick={() => {
+                  setIsSidebarCollapsed(!isSidebarCollapsed);
+                  setUserOverrideSidebar(true);
+                }}
                 className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
               >
                 {isSidebarCollapsed ? <Pin size={16} /> : <PinOff size={16} />}
