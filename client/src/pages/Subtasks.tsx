@@ -92,6 +92,37 @@ export default function Subtasks() {
     },
   });
 
+  const deleteSubtaskMutation = useMutation({
+    mutationFn: async (subtaskId: number) => {
+      const response = await fetch(`/api/subtasks/${subtaskId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete subtask");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: t('common.success'),
+        description: t('subtasks.deleteSuccess'),
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t('common.error'),
+        description: t('subtasks.deleteFailed'),
+        variant: "destructive",
+      });
+    },
+  });
+
   // Create maps for lookup
   const activityMap = activities?.reduce((acc, activity) => {
     acc[activity.id] = activity;
@@ -514,6 +545,13 @@ export default function Subtasks() {
           </div>
         )}
       </div>
+
+      {/* Edit Subtask Modal */}
+      <EditSubtaskModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        subtask={editingSubtask}
+      />
     </AppLayout>
   );
 }
