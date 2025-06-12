@@ -72,6 +72,7 @@ export default function AppLayout({
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [submenuClickedRecently, setSubmenuClickedRecently] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -276,7 +277,7 @@ export default function AppLayout({
                   )}
 
                   {/* Sub-items popover for collapsed sidebar */}
-                  {item.subItems && isSidebarCollapsed && (
+                  {item.subItems && isSidebarCollapsed && !submenuClickedRecently && (
                     <div className="absolute left-full top-0 ml-2 z-50 group/submenu">
                       <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover/submenu:opacity-100 group-hover/submenu:visible transition-all duration-300 delay-75 bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px] transform scale-95 group-hover:scale-100 group-hover/submenu:scale-100">
                         <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border mb-1">
@@ -294,16 +295,14 @@ export default function AppLayout({
                                     ? "text-primary bg-accent" 
                                     : "text-popover-foreground hover:bg-accent hover:text-accent-foreground"
                                 }`}
-                                onClick={(e) => {
+                                onClick={() => {
                                   if (isMobile) {
                                     setIsMobileMenuOpen(false);
                                   }
-                                  // Force hide the submenu immediately on click
-                                  const submenu = e.currentTarget.closest('.group\\/submenu');
-                                  if (submenu) {
-                                    submenu.classList.add('pointer-events-none');
-                                    submenu.querySelector('div')?.classList.add('opacity-0', 'invisible');
-                                  }
+                                  // Mark that submenu was clicked to prevent it from showing again
+                                  setSubmenuClickedRecently(true);
+                                  // Reset the flag after a delay to allow normal hover behavior later
+                                  setTimeout(() => setSubmenuClickedRecently(false), 2000);
                                 }}
                               >
                                 <SubIcon size={16} className="mr-3" />
