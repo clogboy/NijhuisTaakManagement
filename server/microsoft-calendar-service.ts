@@ -426,7 +426,7 @@ export class MicrosoftCalendarService {
       for (const contact of personalContacts) {
         const exists = allContacts.some(c => 
           c.emailAddresses?.some(e => 
-            contact.emailAddresses?.some(ce => ce.address === e.address)
+            contact.emailAddresses?.some((ce: any) => ce.address === e.address)
           )
         );
         if (!exists) {

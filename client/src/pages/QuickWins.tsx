@@ -219,7 +219,7 @@ export default function QuickWins() {
                     
                     {quickWinsByStatus.pending.length === 0 && (
                       <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
-                        No pending quick wins
+                        Geen openstaande quick wins
                       </div>
                     )}
                   </div>
@@ -228,7 +228,7 @@ export default function QuickWins() {
                 {/* Completed Quick Wins */}
                 <div>
                   <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
-                    Completed ({quickWinsByStatus.completed.length})
+                    Voltooid ({quickWinsByStatus.completed.length})
                   </h2>
                   <div className="space-y-4">
                     {quickWinsByStatus.completed.map((quickWin) => {
@@ -281,7 +281,7 @@ export default function QuickWins() {
                     
                     {quickWinsByStatus.completed.length === 0 && (
                       <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
-                        No completed quick wins yet
+                        Nog geen voltooide quick wins
                       </div>
                     )}
                   </div>

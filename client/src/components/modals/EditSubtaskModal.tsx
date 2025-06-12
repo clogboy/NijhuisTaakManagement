@@ -84,7 +84,7 @@ export default function EditSubtaskModal({ open, onOpenChange, subtask }: EditSu
       
       const updateData = {
         ...data,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
       };
       
       const response = await fetch(`/api/subtasks/${subtask.id}`, {
