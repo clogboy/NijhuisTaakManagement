@@ -35,7 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import AppLayout from "@/components/layout/AppLayout";
 
-interface EisenhowerMatrix {
+interface PriorityMatrix {
   urgentImportant: Activity[];
   importantNotUrgent: Activity[];
   urgentNotImportant: Activity[];
@@ -43,7 +43,7 @@ interface EisenhowerMatrix {
 }
 
 interface AgendaSuggestion {
-  eisenhowerMatrix: EisenhowerMatrix;
+  priorityMatrix: PriorityMatrix;
   suggestions: string;
   taskSwitchOptimization: string;
   estimatedTaskSwitches: number;
@@ -84,8 +84,8 @@ export default function Agenda() {
     queryKey: ["/api/activities"],
   });
 
-  const { data: eisenhowerMatrix } = useQuery<EisenhowerMatrix>({
-    queryKey: ["/api/eisenhower", selectedDate],
+  const { data: priorityMatrix } = useQuery<PriorityMatrix>({
+    queryKey: ["/api/priority-matrix", selectedDate],
   });
 
   // Scheduler status query
@@ -252,13 +252,12 @@ export default function Agenda() {
   }, [isOnCooldown, lastTriggerTime]);
 
   return (
-    <AppLayout title="AI Agenda" subtitle="Intelligent time management with Eisenhower matrix">
+    <AppLayout title="AI Agenda" subtitle="Intelligent time management with priority-based planning">
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 sm:p-4">
           <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>
-              <TabsTrigger value="eisenhower" className="text-xs sm:text-sm">Eisenhower Matrix</TabsTrigger>
               <TabsTrigger value="ethos" className="text-xs sm:text-sm">Weekly Ethos</TabsTrigger>
             </TabsList>
 

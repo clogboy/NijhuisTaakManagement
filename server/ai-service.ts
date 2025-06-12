@@ -96,7 +96,7 @@ async function getWorkingOpenAI(): Promise<OpenAI> {
   }
 }
 
-interface EisenhowerMatrix {
+interface PriorityMatrix {
   urgentImportant: Activity[];
   importantNotUrgent: Activity[];
   urgentNotImportant: Activity[];
@@ -105,16 +105,16 @@ interface EisenhowerMatrix {
 
 interface AgendaSuggestion {
   scheduledActivities: number[];
-  eisenhowerMatrix: EisenhowerMatrix;
+  priorityMatrix: PriorityMatrix;
   suggestions: string;
   taskSwitchOptimization: string;
   estimatedTaskSwitches: number;
 }
 
-export async function categorizeActivitiesWithEisenhower(
+export async function categorizeActivitiesWithPriority(
   activities: Activity[], 
   ethos?: WeeklyEthos
-): Promise<EisenhowerMatrix> {
+): Promise<PriorityMatrix> {
   try {
     const activitiesData = activities.map(activity => ({
       id: activity.id,
@@ -278,7 +278,7 @@ Return a JSON object with this exact structure:
     }
     
     // Fallback to simple categorization
-    return simpleEisenhowerCategorization(activities);
+    return simplePriorityCategorization(activities);
   }
 }
 
@@ -290,7 +290,7 @@ export async function generateDailyAgenda(
   maxTaskSwitches: number = 3
 ): Promise<AgendaSuggestion> {
   try {
-    const eisenhowerMatrix = await categorizeActivitiesWithEisenhower(activities, ethos);
+    const priorityMatrix = await categorizeActivitiesWithPriority(activities, ethos);
     
     const ethosContext = ethos ? 
       `Today's ethos: "${ethos.ethos}" - ${ethos.description}. Focus areas: ${ethos.focusAreas?.join(', ')}. Preferred work blocks: ${ethos.preferredWorkBlocks}` : 
@@ -389,7 +389,7 @@ Return JSON with this structure:
   }
 }
 
-function simpleEisenhowerCategorization(activities: Activity[]): EisenhowerMatrix {
+function simplePriorityCategorization(activities: Activity[]): PriorityMatrix {
   const now = new Date();
   const urgentThreshold = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
 

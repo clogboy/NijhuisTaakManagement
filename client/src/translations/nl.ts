@@ -525,7 +525,7 @@ export const nlTranslations = {
     priorityUrgent: "Urgent"
   },
   onboarding: {
-    welcome: "Welkom bij Nijhuis",
+    welcome: "Welkom bij Dossier Manager",
     personalGuide: "Je persoonlijke gids",
     getStarted: "Laten we samen ontdekken hoe je het meeste uit dit platform haalt.",
     skipTutorial: "Tutorial overslaan",
@@ -544,7 +544,7 @@ export const nlTranslations = {
     notNow: "Niet nu",
     newFeature: "Nieuw",
     characterGuides: {
-      nijhuis: "Nijhuis Assistent",
+      productivity: "Productiviteit Assistent",
       helper: "AI Helper",
       expert: "Productiviteit Expert"
     },
