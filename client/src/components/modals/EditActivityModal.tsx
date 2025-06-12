@@ -210,11 +210,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                   <FormItem>
                     <FormLabel>{t('activities.formDueDate')}</FormLabel>
                     <FormControl>
-                      <CulturalDateInput
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        placeholder={t('activities.formDueDate')}
-                      />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
