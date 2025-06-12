@@ -72,6 +72,9 @@ export default function AppLayout({
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [hasManuallyToggled, setHasManuallyToggled] = useState(() => {
+    return localStorage.getItem('sidebar-manually-toggled') === 'true';
+  });
 
   // Detect mobile screen size
   useEffect(() => {
@@ -90,7 +93,8 @@ export default function AppLayout({
   // Sync sidebar state and theme with user preferences when preferences load
   useEffect(() => {
     if (userPreferences) {
-      if (userPreferences.compactSidebar !== undefined) {
+      // Only sync compactSidebar if user hasn't manually toggled it
+      if (userPreferences.compactSidebar !== undefined && !hasManuallyToggled) {
         setIsSidebarCollapsed(userPreferences.compactSidebar);
       }
       
@@ -102,7 +106,7 @@ export default function AppLayout({
         }
       }
     }
-  }, [userPreferences]);
+  }, [userPreferences, hasManuallyToggled]);
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
@@ -195,6 +199,8 @@ export default function AppLayout({
                 size="sm"
                 onClick={() => {
                   setIsSidebarCollapsed(!isSidebarCollapsed);
+                  setHasManuallyToggled(true);
+                  localStorage.setItem('sidebar-manually-toggled', 'true');
                 }}
                 className="p-1 h-8 w-8 hover:bg-sidebar-accent ml-auto text-sidebar-foreground"
               >
