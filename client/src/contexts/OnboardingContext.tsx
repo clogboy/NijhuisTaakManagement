@@ -22,7 +22,7 @@ interface OnboardingContextType {
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-const ONBOARDING_STORAGE_KEY = "nijhuis-onboarding-state";
+const ONBOARDING_STORAGE_KEY = "dossier-manager-onboarding-state";
 
 const defaultState: OnboardingState = {
   hasCompletedTutorial: false,
