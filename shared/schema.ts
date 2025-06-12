@@ -7,7 +7,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("user"), // 'admin' or 'user'
+  role: text("role").notNull().default("user"), // 'admin' | 'manager' | 'user'
+  department: text("department"), // e.g., 'Engineering', 'Sales', 'Operations'
+  managerId: integer("manager_id").references(() => users.id), // Self-referencing for hierarchy
   microsoftId: text("microsoft_id").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
