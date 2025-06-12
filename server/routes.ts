@@ -316,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Activities routes
   app.get("/api/activities", requireAuth, async (req: any, res) => {
     try {
-      const activities = await storage.getActivities(req.user.id, req.user.role === "admin");
+      const activities = await storage.getActivities(req.user.id, req.user.email, req.user.role === "admin");
       res.json(activities);
     } catch (error) {
       console.error("Get activities error:", error);
@@ -907,7 +907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get activities for the user
       const user = await storage.getUser(req.session.userId);
-      const activities = await storage.getActivities(req.session.userId, user?.role === 'admin');
+      const activities = await storage.getActivities(req.session.userId, user?.email || '', user?.role === 'admin');
       
       // Get subtasks for the user
       const subtasks = await storage.getSubtasks(req.session.userId);

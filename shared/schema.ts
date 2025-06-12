@@ -88,6 +88,8 @@ export const activities = pgTable("activities", {
   estimatedDuration: integer("estimated_duration"), // in minutes
   dueDate: timestamp("due_date"),
   participants: text("participants").array(), // array of contact emails
+  isPublic: boolean("is_public").notNull().default(false), // whether non-authors can see this activity
+  collaborators: text("collaborators").array().default([]), // emails of users who can view/edit
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

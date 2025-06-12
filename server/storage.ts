@@ -26,12 +26,13 @@ export interface IStorage {
   updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact>;
   deleteContact(id: number): Promise<void>;
 
-  // Activities
-  getActivities(userId: number, isAdmin: boolean): Promise<Activity[]>;
-  getActivity(id: number): Promise<Activity | undefined>;
+  // Activities with role-based access
+  getActivities(userId: number, userEmail: string, isAdmin: boolean): Promise<Activity[]>;
+  getActivity(id: number, userId?: number, userEmail?: string): Promise<Activity | undefined>;
   createActivity(activity: InsertActivity & { createdBy: number }): Promise<Activity>;
-  updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity>;
-  deleteActivity(id: number): Promise<void>;
+  updateActivity(id: number, activity: Partial<InsertActivity>, userId?: number, userEmail?: string): Promise<Activity>;
+  deleteActivity(id: number, userId?: number, userEmail?: string): Promise<void>;
+  canUserAccessActivity(activityId: number, userId: number, userEmail: string): Promise<{ canView: boolean; canEdit: boolean }>;
 
   // Activity Logs
   getActivityLogs(activityId: number): Promise<ActivityLog[]>;
@@ -200,26 +201,49 @@ export class DatabaseStorage implements IStorage {
     await db.delete(contacts).where(eq(contacts.id, id));
   }
 
-  async getActivities(userId: number, isAdmin: boolean): Promise<Activity[]> {
+  async getActivities(userId: number, userEmail: string, isAdmin: boolean): Promise<Activity[]> {
     if (isAdmin) {
       return await db.select().from(activities).orderBy(desc(activities.createdAt));
     } else {
+      // User can see:
+      // 1. Activities they created
+      // 2. Activities where they are a participant (by email)
+      // 3. Activities where they are a collaborator
+      // 4. Public activities
       return await db.select().from(activities)
-        .where(eq(activities.createdBy, userId))
+        .where(
+          or(
+            eq(activities.createdBy, userId),
+            sql`${userEmail} = ANY(${activities.participants})`,
+            sql`${userEmail} = ANY(${activities.collaborators})`,
+            eq(activities.isPublic, true)
+          )
+        )
         .orderBy(desc(activities.createdAt));
     }
   }
 
-  async getActivity(id: number): Promise<Activity | undefined> {
+  async getActivity(id: number, userId?: number, userEmail?: string): Promise<Activity | undefined> {
     const [activity] = await db.select().from(activities).where(eq(activities.id, id));
-    return activity || undefined;
+    if (!activity) return undefined;
+    
+    // If user info provided, check access permissions
+    if (userId && userEmail) {
+      const access = await this.canUserAccessActivity(id, userId, userEmail);
+      if (!access.canView) return undefined;
+    }
+    
+    return activity;
   }
 
   async createActivity(activity: InsertActivity & { createdBy: number }): Promise<Activity> {
-    // Ensure the author is always included as a participant (using contact ID)
+    // Get the creator's email for participant list
+    const creator = await this.getUser(activity.createdBy);
     const participants = activity.participants || [];
-    if (!participants.includes(activity.createdBy)) {
-      participants.unshift(activity.createdBy); // Add author at the beginning
+    
+    // Ensure the author's email is always included as a participant
+    if (creator && !participants.includes(creator.email)) {
+      participants.unshift(creator.email);
     }
 
     const [newActivity] = await db.insert(activities).values({
@@ -230,7 +254,15 @@ export class DatabaseStorage implements IStorage {
     return newActivity;
   }
 
-  async updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity> {
+  async updateActivity(id: number, activity: Partial<InsertActivity>, userId?: number, userEmail?: string): Promise<Activity> {
+    // Check edit permissions if user info provided
+    if (userId && userEmail) {
+      const access = await this.canUserAccessActivity(id, userId, userEmail);
+      if (!access.canEdit) {
+        throw new Error("Insufficient permissions to edit this activity");
+      }
+    }
+    
     const [updatedActivity] = await db.update(activities)
       .set({ ...activity, updatedAt: new Date() })
       .where(eq(activities.id, id))
@@ -238,8 +270,41 @@ export class DatabaseStorage implements IStorage {
     return updatedActivity;
   }
 
-  async deleteActivity(id: number): Promise<void> {
+  async deleteActivity(id: number, userId?: number, userEmail?: string): Promise<void> {
+    // Check delete permissions if user info provided
+    if (userId && userEmail) {
+      const access = await this.canUserAccessActivity(id, userId, userEmail);
+      if (!access.canEdit) {
+        throw new Error("Insufficient permissions to delete this activity");
+      }
+    }
+    
     await db.delete(activities).where(eq(activities.id, id));
+  }
+
+  async canUserAccessActivity(activityId: number, userId: number, userEmail: string): Promise<{ canView: boolean; canEdit: boolean }> {
+    const [activity] = await db.select().from(activities).where(eq(activities.id, activityId));
+    if (!activity) return { canView: false, canEdit: false };
+
+    // Author has full access
+    if (activity.createdBy === userId) {
+      return { canView: true, canEdit: true };
+    }
+
+    // Check if user is a participant
+    const isParticipant = activity.participants?.includes(userEmail) || false;
+    
+    // Check if user is a collaborator
+    const isCollaborator = activity.collaborators?.includes(userEmail) || false;
+    
+    // Check if activity is public
+    const isPublic = activity.isPublic;
+
+    // Determine access levels
+    const canView = isParticipant || isCollaborator || isPublic;
+    const canEdit = activity.createdBy === userId; // Only authors can edit for now
+
+    return { canView, canEdit };
   }
 
   async getActivityLogs(activityId: number): Promise<ActivityLog[]> {
