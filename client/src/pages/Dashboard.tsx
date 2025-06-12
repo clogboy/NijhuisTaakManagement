@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import WelcomeFlow from "@/components/onboarding/WelcomeFlow";
+import OnboardingTutorial from "@/components/onboarding/OnboardingTutorial";
+import CharacterGuide from "@/components/onboarding/CharacterGuide";
 import { 
   Select,
   SelectContent,
@@ -42,6 +46,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { t } = useTranslations();
+  const { state: onboardingState, completeTutorial, showGuide, hideGuide } = useOnboarding();
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -52,6 +57,8 @@ export default function Dashboard() {
   const [priorityFilters, setPriorityFilters] = useState<string[]>(["urgent", "normal", "low"]);
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [showWelcomeFlow, setShowWelcomeFlow] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
@@ -72,6 +79,23 @@ export default function Dashboard() {
   const { data: subtasks } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
   });
+
+  // Trigger onboarding for new users
+  useEffect(() => {
+    if (onboardingState.isFirstVisit && !onboardingState.hasCompletedTutorial) {
+      const timer = setTimeout(() => {
+        setShowWelcomeFlow(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [onboardingState.isFirstVisit, onboardingState.hasCompletedTutorial]);
+
+  // Show contextual guides based on user actions
+  useEffect(() => {
+    if (activities && activities.length === 0 && onboardingState.hasCompletedTutorial) {
+      showGuide("helper", "Het lijkt erop dat je nog geen activiteiten hebt aangemaakt. Klik op 'Nieuwe Activiteit' om te beginnen!");
+    }
+  }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -700,6 +724,41 @@ export default function Dashboard() {
           onClose={() => setIsTaskDetailModalOpen(false)}
         />
       )}
+
+      {/* Onboarding Components */}
+      <WelcomeFlow
+        isOpen={showWelcomeFlow}
+        onClose={() => setShowWelcomeFlow(false)}
+      />
+
+      <OnboardingTutorial
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+        onComplete={completeTutorial}
+      />
+
+      <CharacterGuide
+        character={onboardingState.guideCharacter}
+        message={onboardingState.guidanceMessage}
+        isVisible={onboardingState.showCharacterGuide}
+        onDismiss={hideGuide}
+        position="bottom-right"
+        showActions={true}
+        actions={[
+          {
+            label: "Start Tutorial",
+            action: () => {
+              setShowTutorial(true);
+              hideGuide();
+            }
+          },
+          {
+            label: "Niet nu",
+            action: hideGuide,
+            variant: "outline"
+          }
+        ]}
+      />
     </div>
   );
 }
