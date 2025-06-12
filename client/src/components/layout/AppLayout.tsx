@@ -126,11 +126,17 @@ export default function AppLayout({
 
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
-    { path: "/activities", icon: CheckSquare, label: t("nav.activities") },
+    { 
+      path: "/activities", 
+      icon: CheckSquare, 
+      label: t("nav.activities"),
+      subItems: [
+        { path: "/subtasks", icon: ListChecks, label: t("subtasks") },
+        { path: "/quickwins", icon: Trophy, label: t("nav.quickWins") },
+        { path: "/roadblocks", icon: AlertTriangle, label: t("nav.roadblocks") },
+      ]
+    },
     { path: "/contacts", icon: Users, label: t("nav.contacts") },
-    { path: "/subtasks", icon: ListChecks, label: t("subtasks") },
-    { path: "/quickwins", icon: Trophy, label: t("nav.quickWins") },
-    { path: "/roadblocks", icon: AlertTriangle, label: t("nav.roadblocks") },
     { path: "/agenda", icon: Calendar, label: t("nav.agenda") },
     // { path: "/timeblocking", icon: Clock, label: t("nav.timeBlocking") }, // Temporarily disabled
   ];
@@ -217,6 +223,7 @@ export default function AppLayout({
               
               return (
                 <li key={item.path}>
+                  {/* Main menu item */}
                   <Link href={item.path}>
                     <div 
                       className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer micro-nav-item micro-button-press ${
@@ -235,6 +242,38 @@ export default function AppLayout({
                       {!isSidebarCollapsed && item.label}
                     </div>
                   </Link>
+                  
+                  {/* Sub-items */}
+                  {item.subItems && !isSidebarCollapsed && (
+                    <ul className="mt-1 ml-6 space-y-1">
+                      {item.subItems.map((subItem) => {
+                        const isSubActive = location === subItem.path;
+                        const SubIcon = subItem.icon;
+                        
+                        return (
+                          <li key={subItem.path}>
+                            <Link href={subItem.path}>
+                              <div 
+                                className={`flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer micro-nav-item micro-button-press ${
+                                  isSubActive 
+                                    ? "text-sidebar-primary-foreground bg-sidebar-primary active" 
+                                    : "text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
+                                }`}
+                                onClick={() => {
+                                  if (isMobile) {
+                                    setIsMobileMenuOpen(false);
+                                  }
+                                }}
+                              >
+                                <SubIcon size={14} className="mr-2" />
+                                {subItem.label}
+                              </div>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </li>
               );
             })}
