@@ -132,6 +132,7 @@ export default function AppLayout({
     { path: "/quickwins", icon: Trophy, label: t("nav.quickWins") },
     { path: "/roadblocks", icon: AlertTriangle, label: t("nav.roadblocks") },
     { path: "/agenda", icon: Calendar, label: t("nav.agenda") },
+    { path: "/analytics", icon: BarChart3, label: "Analytics" },
     // { path: "/timeblocking", icon: Clock, label: t("nav.timeBlocking") }, // Temporarily disabled
     { path: "/reports", icon: BarChart3, label: "Reports" },
   ];

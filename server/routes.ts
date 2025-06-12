@@ -9,6 +9,7 @@ import { dailyScheduler } from "./scheduler";
 import { supabaseService } from "./supabase-service";
 import { emailService } from "./email-service";
 import { analyticsService } from "./analytics-service";
+import { auditService } from "./audit-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
