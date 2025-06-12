@@ -8,10 +8,19 @@ import { format } from "date-fns";
 import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useTranslations } from "@/hooks/useTranslations";
+import EditSubtaskModal from "@/components/modals/EditSubtaskModal";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function QuickWins() {
   const { t } = useTranslations();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingSubtask, setEditingSubtask] = useState<any>(null);
 
   const { data: quickWins, isLoading: quickWinsLoading } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
@@ -21,6 +30,37 @@ export default function QuickWins() {
   // Also fetch subtasks that are classified as quick wins
   const { data: subtasks = [] } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
+  });
+
+  const deleteSubtaskMutation = useMutation({
+    mutationFn: async (subtaskId: number) => {
+      const response = await fetch(`/api/subtasks/${subtaskId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete subtask");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: t('common.success'),
+        description: t('subtasks.deleteSuccess'),
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t('common.error'),
+        description: t('subtasks.deleteFailed'),
+        variant: "destructive",
+      });
+    },
   });
 
   // Filter subtasks that are classified as quick wins by participants
