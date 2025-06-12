@@ -504,8 +504,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subtasks routes (unified Quick Wins and Roadblocks)
   app.get("/api/subtasks", requireAuth, async (req: any, res) => {
     try {
-      const subtasks = await storage.getSubtasks(req.user.id);
-      res.json(subtasks);
+      const allSubtasks = await storage.getSubtasks(req.user.id);
+      // Filter subtasks to only show those assigned to the current user
+      const userEmail = req.user.email;
+      const assignedSubtasks = allSubtasks.filter(subtask => 
+        subtask.participants.includes(userEmail)
+      );
+      res.json(assignedSubtasks);
     } catch (error) {
       console.error("Get subtasks error:", error);
       res.status(500).json({ message: "Failed to fetch subtasks" });
@@ -1317,6 +1322,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Teams status error:", error);
       res.status(500).json({ message: "Failed to get Teams status" });
+    }
+  });
+
+  // Microsoft Contacts routes
+  app.get("/api/microsoft/contacts", requireAuth, async (req: any, res) => {
+    try {
+      const searchFilter = req.query.search as string;
+      const contacts = await microsoftCalendarService.getMicrosoftContacts(req.user.id, searchFilter);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching Microsoft contacts:", error);
+      res.status(500).json({ message: "Failed to fetch Microsoft contacts" });
     }
   });
 

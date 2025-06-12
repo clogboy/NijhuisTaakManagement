@@ -380,6 +380,63 @@ export class MicrosoftCalendarService {
     result.setHours(hours, minutes, 0, 0);
     return result;
   }
+
+  /**
+   * Get Microsoft contacts with search filtering
+   */
+  async getMicrosoftContacts(
+    userId: number,
+    searchFilter?: string
+  ): Promise<MicrosoftContact[]> {
+    const token = await this.getMicrosoftToken(userId);
+    if (!token) {
+      return [];
+    }
+
+    try {
+      let url = `${this.graphBaseUrl}/me/contacts?$top=100&$select=id,displayName,emailAddresses,businessPhones,mobilePhone,jobTitle,companyName,department`;
+      
+      if (searchFilter && searchFilter.trim()) {
+        // Microsoft Graph API search filter for contacts
+        const filter = `startswith(displayName,'${searchFilter}') or startswith(givenName,'${searchFilter}') or startswith(surname,'${searchFilter}')`;
+        url += `&$filter=${encodeURIComponent(filter)}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Microsoft Graph API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.value || [];
+    } catch (error) {
+      console.error('Error fetching Microsoft contacts:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Convert Microsoft contact to local contact format
+   */
+  convertMicrosoftContactToLocal(msContact: MicrosoftContact): any {
+    const primaryEmail = msContact.emailAddresses?.[0]?.address || '';
+    return {
+      name: msContact.displayName,
+      email: primaryEmail,
+      phone: msContact.businessPhones?.[0] || msContact.mobilePhone || '',
+      company: msContact.companyName || '',
+      position: msContact.jobTitle || '',
+      department: msContact.department || '',
+      microsoftId: msContact.id,
+      source: 'microsoft'
+    };
+  }
 }
 
 export const microsoftCalendarService = new MicrosoftCalendarService();
