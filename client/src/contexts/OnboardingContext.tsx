@@ -22,7 +22,7 @@ interface OnboardingContextType {
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-const ONBOARDING_STORAGE_KEY = "dossier-manager-onboarding-state";
+const ONBOARDING_STORAGE_KEY = "nijflow-onboarding-state";
 
 const defaultState: OnboardingState = {
   hasCompletedTutorial: false,

@@ -75,7 +75,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
   const tutorialSteps: TutorialStep[] = [
     {
       id: "welcome",
-      title: "Welkom bij Dossier Manager!",
+      title: "Welkom bij NijFlow!",
       description: "Hallo! Ik ben je persoonlijke gids. Laten we samen ontdekken hoe je het meeste uit dit platform haalt.",
       character: "productivity"
     },

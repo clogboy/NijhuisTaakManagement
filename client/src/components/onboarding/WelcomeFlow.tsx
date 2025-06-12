@@ -28,7 +28,7 @@ export default function WelcomeFlow({ isOpen, onClose }: WelcomeFlowProps) {
 
   const welcomeSlides = [
     {
-      title: "Welkom bij Dossier Manager",
+      title: "Welkom bij NijFlow",
       subtitle: "Je persoonlijke productiviteitsplatform",
       description: "Ontdek hoe je efficiënter kunt werken met onze slimme tools en AI-ondersteuning.",
       icon: Building2,

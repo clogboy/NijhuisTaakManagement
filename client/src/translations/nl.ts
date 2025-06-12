@@ -525,7 +525,7 @@ export const nlTranslations = {
     priorityUrgent: "Urgent"
   },
   onboarding: {
-    welcome: "Welkom bij Dossier Manager",
+    welcome: "Welkom bij NijFlow",
     personalGuide: "Je persoonlijke gids",
     getStarted: "Laten we samen ontdekken hoe je het meeste uit dit platform haalt.",
     skipTutorial: "Tutorial overslaan",
