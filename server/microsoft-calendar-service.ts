@@ -394,6 +394,10 @@ export class MicrosoftCalendarService {
     }
 
     try {
+      // First, get organization contacts from directory
+      const orgContacts = await this.getOrganizationContacts(token, searchFilter);
+      
+      // Then get personal contacts
       let url = `${this.graphBaseUrl}/me/contacts?$top=100&$select=id,displayName,emailAddresses,businessPhones,mobilePhone,jobTitle,companyName,department`;
       
       if (searchFilter && searchFilter.trim()) {
@@ -410,13 +414,216 @@ export class MicrosoftCalendarService {
       });
 
       if (!response.ok) {
-        throw new Error(`Microsoft Graph API error: ${response.status}`);
+        console.error('[MICROSOFT] Error fetching personal contacts:', response.status, response.statusText);
+        return orgContacts;
       }
 
       const data = await response.json();
-      return data.value || [];
+      const personalContacts = data.value || [];
+
+      // Combine organization contacts and personal contacts, removing duplicates
+      const allContacts = [...orgContacts];
+      for (const contact of personalContacts) {
+        const exists = allContacts.some(c => 
+          c.emailAddresses?.some(e => 
+            contact.emailAddresses?.some(ce => ce.address === e.address)
+          )
+        );
+        if (!exists) {
+          allContacts.push(contact);
+        }
+      }
+
+      return allContacts;
     } catch (error) {
-      console.error('Error fetching Microsoft contacts:', error);
+      console.error('[MICROSOFT] Error in getMicrosoftContacts:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get organization contacts from Microsoft Graph directory
+   */
+  private async getOrganizationContacts(
+    token: string,
+    searchFilter?: string
+  ): Promise<MicrosoftContact[]> {
+    // Try multiple approaches to find organization colleagues
+    const results = await Promise.allSettled([
+      this.getDirectoryUsers(token, searchFilter),
+      this.getPeopleFromOrganization(token, searchFilter),
+      this.getGlobalAddressList(token, searchFilter)
+    ]);
+
+    // Combine results from all successful approaches
+    const allContacts: MicrosoftContact[] = [];
+    const seenEmails = new Set<string>();
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        for (const contact of result.value) {
+          const email = contact.emailAddresses?.[0]?.address;
+          if (email && !seenEmails.has(email)) {
+            seenEmails.add(email);
+            allContacts.push(contact);
+          }
+        }
+      }
+    }
+
+    console.log(`[MICROSOFT] Combined organization search found ${allContacts.length} colleagues`);
+    return allContacts;
+  }
+
+  /**
+   * Get users from organization directory (requires admin consent)
+   */
+  private async getDirectoryUsers(
+    token: string,
+    searchFilter?: string
+  ): Promise<MicrosoftContact[]> {
+    try {
+      let url = `${this.graphBaseUrl}/users?$top=200&$select=id,displayName,mail,businessPhones,mobilePhone,jobTitle,companyName,department,userPrincipalName`;
+      
+      if (searchFilter && searchFilter.trim()) {
+        const filter = `(startswith(displayName,'${searchFilter}') or startswith(givenName,'${searchFilter}') or startswith(surname,'${searchFilter}')) and endswith(userPrincipalName,'nijhuis.nl')`;
+        url += `&$filter=${encodeURIComponent(filter)}`;
+      } else {
+        const filter = `endswith(userPrincipalName,'nijhuis.nl')`;
+        url += `&$filter=${encodeURIComponent(filter)}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[MICROSOFT] Directory users access failed:', response.status, errorText);
+        return [];
+      }
+
+      const data = await response.json();
+      const users = data.value || [];
+
+      console.log(`[MICROSOFT] Directory search found ${users.length} users`);
+
+      return users.map((user: any): MicrosoftContact => ({
+        id: user.id,
+        displayName: user.displayName || '',
+        emailAddresses: user.mail ? [{ address: user.mail }] : [],
+        businessPhones: user.businessPhones || [],
+        mobilePhone: user.mobilePhone,
+        jobTitle: user.jobTitle,
+        companyName: user.companyName || 'Nijhuis',
+        department: user.department,
+      }));
+    } catch (error) {
+      console.error('[MICROSOFT] Directory users error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get people from organization using People API
+   */
+  private async getPeopleFromOrganization(
+    token: string,
+    searchFilter?: string
+  ): Promise<MicrosoftContact[]> {
+    try {
+      let url = `${this.graphBaseUrl}/me/people?$top=200&$select=id,displayName,emailAddresses,phones,jobTitle,companyName,department`;
+      
+      if (searchFilter && searchFilter.trim()) {
+        url += `&$search="${searchFilter}"`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('[MICROSOFT] People API access failed:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      const people = data.value || [];
+
+      // Filter for Nijhuis colleagues
+      const nijhuisPeople = people.filter((person: any) =>
+        person.emailAddresses?.some((email: any) => 
+          email.address?.includes('nijhuis.nl')
+        )
+      );
+
+      console.log(`[MICROSOFT] People API found ${nijhuisPeople.length} Nijhuis colleagues`);
+
+      return nijhuisPeople.map((person: any): MicrosoftContact => ({
+        id: person.id,
+        displayName: person.displayName || '',
+        emailAddresses: person.emailAddresses || [],
+        businessPhones: person.phones?.filter((p: any) => p.type === 'business').map((p: any) => p.number) || [],
+        mobilePhone: person.phones?.find((p: any) => p.type === 'mobile')?.number,
+        jobTitle: person.jobTitle,
+        companyName: person.companyName || 'Nijhuis',
+        department: person.department,
+      }));
+    } catch (error) {
+      console.error('[MICROSOFT] People API error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Search global address list for organization contacts
+   */
+  private async getGlobalAddressList(
+    token: string,
+    searchFilter?: string
+  ): Promise<MicrosoftContact[]> {
+    try {
+      // Use Outlook contacts search which may include GAL
+      let url = `${this.graphBaseUrl}/me/contacts?$top=200&$select=id,displayName,emailAddresses,businessPhones,mobilePhone,jobTitle,companyName,department`;
+      
+      if (searchFilter && searchFilter.trim()) {
+        const filter = `startswith(displayName,'${searchFilter}') or contains(emailAddresses/any(e:e/address),'${searchFilter}')`;
+        url += `&$filter=${encodeURIComponent(filter)}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('[MICROSOFT] GAL search failed:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      const contacts = data.value || [];
+
+      // Filter for Nijhuis colleagues
+      const nijhuisContacts = contacts.filter((contact: any) =>
+        contact.emailAddresses?.some((email: any) => 
+          email.address?.includes('nijhuis.nl')
+        )
+      );
+
+      console.log(`[MICROSOFT] GAL search found ${nijhuisContacts.length} Nijhuis colleagues`);
+
+      return nijhuisContacts;
+    } catch (error) {
+      console.error('[MICROSOFT] GAL search error:', error);
       return [];
     }
   }

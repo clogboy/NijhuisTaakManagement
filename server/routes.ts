@@ -1329,7 +1329,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/microsoft/contacts", requireAuth, async (req: any, res) => {
     try {
       const searchFilter = req.query.search as string;
+      console.log(`[API] Fetching Microsoft contacts for user ${req.user.id}${searchFilter ? ` with filter: ${searchFilter}` : ''}`);
+      
       const contacts = await microsoftCalendarService.getMicrosoftContacts(req.user.id, searchFilter);
+      
+      const nijhuisContacts = contacts.filter(c => 
+        c.emailAddresses?.some(e => e.address?.includes('nijhuis.nl'))
+      );
+      
+      console.log(`[API] Found ${contacts.length} total contacts (${nijhuisContacts.length} from Nijhuis domain)`);
+      
       res.json(contacts);
     } catch (error) {
       console.error("Error fetching Microsoft contacts:", error);
