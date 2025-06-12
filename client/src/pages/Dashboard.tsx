@@ -38,6 +38,8 @@ import EmailModal from "@/components/modals/EmailModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import { format } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardStats {
   urgentCount: number;
@@ -49,6 +51,8 @@ interface DashboardStats {
 export default function Dashboard() {
   const { t } = useTranslations();
   const { state: onboardingState, completeTutorial, showGuide, hideGuide } = useOnboarding();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -59,6 +63,7 @@ export default function Dashboard() {
   const [priorityFilters, setPriorityFilters] = useState<string[]>(["urgent", "normal", "low"]);
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [showArchived, setShowArchived] = useState(false);
   const [showWelcomeFlow, setShowWelcomeFlow] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -80,6 +85,49 @@ export default function Dashboard() {
 
   const { data: subtasks } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
+  });
+
+  // Archive/Unarchive mutations
+  const archiveMutation = useMutation({
+    mutationFn: async (activityId: number) => {
+      return apiRequest(`/api/activities/${activityId}/archive`, "PATCH");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: "Activity Archived",
+        description: "Activity has been successfully archived",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to archive activity",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unarchiveMutation = useMutation({
+    mutationFn: async (activityId: number) => {
+      return apiRequest(`/api/activities/${activityId}/unarchive`, "PATCH");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: "Activity Restored",
+        description: "Activity has been successfully restored",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to restore activity",
+        variant: "destructive",
+      });
+    },
   });
 
   // Trigger onboarding for new users
@@ -149,13 +197,17 @@ export default function Dashboard() {
   };
 
   const filteredActivities = activities?.filter(activity => {
+    // Archive filter - show archived only if toggle is on
+    if (activity.status === "archived" && !showArchived) return false;
+    if (activity.status !== "archived" && showArchived) return false;
+    
     // Priority filter
     if (!priorityFilters.includes(activity.priority)) return false;
     
     // Contact filter - check if any participants match selected contacts
     if (selectedContacts.length > 0 && activity.participants && activity.participants.length > 0) {
-      const hasMatchingParticipant = activity.participants.some(participantId => 
-        selectedContacts.includes(participantId)
+      const hasMatchingParticipant = activity.participants.some(participantEmail => 
+        contacts?.some(contact => contact.email === participantEmail && selectedContacts.includes(contact.id))
       );
       if (!hasMatchingParticipant) {
         return false;
@@ -541,6 +593,35 @@ export default function Dashboard() {
                         >
                           <Mail size={16} />
                         </Button>
+                        {activity.status === "archived" ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              unarchiveMutation.mutate(activity.id);
+                            }}
+                            disabled={unarchiveMutation.isPending}
+                            className="text-green-600 hover:text-green-700"
+                            title="Restore activity"
+                          >
+                            <ArchiveRestore size={16} />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              archiveMutation.mutate(activity.id);
+                            }}
+                            disabled={archiveMutation.isPending}
+                            className="text-gray-600 hover:text-gray-700"
+                            title="Archive activity"
+                          >
+                            <Archive size={16} />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
