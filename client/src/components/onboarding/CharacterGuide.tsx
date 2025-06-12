@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X, MessageCircle, Lightbulb, Target, Sparkles } from "lucide-react";
 
 interface CharacterGuideProps {
-  character: "nijhuis" | "helper" | "expert";
+  character: "productivity" | "helper" | "expert";
   message: string;
   isVisible: boolean;
   onDismiss?: () => void;
@@ -19,9 +19,9 @@ interface CharacterGuideProps {
 }
 
 const characterData = {
-  nijhuis: {
-    name: "Nijhuis Assistent",
-    emoji: "🏗️",
+  productivity: {
+    name: "Productiviteit Assistent",
+    emoji: "🎯",
     color: "from-red-500 to-red-600",
     accent: "text-red-600",
     personality: "professioneel en behulpzaam"

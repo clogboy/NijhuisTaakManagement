@@ -108,20 +108,20 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
     {
       id: "ai-agenda",
       title: "AI-Gestuurde Agenda",
-      description: "Laat onze AI je helpen met dagelijkse planning. We gebruiken de Eisenhower matrix om prioriteiten slim in te delen.",
-      character: "nijhuis"
+      description: "Laat onze AI je helpen met dagelijkse planning. We gebruiken slimme prioritering om taken optimaal in te delen.",
+      character: "productivity"
     },
     {
       id: "contacts",
       title: "Contacten & Samenwerking",
-      description: "Beheer je contacten en werk samen met collega's. Het systeem detecteert automatisch Nijhuis-medewerkers.",
+      description: "Beheer je contacten en werk samen met collega's. Eenvoudig contacten beheren en e-mails versturen.",
       character: "helper"
     },
     {
       id: "completion",
       title: "Klaar om te Beginnen!",
       description: "Geweldig! Je bent nu klaar om het platform ten volle te benutten. Veel succes met je productiviteit!",
-      character: "nijhuis",
+      character: "productivity",
       completion: true
     }
   ];

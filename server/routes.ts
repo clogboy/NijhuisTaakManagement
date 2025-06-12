@@ -945,8 +945,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activities = await storage.getActivities(req.session.userId, user?.role === 'admin');
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
       
-      // Categorize activities using Eisenhower matrix
-      const matrix = await categorizeActivitiesWithEisenhower(
+      // Categorize activities using priority matrix
+      const matrix = await categorizeActivitiesWithPriority(
         activities.filter(a => a.status !== 'completed'),
         ethos
       );
