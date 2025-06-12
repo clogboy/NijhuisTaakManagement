@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { CulturalDateInput } from "@/components/ui/cultural-date-input";
 import { MicrosoftContactSelector } from "@/components/ui/microsoft-contact-selector";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Select,
   SelectContent,
@@ -57,6 +57,8 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
   const { data: contacts } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
   });
+
+  const [selectedMsContacts, setSelectedMsContacts] = useState<any[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
