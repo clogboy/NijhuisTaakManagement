@@ -115,7 +115,10 @@ export class SupabaseService {
     try {
       // Test connection with a simple query - use a more direct approach
       const result = await this.withTimeout(
-        this.client.from('contacts').select('id').limit(1).maybeSingle(),
+        (async () => {
+          const { data, error } = await this.client!.from('contacts').select('id').limit(1).maybeSingle();
+          return { data, error };
+        })(),
         this.timeout
       );
       
@@ -391,7 +394,180 @@ export class SupabaseService {
       suggestions
     };
   }
+
+  // Activities operations
+  async createActivity(activity: any): Promise<any> {
+    if (!this.client) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    console.log('[SUPABASE] Creating new activity...');
+    const startTime = Date.now();
+
+    try {
+      const operation = async () => {
+        const { data, error } = await this.client!
+          .from('activities')
+          .insert(activity)
+          .select()
+          .single();
+
+        if (error) {
+          const dbError: DatabaseError = {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          };
+          
+          console.error('[SUPABASE] Error creating activity:', dbError);
+          throw new Error(`Database error: ${error.message}`);
+        }
+
+        console.log(`[SUPABASE] Successfully created activity (${Date.now() - startTime}ms)`);
+        return data;
+      };
+
+      return await this.withTimeout(
+        this.retry(operation),
+        this.timeout
+      );
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error creating activity';
+      console.error('[SUPABASE] Failed to create activity:', errorMessage);
+      throw new Error(`Failed to create activity: ${errorMessage}`);
+    }
+  }
+
+  async loadActivities(): Promise<any[]> {
+    if (!this.client) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    console.log('[SUPABASE] Loading activities from database...');
+    const startTime = Date.now();
+
+    try {
+      const operation = async () => {
+        const { data, error } = await this.client!
+          .from('activities')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          const dbError: DatabaseError = {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          };
+          
+          console.error('[SUPABASE] Error loading activities:', dbError);
+          throw new Error(`Database error: ${error.message}`);
+        }
+
+        console.log(`[SUPABASE] Successfully loaded ${data?.length || 0} activities (${Date.now() - startTime}ms)`);
+        return data || [];
+      };
+
+      return await this.withTimeout(
+        this.retry(operation),
+        this.timeout
+      );
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error loading activities';
+      console.error('[SUPABASE] Failed to load activities:', errorMessage);
+      throw new Error(`Failed to load activities: ${errorMessage}`);
+    }
+  }
+
+  async updateActivity(id: number, activity: any): Promise<any> {
+    if (!this.client) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    console.log('[SUPABASE] Updating activity in database...');
+    const startTime = Date.now();
+
+    try {
+      const operation = async () => {
+        const { data, error } = await this.client!
+          .from('activities')
+          .update({ ...activity, updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) {
+          const dbError: DatabaseError = {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          };
+          
+          console.error('[SUPABASE] Error updating activity:', dbError);
+          throw new Error(`Database error: ${error.message}`);
+        }
+
+        console.log(`[SUPABASE] Successfully updated activity (${Date.now() - startTime}ms)`);
+        return data;
+      };
+
+      return await this.withTimeout(
+        this.retry(operation),
+        this.timeout
+      );
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error updating activity';
+      console.error('[SUPABASE] Failed to update activity:', errorMessage);
+      throw new Error(`Failed to update activity: ${errorMessage}`);
+    }
+  }
+
+  async deleteActivity(id: number): Promise<void> {
+    if (!this.client) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    console.log('[SUPABASE] Deleting activity from database...');
+
+    try {
+      const operation = async () => {
+        const { error } = await this.client!
+          .from('activities')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          const dbError: DatabaseError = {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          };
+          
+          console.error('[SUPABASE] Error deleting activity:', dbError);
+          throw new Error(`Database error: ${error.message}`);
+        }
+
+        console.log('[SUPABASE] Successfully deleted activity');
+      };
+
+      await this.withTimeout(
+        this.retry(operation),
+        this.timeout
+      );
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error deleting activity';
+      console.error('[SUPABASE] Failed to delete activity:', errorMessage);
+      throw new Error(`Failed to delete activity: ${errorMessage}`);
+    }
+  }
 }
 
-// Export singleton instance
 export const supabaseService = new SupabaseService();
