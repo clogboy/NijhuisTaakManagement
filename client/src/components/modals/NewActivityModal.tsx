@@ -247,7 +247,11 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                   <FormItem>
                     <FormLabel>Due Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <CulturalDateInput
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder="Due Date"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
