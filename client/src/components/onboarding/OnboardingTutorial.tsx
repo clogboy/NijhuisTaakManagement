@@ -24,7 +24,7 @@ interface TutorialStep {
   title: string;
   description: string;
   targetElement?: string;
-  character: "nijhuis" | "helper" | "expert";
+  character: "productivity" | "helper" | "expert";
   action?: "highlight" | "click" | "navigate";
   completion?: boolean;
 }
@@ -38,8 +38,8 @@ interface OnboardingTutorialProps {
 const CharacterAvatar = ({ character, emotion = "happy" }: { character: string; emotion?: string }) => {
   const getCharacterEmoji = () => {
     switch (character) {
-      case "nijhuis":
-        return "🏗️";
+      case "productivity":
+        return "🎯";
       case "helper":
         return "🤖";
       case "expert":
@@ -75,9 +75,9 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
   const tutorialSteps: TutorialStep[] = [
     {
       id: "welcome",
-      title: "Welkom bij Nijhuis Productiviteit Platform!",
+      title: "Welkom bij Dossier Manager!",
       description: "Hallo! Ik ben je persoonlijke gids. Laten we samen ontdekken hoe je het meeste uit dit platform haalt.",
-      character: "nijhuis"
+      character: "productivity"
     },
     {
       id: "dashboard",
@@ -207,7 +207,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 <div className="flex-shrink-0 mt-1">
                   {currentStepData.completion ? (
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : currentStepData.character === "nijhuis" ? (
+                  ) : currentStepData.character === "productivity" ? (
                     <Target className="h-5 w-5 text-red-500" />
                   ) : currentStepData.character === "helper" ? (
                     <Lightbulb className="h-5 w-5 text-blue-500" />
