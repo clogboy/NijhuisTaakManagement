@@ -1561,6 +1561,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Azure Migration API routes
+  app.get("/api/azure/status", requireAuth, async (req, res) => {
+    try {
+      const configured = azureMigrationService.isConfigured();
+      const migrationStatus = azureMigrationService.getMigrationStatus();
+      const serviceHealth = await azureMigrationService.getAzureServiceHealth();
+      
+      res.json({
+        configured,
+        migrationStatus,
+        serviceHealth
+      });
+    } catch (error) {
+      console.error("Azure status error:", error);
+      res.status(500).json({ message: "Failed to get Azure status" });
+    }
+  });
+
+  app.post("/api/azure/test-connection", requireAuth, async (req, res) => {
+    try {
+      const result = await azureMigrationService.testConnection();
+      res.json(result);
+    } catch (error) {
+      console.error("Azure connection test error:", error);
+      res.status(500).json({ message: "Failed to test Azure connection" });
+    }
+  });
+
+  app.get("/api/azure/migration-estimate", requireAuth, async (req, res) => {
+    try {
+      const estimate = await azureMigrationService.getMigrationEstimate();
+      res.json(estimate);
+    } catch (error) {
+      console.error("Migration estimate error:", error);
+      res.status(500).json({ message: "Failed to get migration estimate" });
+    }
+  });
+
+  app.post("/api/azure/prepare-migration", requireAuth, async (req, res) => {
+    try {
+      const result = await azureMigrationService.prepareMigration();
+      res.json(result);
+    } catch (error) {
+      console.error("Migration preparation error:", error);
+      res.status(500).json({ message: "Failed to prepare migration" });
+    }
+  });
+
+  app.post("/api/azure/execute-migration", requireAuth, async (req, res) => {
+    try {
+      const result = await azureMigrationService.executeMigration();
+      res.json(result);
+    } catch (error) {
+      console.error("Migration execution error:", error);
+      res.status(500).json({ message: "Failed to execute migration" });
+    }
+  });
+
+  app.post("/api/azure/rollback-migration", requireAuth, async (req, res) => {
+    try {
+      const result = await azureMigrationService.rollbackMigration();
+      res.json(result);
+    } catch (error) {
+      console.error("Migration rollback error:", error);
+      res.status(500).json({ message: "Failed to rollback migration" });
+    }
+  });
+
   // Health check endpoint for Fly.io
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
