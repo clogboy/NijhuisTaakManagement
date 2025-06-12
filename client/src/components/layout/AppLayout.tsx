@@ -222,7 +222,7 @@ export default function AppLayout({
               const Icon = item.icon;
               
               return (
-                <li key={item.path}>
+                <li key={item.path} className="relative group">
                   {/* Main menu item */}
                   <Link href={item.path}>
                     <div 
@@ -243,7 +243,7 @@ export default function AppLayout({
                     </div>
                   </Link>
                   
-                  {/* Sub-items */}
+                  {/* Sub-items - normal view when expanded */}
                   {item.subItems && !isSidebarCollapsed && (
                     <ul className="mt-1 ml-6 space-y-1">
                       {item.subItems.map((subItem) => {
@@ -273,6 +273,41 @@ export default function AppLayout({
                         );
                       })}
                     </ul>
+                  )}
+
+                  {/* Sub-items popover for collapsed sidebar */}
+                  {item.subItems && isSidebarCollapsed && (
+                    <div className="absolute left-full top-0 ml-2 hidden group-hover:block z-50">
+                      <div className="bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px]">
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border mb-1">
+                          {item.label}
+                        </div>
+                        {item.subItems.map((subItem) => {
+                          const isSubActive = location === subItem.path;
+                          const SubIcon = subItem.icon;
+                          
+                          return (
+                            <Link key={subItem.path} href={subItem.path}>
+                              <div 
+                                className={`flex items-center px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                                  isSubActive 
+                                    ? "text-primary bg-accent" 
+                                    : "text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                                }`}
+                                onClick={() => {
+                                  if (isMobile) {
+                                    setIsMobileMenuOpen(false);
+                                  }
+                                }}
+                              >
+                                <SubIcon size={16} className="mr-3" />
+                                {subItem.label}
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </li>
               );
