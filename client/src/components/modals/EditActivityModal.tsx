@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { CulturalDateInput } from "@/components/ui/cultural-date-input";
 import {
   Select,
   SelectContent,
@@ -209,7 +210,11 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                   <FormItem>
                     <FormLabel>{t('activities.formDueDate')}</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <CulturalDateInput
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder={t('activities.formDueDate')}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -253,7 +258,7 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const newParticipants = field.value.filter((id: number) => id !== participantId);
+                                  const newParticipants = (field.value || []).filter((id: number) => id !== participantId);
                                   field.onChange(newParticipants);
                                 }}
                                 className="ml-2 text-gray-500 hover:text-gray-700"

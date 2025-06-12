@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { culturalDateSchema } from "./validation/date-utils";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -171,7 +172,7 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  dueDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
+  dueDate: culturalDateSchema,
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
@@ -205,7 +206,7 @@ export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  dueDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
+  dueDate: culturalDateSchema,
 });
 
 export const weeklyEthos = pgTable("weekly_ethos", {
