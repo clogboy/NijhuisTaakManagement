@@ -476,7 +476,7 @@ export default function Dashboard() {
                 {filteredActivities?.map((activity) => (
                   <tr 
                     key={activity.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className={`hover:bg-gray-50 cursor-pointer ${getDeadlineWarningColor(activity.dueDate)}`}
                     onClick={() => {
                       setSelectedActivity(activity);
                       setIsTaskDetailModalOpen(true);
