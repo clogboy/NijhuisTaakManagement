@@ -7,6 +7,7 @@ import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { dailyScheduler } from "./scheduler";
 import { supabaseService } from "./supabase-service";
+import { emailService } from "./email-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
