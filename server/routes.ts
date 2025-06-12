@@ -338,6 +338,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...activityData,
         createdBy: req.user.id,
       });
+
+      // Send email notifications to participants and collaborators
+      const authorName = req.user.name || req.user.email;
+      const authorEmail = req.user.email;
+
+      // Notify participants (they can interact with the activity)
+      if (activity.participants && activity.participants.length > 0) {
+        for (const participantEmail of activity.participants) {
+          if (participantEmail !== authorEmail) { // Don't notify the author
+            try {
+              await emailService.sendActivityInvitation(
+                participantEmail,
+                activity.title,
+                activity.description || '',
+                authorName,
+                authorEmail,
+                activity.id
+              );
+            } catch (error) {
+              console.error(`Failed to send invitation to ${participantEmail}:`, error);
+            }
+          }
+        }
+      }
+
+      // Notify collaborators (they have read-only access)
+      if (activity.collaborators && activity.collaborators.length > 0) {
+        for (const collaboratorEmail of activity.collaborators) {
+          if (collaboratorEmail !== authorEmail) { // Don't notify the author
+            try {
+              await emailService.sendCollaboratorInvitation(
+                collaboratorEmail,
+                activity.title,
+                activity.description || '',
+                authorName,
+                authorEmail,
+                activity.id
+              );
+            } catch (error) {
+              console.error(`Failed to send collaboration invite to ${collaboratorEmail}:`, error);
+            }
+          }
+        }
+      }
+
       res.json(activity);
     } catch (error) {
       console.error("Create activity error:", error);
