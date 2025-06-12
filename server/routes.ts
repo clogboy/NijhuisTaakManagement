@@ -8,6 +8,7 @@ import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { dailyScheduler } from "./scheduler";
 import { supabaseService } from "./supabase-service";
 import { emailService } from "./email-service";
+import { analyticsService } from "./analytics-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
@@ -1220,6 +1221,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update preferences error:", error);
       res.status(500).json({ message: "Failed to update preferences" });
+    }
+  });
+
+  // Analytics routes for management insights
+  app.get("/api/analytics/productivity", requireAuth, async (req: any, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const metrics = await analyticsService.getUserProductivityMetrics(req.user.id, days);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Get productivity metrics error:", error);
+      res.status(500).json({ message: "Failed to fetch productivity metrics" });
+    }
+  });
+
+  app.get("/api/analytics/team", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const metrics = await analyticsService.getTeamMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Get team metrics error:", error);
+      res.status(500).json({ message: "Failed to fetch team metrics" });
+    }
+  });
+
+  app.get("/api/analytics/roi", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const metrics = await analyticsService.getROIMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Get ROI metrics error:", error);
+      res.status(500).json({ message: "Failed to fetch ROI metrics" });
     }
   });
 

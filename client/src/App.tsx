@@ -19,6 +19,7 @@ import TimeBlocking from "@/pages/TimeBlocking";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Integrations from "@/pages/Integrations";
+import Analytics from "@/pages/Analytics";
 import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -95,6 +96,14 @@ function AuthenticatedApp() {
           subtitle="Connect external tools"
         >
           <Integrations />
+        </AppLayout>
+      </Route>
+      <Route path="/analytics">
+        <AppLayout
+          title="Analytics"
+          subtitle="Performance metrics and ROI insights"
+        >
+          <Analytics />
         </AppLayout>
       </Route>
       <Route component={NotFound} />
