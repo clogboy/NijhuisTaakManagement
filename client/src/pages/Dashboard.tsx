@@ -531,7 +531,7 @@ export default function Dashboard() {
                 {filteredActivities?.map((activity) => (
                   <tr 
                     key={activity.id} 
-                    className={`hover:bg-gray-50 cursor-pointer ${getDeadlineWarningColor(activity.dueDate)}`}
+                    className={`hover:bg-gray-50 cursor-pointer ${getDeadlineWarningColor(activity.dueDate ? activity.dueDate.toString() : null)}`}
                     onClick={() => {
                       setSelectedActivity(activity);
                       setIsTaskDetailModalOpen(true);
@@ -727,6 +727,18 @@ export default function Dashboard() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Archive Filter */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-neutral-dark mb-3">Activity Status</h4>
+            <label className="flex items-center">
+              <Checkbox
+                checked={showArchived}
+                onCheckedChange={(checked) => setShowArchived(checked === true)}
+              />
+              <span className="ml-2 text-sm text-neutral-dark">Show archived activities</span>
+            </label>
           </div>
 
           {/* Date Range Filter */}
