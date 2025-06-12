@@ -195,7 +195,8 @@ export default function TodaysTasks() {
       description: subtask.description,
       isSubtask: true,
       taskType: (subtask.participantTypes as Record<string, string>)?.[userEmail || ''] || subtask.type,
-      urgencyScore: getPriorityScore(subtask.priority) + (isUrgent ? 3 : 0)
+      urgencyScore: getPriorityScore(subtask.priority) + (isUrgent ? 3 : 0),
+      parentActivityTitle: linkedActivity?.title || 'Onbekende activiteit'
     };
   });
 
@@ -263,7 +264,7 @@ export default function TodaysTasks() {
         <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-lg">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-ms-blue flex-shrink-0" />
-            <span>Today's Tasks</span>
+            <span>Vandaag's Actiepunten</span>
             {hasOverdueWarning && (
               <Badge variant="destructive" className="text-xs">
                 {overdueSubtasks.length} overdue
@@ -376,9 +377,14 @@ export default function TodaysTasks() {
                             }}
                             className="flex-shrink-0"
                           />
-                          <span className={isCompleted ? "line-through text-gray-500" : ""}>
-                            {task.title}
-                          </span>
+                          <div className="flex-1">
+                            <span className={isCompleted ? "line-through text-gray-500" : ""}>
+                              {task.title}
+                            </span>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              van: {task.parentActivityTitle}
+                            </div>
+                          </div>
                         </CardTitle>
                         <div className="flex gap-2 mb-2">
                           <Badge className={getTypeColor(task.taskType || 'task')}>
