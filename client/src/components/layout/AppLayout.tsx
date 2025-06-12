@@ -294,9 +294,15 @@ export default function AppLayout({
                                     ? "text-primary bg-accent" 
                                     : "text-popover-foreground hover:bg-accent hover:text-accent-foreground"
                                 }`}
-                                onClick={() => {
+                                onClick={(e) => {
                                   if (isMobile) {
                                     setIsMobileMenuOpen(false);
+                                  }
+                                  // Force hide the submenu immediately on click
+                                  const submenu = e.currentTarget.closest('.group\\/submenu');
+                                  if (submenu) {
+                                    submenu.classList.add('pointer-events-none');
+                                    submenu.querySelector('div')?.classList.add('opacity-0', 'invisible');
                                   }
                                 }}
                               >
