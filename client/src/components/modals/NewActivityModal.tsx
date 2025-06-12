@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { CulturalDateInput } from "@/components/ui/cultural-date-input";
+import { MicrosoftContactSelector } from "@/components/ui/microsoft-contact-selector";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

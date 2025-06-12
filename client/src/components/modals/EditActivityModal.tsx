@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { CulturalDateInput } from "@/components/ui/cultural-date-input";
+import { MicrosoftContactSelector } from "@/components/ui/microsoft-contact-selector";
 import {
   Select,
   SelectContent,
@@ -63,6 +64,8 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
       participants: [],
     },
   });
+
+  const [selectedMsContacts, setSelectedMsContacts] = useState<any[]>([]);
 
   // Reset form when activity changes
   useEffect(() => {
@@ -223,49 +226,18 @@ export default function EditActivityModal({ open, onOpenChange, activity }: Edit
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('activities.formParticipants')}</FormLabel>
-                    <Select onValueChange={(value) => {
-                      const participantId = parseInt(value);
-                      const currentParticipants = field.value || [];
-                      if (!currentParticipants.includes(participantId)) {
-                        field.onChange([...currentParticipants, participantId]);
-                      }
-                    }}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('forms.selectOption')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {contacts?.filter(contact => !(field.value || []).includes(contact.id)).map((contact) => (
-                          <SelectItem key={contact.id} value={contact.id.toString()}>
-                            {contact.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {/* Show selected participants */}
-                    {field.value && field.value.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {field.value.map((participantId: number) => {
-                          const contact = contacts?.find(c => c.id === participantId);
-                          return contact ? (
-                            <div key={participantId} className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm">
-                              <span>{contact.name}</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newParticipants = (field.value || []).filter((id: number) => id !== participantId);
-                                  field.onChange(newParticipants);
-                                }}
-                                className="ml-2 text-gray-500 hover:text-gray-700"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ) : null;
-                        })}
-                      </div>
-                    )}
+                    <FormControl>
+                      <MicrosoftContactSelector
+                        selectedContacts={selectedMsContacts}
+                        onContactsChange={(contacts) => {
+                          setSelectedMsContacts(contacts);
+                          // Convert to email array for form
+                          const emails = contacts.map(c => c.emailAddresses?.[0]?.address || '').filter(Boolean);
+                          field.onChange(emails);
+                        }}
+                        placeholder={t('activities.searchContacts')}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
