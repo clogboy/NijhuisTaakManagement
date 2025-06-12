@@ -303,6 +303,59 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
               />
             </div>
 
+            {/* Collaboration Settings */}
+            <div className="space-y-4 pt-4 border-t border-gray-200">
+              <h3 className="text-lg font-medium text-neutral-dark">Collaboration Settings</h3>
+              
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Make this activity public</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        All team members can view this activity
+                      </div>
+                    </div>
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="w-4 h-4 text-ms-blue bg-gray-100 border-gray-300 rounded focus:ring-ms-blue"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="collaborators"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Collaborators (Email addresses)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter email addresses separated by commas (e.g., user1@nijhuis.nl, user2@nijhuis.nl)"
+                        value={field.value?.join(', ') || ''}
+                        onChange={(e) => {
+                          const emails = e.target.value.split(',').map(email => email.trim()).filter(Boolean);
+                          field.onChange(emails);
+                        }}
+                        className="min-h-[60px]"
+                      />
+                    </FormControl>
+                    <div className="text-sm text-muted-foreground">
+                      Collaborators can view the activity but only you can edit it
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
               <Button 
                 type="button" 
