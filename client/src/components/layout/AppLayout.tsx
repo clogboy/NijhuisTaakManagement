@@ -277,8 +277,8 @@ export default function AppLayout({
 
                   {/* Sub-items popover for collapsed sidebar */}
                   {item.subItems && isSidebarCollapsed && (
-                    <div className="absolute left-full top-0 ml-2 hidden group-hover:block z-50">
-                      <div className="bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px]">
+                    <div className="absolute left-full top-0 ml-2 z-50 group/submenu">
+                      <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover/submenu:opacity-100 group-hover/submenu:visible transition-all duration-300 delay-75 bg-popover border border-border rounded-lg shadow-lg py-2 min-w-[180px] transform scale-95 group-hover:scale-100 group-hover/submenu:scale-100">
                         <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-border mb-1">
                           {item.label}
                         </div>
