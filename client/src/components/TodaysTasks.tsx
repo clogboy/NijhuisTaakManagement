@@ -243,7 +243,7 @@ export default function TodaysTasks() {
         <CardHeader>
           <CardTitle className="flex items-center text-lg">
             <Calendar className="mr-2 h-5 w-5" />
-            Today's Tasks
+            Vandaag's Actiepunten
           </CardTitle>
         </CardHeader>
         <CardContent>
