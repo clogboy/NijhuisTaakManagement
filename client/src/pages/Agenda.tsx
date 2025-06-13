@@ -27,7 +27,11 @@ import {
   Settings,
   Play,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Edit2,
+  Trash2,
+  Save,
+  X
 } from "lucide-react";
 import { Activity, WeeklyEthos } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -201,6 +205,19 @@ export default function Agenda() {
 
   const handleCreateEthos = () => {
     createEthosMutation.mutate(newEthos);
+  };
+
+  const handleEditEthos = (ethos: WeeklyEthos) => {
+    setEditingEthos({ ...ethos });
+  };
+
+  const handleUpdateEthos = () => {
+    if (!editingEthos) return;
+    updateEthosMutation.mutate(editingEthos);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEthos(null);
   };
 
   const getQuadrantColor = (quadrant: string) => {
@@ -535,39 +552,143 @@ export default function Agenda() {
             {/* Existing Ethos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {weeklyEthos?.map((ethos) => (
-                <Card key={ethos.id} className="border-2 border-ms-blue/20">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      {DAYS_OF_WEEK.find(d => d.value === ethos.dayOfWeek)?.label}
-                      <Badge variant="secondary">{ethos.maxTaskSwitches} switches</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-ms-blue">{ethos.ethos}</h4>
-                        <p className="text-sm text-neutral-medium mt-1">{ethos.description}</p>
-                      </div>
-                      
-                      {ethos.focusAreas && ethos.focusAreas.length > 0 && (
+                <Card key={ethos.id} className="border-2 border-ms-blue/20 micro-hover-lift">
+                  {editingEthos?.id === ethos.id ? (
+                    // Edit Mode
+                    <>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center justify-between">
+                          <Select 
+                            value={editingEthos.dayOfWeek.toString()} 
+                            onValueChange={(value) => setEditingEthos({...editingEthos, dayOfWeek: parseInt(value)})}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DAYS_OF_WEEK.map((day) => (
+                                <SelectItem key={day.value} value={day.value.toString()}>
+                                  {day.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={editingEthos.maxTaskSwitches.toString()} 
+                            onValueChange={(value) => setEditingEthos({...editingEthos, maxTaskSwitches: parseInt(value)})}
+                          >
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1</SelectItem>
+                              <SelectItem value="2">2</SelectItem>
+                              <SelectItem value="3">3</SelectItem>
+                              <SelectItem value="4">4</SelectItem>
+                              <SelectItem value="5">5</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         <div>
-                          <h5 className="text-xs font-medium text-neutral-medium mb-2">Focus Areas</h5>
-                          <div className="flex flex-wrap gap-1">
-                            {ethos.focusAreas.map((area) => (
-                              <Badge key={area} variant="outline" className="text-xs">
-                                {area}
-                              </Badge>
-                            ))}
+                          <Input
+                            value={editingEthos.ethos}
+                            onChange={(e) => setEditingEthos({...editingEthos, ethos: e.target.value})}
+                            placeholder="Ethos name"
+                            className="font-medium"
+                          />
+                          <Textarea
+                            value={editingEthos.description || ""}
+                            onChange={(e) => setEditingEthos({...editingEthos, description: e.target.value})}
+                            placeholder="Description"
+                            className="mt-2"
+                            rows={2}
+                          />
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleUpdateEthos}
+                            disabled={updateEthosMutation.isPending || !editingEthos.ethos}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white micro-button-press flex-1"
+                          >
+                            <Save size={14} className="mr-1" />
+                            {updateEthosMutation.isPending ? "Saving..." : "Save"}
+                          </Button>
+                          <Button
+                            onClick={handleCancelEdit}
+                            size="sm"
+                            variant="outline"
+                            className="micro-button-press"
+                          >
+                            <X size={14} />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </>
+                  ) : (
+                    // View Mode
+                    <>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center justify-between">
+                          {DAYS_OF_WEEK.find(d => d.value === ethos.dayOfWeek)?.label}
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{ethos.maxTaskSwitches} switches</Badge>
+                            <div className="flex gap-1">
+                              <Button
+                                onClick={() => handleEditEthos(ethos)}
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 hover:bg-blue-50 micro-button-press"
+                              >
+                                <Edit2 size={12} className="text-blue-600" />
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to delete this ethos?")) {
+                                    // deleteEthosMutation.mutate(ethos.id);
+                                  }
+                                }}
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 hover:bg-red-50 micro-button-press"
+                              >
+                                <Trash2 size={12} className="text-red-600" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-medium text-ms-blue">{ethos.ethos}</h4>
+                            <p className="text-sm text-neutral-medium mt-1">{ethos.description}</p>
+                          </div>
+                          
+                          {ethos.focusAreas && ethos.focusAreas.length > 0 && (
+                            <div>
+                              <h5 className="text-xs font-medium text-neutral-medium mb-2">Focus Areas</h5>
+                              <div className="flex flex-wrap gap-1">
+                                {ethos.focusAreas.map((area) => (
+                                  <Badge key={area} variant="outline" className="text-xs">
+                                    {area}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between text-xs text-neutral-medium">
+                            <span>Work blocks: {ethos.preferredWorkBlocks}</span>
+                            <span>Max switches: {ethos.maxTaskSwitches}</span>
                           </div>
                         </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between text-xs text-neutral-medium">
-                        <span>Work blocks: {ethos.preferredWorkBlocks}</span>
-                        <span>Max switches: {ethos.maxTaskSwitches}</span>
-                      </div>
-                    </div>
-                  </CardContent>
+                      </CardContent>
+                    </>
+                  )}
                 </Card>
               ))}
             </div>
