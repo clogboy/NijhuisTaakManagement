@@ -16,7 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TaskCelebration from "@/components/celebrations/TaskCelebration";
 import BlameAnalytics from "@/components/roadblocks/BlameAnalytics";
-import RoadblockForm from "@/components/roadblocks/RoadblockForm";
+import StreamlinedRoadblockForm from "@/components/roadblocks/StreamlinedRoadblockForm";
 
 export default function Roadblocks() {
   const { t } = useTranslations();
@@ -111,7 +111,7 @@ export default function Roadblocks() {
       
       toast({
         title: t('common.success'),
-        description: "Roadblock status updated successfully",
+        description: "Wegversperring status updated successfully",
       });
     },
     onError: (error) => {
@@ -422,12 +422,21 @@ export default function Roadblocks() {
           </TabsContent>
 
           <TabsContent value="new" className="space-y-6">
-            <RoadblockForm 
-              activities={activities || []} 
-              onSuccess={() => {
-                // Could switch back to roadblocks tab after creation
-              }}
-            />
+            <div className="max-w-2xl">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nieuwe Wegversperring Aanmaken</CardTitle>
+                  <p className="text-sm text-neutral-medium">
+                    Maak een nieuwe wegversperring aan door een bestaande taak te selecteren of handmatig in te voeren.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-neutral-medium">
+                    Gebruik de rescue functie in de dashboard voor automatische wegversperring creatie van achterstallige taken.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
 

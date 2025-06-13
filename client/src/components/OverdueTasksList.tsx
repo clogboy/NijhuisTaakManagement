@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Calendar, Activity, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import StreamlinedRoadblockForm from "@/components/roadblocks/StreamlinedRoadblockForm";
+import { useRescueWorkflow } from "@/hooks/useRescueWorkflow";
 
 interface OverdueTasksListProps {
   autoShowRescue?: boolean;
@@ -14,6 +15,7 @@ interface OverdueTasksListProps {
 export default function OverdueTasksList({ autoShowRescue = false }: OverdueTasksListProps) {
   const [showRescuePanel, setShowRescuePanel] = useState(autoShowRescue);
   const [selectedTaskForRescue, setSelectedTaskForRescue] = useState<any>(null);
+  const { executeRescue, isExecuting } = useRescueWorkflow();
 
   const { data: subtasks = [] } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
@@ -154,11 +156,11 @@ export default function OverdueTasksList({ autoShowRescue = false }: OverdueTask
                   priority: selectedTaskForRescue.priority,
                 }}
                 onSubmit={(data) => {
-                  // Handle rescue submission via the useRescueWorkflow hook
-                  console.log('Rescue data:', data);
+                  executeRescue(data);
                   setShowRescuePanel(false);
                   setSelectedTaskForRescue(null);
                 }}
+                isLoading={isExecuting}
                 onCancel={() => {
                   setShowRescuePanel(false);
                   setSelectedTaskForRescue(null);
