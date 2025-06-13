@@ -16,6 +16,7 @@ import Roadblocks from "@/pages/Roadblocks";
 import Subtasks from "@/pages/Subtasks";
 import Agenda from "@/pages/Agenda";
 import TimeBlocking from "@/pages/TimeBlocking";
+import CalendarIntegration from "@/pages/CalendarIntegration";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Integrations from "@/pages/Integrations";
@@ -97,6 +98,9 @@ function AuthenticatedApp() {
         >
           <Integrations />
         </AppLayout>
+      </Route>
+      <Route path="/calendar">
+        <CalendarIntegration />
       </Route>
       <Route path="/analytics">
         <AppLayout
