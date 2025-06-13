@@ -135,9 +135,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contacts routes
   app.get("/api/contacts", requireAuth, async (req: any, res) => {
     try {
-      console.log(`[API] Loading contacts for user ${req.user.id} from local storage`);
+      console.log(`[API] Loading contacts for user ${req.user.id} from Supabase`);
       const contacts = await storage.getContacts(req.user.id);
-      console.log(`[API] Loaded ${contacts.length} contacts from local storage`);
+      console.log(`[API] Loaded ${contacts.length} contacts from Supabase`);
       res.json(contacts);
     } catch (error) {
       console.error("[API] Error fetching contacts:", error);
