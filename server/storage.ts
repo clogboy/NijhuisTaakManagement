@@ -1,7 +1,7 @@
 import { 
   users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions,
   teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences, calendarIntegrations, calendarEvents, deadlineReminders,
-  type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder,
+  type User, type InsertUser, type UpsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder,
   type TeamsBoard, type InsertTeamsBoard, type TeamsCard, type InsertTeamsCard,
   type BimcollabProject, type InsertBimcollabProject, type BimcollabIssue, type InsertBimcollabIssue,
   type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference,
@@ -19,6 +19,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Contacts
   getContacts(createdBy: number): Promise<Contact[]>;
@@ -174,6 +175,22 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.update(users)
       .set(userUpdate)
       .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.email,
+        set: {
+          name: userData.name,
+          microsoftId: userData.microsoftId,
+          role: userData.role,
+        },
+      })
       .returning();
     return user;
   }
