@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Search, Activity as ActivityIcon, AlertCircle, User, ListChecks, Clock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, Search, Activity as ActivityIcon, AlertCircle, User, ListChecks, Clock, BarChart3, Plus } from "lucide-react";
 import { Roadblock, Activity } from "@shared/schema";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -14,6 +15,8 @@ import { Edit, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TaskCelebration from "@/components/celebrations/TaskCelebration";
+import BlameAnalytics from "@/components/roadblocks/BlameAnalytics";
+import RoadblockForm from "@/components/roadblocks/RoadblockForm";
 
 export default function Roadblocks() {
   const { t } = useTranslations();
@@ -36,9 +39,12 @@ export default function Roadblocks() {
     queryKey: ["/api/roadblocks"],
   });
 
-  // Also fetch subtasks that are classified as roadblocks
   const { data: subtasks = [] } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
+  });
+
+  const { data: activities } = useQuery<Activity[]>({
+    queryKey: ["/api/activities"],
   });
 
   const deleteSubtaskMutation = useMutation({
@@ -92,7 +98,6 @@ export default function Roadblocks() {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       
-      // Show celebration for resolved roadblocks
       if (status === 'resolved' || status === 'completed') {
         const subtask = subtasks.find(s => s.id === subtaskId);
         if (subtask) {
@@ -118,6 +123,12 @@ export default function Roadblocks() {
     },
   });
 
+  // Create a map of activity IDs to activity titles
+  const activityMap = activities?.reduce((acc, activity) => {
+    acc[activity.id] = activity;
+    return acc;
+  }, {} as Record<number, Activity>) || {};
+
   // Filter subtasks that are classified as roadblocks by participants and exclude completed ones
   const roadblockSubtasks = (subtasks as any[]).filter((subtask: any) => {
     const participantTypes = subtask.participantTypes as Record<string, string> || {};
@@ -132,16 +143,6 @@ export default function Roadblocks() {
     subtask.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     activityMap[subtask.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const { data: activities } = useQuery<Activity[]>({
-    queryKey: ["/api/activities"],
-  });
-
-  // Create a map of activity IDs to activity titles
-  const activityMap = activities?.reduce((acc, activity) => {
-    acc[activity.id] = activity;
-    return acc;
-  }, {} as Record<number, Activity>) || {};
 
   // Filter roadblocks based on search query
   const filteredRoadblocks = roadblocks?.filter(roadblock =>
@@ -187,6 +188,19 @@ export default function Roadblocks() {
     }
   };
 
+  const getCategoryIcon = (category?: string) => {
+    switch (category) {
+      case 'process': return '⚙️';
+      case 'resources': return '💰';
+      case 'communication': return '💬';
+      case 'external': return '🌐';
+      case 'technical': return '🔧';
+      case 'planning': return '📋';
+      case 'skills': return '🎓';
+      default: return '❓';
+    }
+  };
+
   return (
     <AppLayout>
       <div className="p-3 sm:p-4 space-y-6">
@@ -198,387 +212,239 @@ export default function Roadblocks() {
               {t('roadblocks.title')}
             </h1>
             <p className="text-neutral-medium dark:text-gray-400 mt-1">
-              {t('roadblocks.description')}
+              Track and analyze systemic obstacles that impact productivity
             </p>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-medium h-4 w-4" />
-          <Input
-            placeholder={t('roadblocks.searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 micro-focus-ring"
-          />
-        </div>
+        <Tabs defaultValue="roadblocks" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="roadblocks" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Roadblocks
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Systemic Analysis
+            </TabsTrigger>
+            <TabsTrigger value="new" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Report New
+            </TabsTrigger>
+          </TabsList>
 
-        {roadblocksLoading ? (
-          <div className="text-center py-12">
-            <p className="text-neutral-medium">Loading roadblocks...</p>
-          </div>
-        ) : filteredRoadblocks.length === 0 && filteredRoadblockSubtasks.length === 0 ? (
-          <div className="text-center py-12">
-            <AlertTriangle className="h-12 w-12 text-neutral-light mx-auto mb-4" />
-            <p className="text-neutral-medium text-lg mb-2">
-              {roadblocks?.length === 0 && roadblockSubtasks.length === 0 ? t('roadblocks.noRoadblocks') : "No roadblocks match your search"}
-            </p>
-            <p className="text-neutral-medium">
-              {roadblocks?.length === 0 && roadblockSubtasks.length === 0
-                ? t('roadblocks.reportRoadblocks') 
-                : "Try adjusting your search criteria"
-              }
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Traditional Roadblocks */}
-            {filteredRoadblocks.length > 0 && (
-              <div className="grid gap-6 lg:grid-cols-3">
-                {/* Open Roadblocks */}
-                <div>
-                  <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
-                    <span className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-sm">
-                      Open ({roadblocksByStatus.open.length})
-                    </span>
-                  </h2>
-                  <div className="space-y-4">
-                    {roadblocksByStatus.open.map((roadblock) => {
-                      const linkedActivity = activityMap[roadblock.linkedActivityId];
-                      return (
-                        <Card key={roadblock.id} className="hover:shadow-md transition-shadow border-l-4 border-l-red-500">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <CardTitle className="text-base text-neutral-dark dark:text-white flex items-center gap-2">
-                                  <span>{getSeverityIcon(roadblock.severity)}</span>
-                                  {roadblock.title}
-                                </CardTitle>
-                                <p className="text-sm text-neutral-medium dark:text-gray-400 mt-1">
-                                  {roadblock.description}
-                                </p>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="space-y-3">
-                              <div className="flex gap-2 flex-wrap">
-                                <Badge className={getSeverityColor(roadblock.severity)}>
-                                  {roadblock.severity} severity
-                                </Badge>
-                                <Badge className={getStatusColor(roadblock.status)}>
-                                  {roadblock.status.replace('_', ' ')}
-                                </Badge>
-                              </div>
-                              
-                              {roadblock.assignedTo && (
-                                <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
-                                  <User className="h-4 w-4" />
-                                  <span>Assigned to: {roadblock.assignedTo}</span>
-                                </div>
-                              )}
-                              
-                              {linkedActivity && (
-                                <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
-                                  <ActivityIcon className="h-4 w-4" />
-                                  <span>Task: {linkedActivity.title}</span>
-                                </div>
-                              )}
-                              
-                              <div className="text-xs text-neutral-medium dark:text-gray-500">
-                                Reported: {format(new Date(roadblock.reportedDate), "MMM dd, yyyy")}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                    
-                    {roadblocksByStatus.open.length === 0 && (
-                      <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
-                        No open roadblocks
-                      </div>
-                    )}
-                  </div>
-                </div>
+          <TabsContent value="roadblocks" className="space-y-6">
+            {/* Search */}
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-medium h-4 w-4" />
+              <Input
+                placeholder={t('roadblocks.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 micro-focus-ring"
+              />
+            </div>
 
-                {/* In Progress Roadblocks */}
-                <div>
-                  <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
-                    <span className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-1 rounded text-sm">
-                      In Progress ({roadblocksByStatus.in_progress.length})
-                    </span>
-                  </h2>
-                  <div className="space-y-4">
-                    {roadblocksByStatus.in_progress.map((roadblock) => {
-                      const linkedActivity = activityMap[roadblock.linkedActivityId];
-                      return (
-                        <Card key={roadblock.id} className="hover:shadow-md transition-shadow border-l-4 border-l-yellow-500">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <CardTitle className="text-base text-neutral-dark dark:text-white flex items-center gap-2">
-                                  <span>{getSeverityIcon(roadblock.severity)}</span>
-                                  {roadblock.title}
-                                </CardTitle>
-                                <p className="text-sm text-neutral-medium dark:text-gray-400 mt-1">
-                                  {roadblock.description}
-                                </p>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="space-y-3">
-                              <div className="flex gap-2 flex-wrap">
-                                <Badge className={getSeverityColor(roadblock.severity)}>
-                                  {roadblock.severity} severity
-                                </Badge>
-                                <Badge className={getStatusColor(roadblock.status)}>
-                                  {roadblock.status.replace('_', ' ')}
-                                </Badge>
-                              </div>
-                              
-                              {roadblock.assignedTo && (
-                                <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
-                                  <User className="h-4 w-4" />
-                                  <span>Assigned to: {roadblock.assignedTo}</span>
-                                </div>
-                              )}
-                              
-                              {linkedActivity && (
-                                <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
-                                  <ActivityIcon className="h-4 w-4" />
-                                  <span>Task: {linkedActivity.title}</span>
-                                </div>
-                              )}
-                              
-                              <div className="text-xs text-neutral-medium dark:text-gray-500">
-                                Reported: {format(new Date(roadblock.reportedDate), "MMM dd, yyyy")}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                    
-                    {roadblocksByStatus.in_progress.length === 0 && (
-                      <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
-                        Geen wegversperringen in behandeling
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Resolved Roadblocks */}
-                <div>
-                  <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
-                    <span className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-sm">
-                      Opgelost ({roadblocksByStatus.resolved.length})
-                    </span>
-                  </h2>
-                  <div className="space-y-4">
-                    {roadblocksByStatus.resolved.map((roadblock) => {
-                      const linkedActivity = activityMap[roadblock.linkedActivityId];
-                      return (
-                        <Card key={roadblock.id} className="hover:shadow-md transition-shadow opacity-75 border-l-4 border-l-green-500">
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <CardTitle className="text-base text-neutral-dark dark:text-white line-through flex items-center gap-2">
-                                  <span>{getSeverityIcon(roadblock.severity)}</span>
-                                  {roadblock.title}
-                                </CardTitle>
-                                <p className="text-sm text-neutral-medium dark:text-gray-400 mt-1 line-through">
-                                  {roadblock.description}
-                                </p>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="space-y-3">
-                              <div className="flex gap-2 flex-wrap">
-                                <Badge className={getSeverityColor(roadblock.severity)}>
-                                  {roadblock.severity} severity
-                                </Badge>
-                                <Badge className={getStatusColor(roadblock.status)}>
-                                  ✓ Resolved
-                                </Badge>
-                              </div>
-                              
-                              {roadblock.assignedTo && (
-                                <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
-                                  <User className="h-4 w-4" />
-                                  <span>Assigned to: {roadblock.assignedTo}</span>
-                                </div>
-                              )}
-                              
-                              {linkedActivity && (
-                                <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
-                                  <ActivityIcon className="h-4 w-4" />
-                                  <span>Task: {linkedActivity.title}</span>
-                                </div>
-                              )}
-                              
-                              <div className="text-xs text-neutral-medium dark:text-gray-500">
-                                Reported: {format(new Date(roadblock.reportedDate), "MMM dd, yyyy")}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                    
-                    {roadblocksByStatus.resolved.length === 0 && (
-                      <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
-                        No resolved roadblocks yet
-                      </div>
-                    )}
-                  </div>
-                </div>
+            {roadblocksLoading ? (
+              <div className="text-center py-12">
+                <p className="text-neutral-medium">Loading roadblocks...</p>
               </div>
-            )}
-
-            {/* Subtasks Classified as Roadblocks */}
-            {filteredRoadblockSubtasks.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
-                  <ListChecks className="h-5 w-5" />
-                  Subtaken geclassificeerd als Wegversperringen ({filteredRoadblockSubtasks.length})
-                </h2>
-                <div className="space-y-4">
-                  {filteredRoadblockSubtasks.map((subtask: any) => {
-                    const linkedActivity = activityMap[subtask.linkedActivityId];
-                    const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
-                                     subtask.status !== "completed" && subtask.status !== "resolved";
-
-                    return (
-                      <Card key={`subtask-${subtask.id}`} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-sm font-medium mb-2">
-                                {subtask.title}
-                              </CardTitle>
-                              <div className="flex gap-2 mb-2">
-                                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                  Wegversperring
-                                </Badge>
-                                <Badge className={`${
-                                  subtask.status === "completed" || subtask.status === "resolved" 
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                    : subtask.status === "in_progress" 
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                                }`}>
-                                  {subtask.status === "pending" ? "In wachtrij" :
-                                   subtask.status === "in_progress" ? "In uitvoering" :
-                                   subtask.status === "completed" ? "Voltooid" : "Opgelost"}
-                                </Badge>
-                              </div>
+            ) : filteredRoadblocks.length === 0 && filteredRoadblockSubtasks.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertTriangle className="h-12 w-12 text-neutral-light mx-auto mb-4" />
+                <p className="text-neutral-medium text-lg mb-2">
+                  {roadblocks?.length === 0 && roadblockSubtasks.length === 0 ? "No roadblocks reported yet" : "No roadblocks match your search"}
+                </p>
+                <p className="text-neutral-medium">
+                  {roadblocks?.length === 0 && roadblockSubtasks.length === 0
+                    ? "Use the 'Report New' tab to document obstacles"
+                    : "Try adjusting your search criteria"
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* Traditional Roadblocks */}
+                {filteredRoadblocks.length > 0 && (
+                  <div className="grid gap-6 lg:grid-cols-3">
+                    {/* Open, In Progress, Resolved columns */}
+                    {['open', 'in_progress', 'resolved'].map((status) => (
+                      <div key={status}>
+                        <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded text-sm ${getStatusColor(status)}`}>
+                            {status === 'open' ? 'Open' : status === 'in_progress' ? 'In Progress' : 'Resolved'} ({roadblocksByStatus[status as keyof typeof roadblocksByStatus].length})
+                          </span>
+                        </h2>
+                        <div className="space-y-4">
+                          {roadblocksByStatus[status as keyof typeof roadblocksByStatus].map((roadblock) => {
+                            const linkedActivity = activityMap[roadblock.linkedActivityId];
+                            return (
+                              <Card key={roadblock.id} className={`hover:shadow-md transition-shadow border-l-4 ${
+                                status === 'open' ? 'border-l-red-500' : 
+                                status === 'in_progress' ? 'border-l-yellow-500' : 'border-l-green-500'
+                              }`}>
+                                <CardHeader className="pb-2">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <CardTitle className="text-base text-neutral-dark dark:text-white flex items-center gap-2">
+                                        <span>{getSeverityIcon(roadblock.severity)}</span>
+                                        <span>{getCategoryIcon(roadblock.blameCategory)}</span>
+                                        {roadblock.title}
+                                      </CardTitle>
+                                      <p className="text-sm text-neutral-medium dark:text-gray-400 mt-1">
+                                        {roadblock.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                  <div className="space-y-3">
+                                    <div className="flex gap-2 flex-wrap">
+                                      <Badge className={getSeverityColor(roadblock.severity)}>
+                                        {roadblock.severity} severity
+                                      </Badge>
+                                      {roadblock.blameCategory && roadblock.blameCategory !== 'unclear' && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {roadblock.blameCategory}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    
+                                    {roadblock.assignedTo && (
+                                      <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
+                                        <User className="h-4 w-4" />
+                                        <span>Assigned to: {roadblock.assignedTo}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {linkedActivity && (
+                                      <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
+                                        <ActivityIcon className="h-4 w-4" />
+                                        <span>Task: {linkedActivity.title}</span>
+                                      </div>
+                                    )}
+                                    
+                                    <div className="text-xs text-neutral-medium dark:text-gray-500">
+                                      Reported: {format(new Date(roadblock.reportedDate), "MMM dd, yyyy")}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                          
+                          {roadblocksByStatus[status as keyof typeof roadblocksByStatus].length === 0 && (
+                            <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
+                              No {status.replace('_', ' ')} roadblocks
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          {subtask.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              {subtask.description}
-                            </p>
                           )}
-                          
-                          <div className="space-y-2 text-xs text-gray-500">
-                            <div className="flex items-center gap-2">
-                              <ActivityIcon className="h-3 w-3" />
-                              <span>Gekoppeld aan: {linkedActivity?.title || "Onbekende activiteit"}</span>
-                            </div>
-                            
-                            {subtask.dueDate && (
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-3 w-3" />
-                                <span className={isOverdue ? "text-red-600 font-medium" : ""}>
-                                  Vervaldatum: {format(new Date(subtask.dueDate), "dd/MM/yyyy")}
-                                </span>
-                                {isOverdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Subtasks Classified as Roadblocks */}
+                {filteredRoadblockSubtasks.length > 0 && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
+                      <ListChecks className="h-5 w-5" />
+                      Task Roadblocks ({filteredRoadblockSubtasks.length})
+                    </h2>
+                    <div className="space-y-4">
+                      {filteredRoadblockSubtasks.map((subtask: any) => {
+                        const linkedActivity = activityMap[subtask.linkedActivityId];
+                        const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
+                                         subtask.status !== "completed" && subtask.status !== "resolved";
+
+                        return (
+                          <Card key={`subtask-${subtask.id}`} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <CardTitle className="text-sm font-medium mb-2">
+                                    {subtask.title}
+                                  </CardTitle>
+                                  <div className="flex gap-2 mb-2">
+                                    <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                      Roadblock
+                                    </Badge>
+                                    <Badge className={`${
+                                      subtask.status === "completed" || subtask.status === "resolved" 
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        : subtask.status === "in_progress" 
+                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                        : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                    }`}>
+                                      {subtask.status === "pending" ? "Pending" :
+                                       subtask.status === "in_progress" ? "In Progress" :
+                                       subtask.status === "completed" ? "Completed" : "Resolved"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingSubtask(subtask);
+                                      setIsEditModalOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => updateSubtaskStatusMutation.mutate({ 
+                                      subtaskId: subtask.id, 
+                                      status: subtask.status === "resolved" ? "pending" : "resolved" 
+                                    })}
+                                    disabled={updateSubtaskStatusMutation.isPending}
+                                  >
+                                    {subtask.status === "resolved" ? "Reopen" : "Resolve"}
+                                  </Button>
+                                </div>
                               </div>
-                            )}
-                            
-                            {subtask.participants && subtask.participants.length > 0 && (
-                              <div className="flex items-center gap-2">
-                                <User className="h-3 w-3" />
-                                <span>Deelnemers: {subtask.participants.length}</span>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Status and Actions */}
-                          <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                            {subtask.status !== 'resolved' && subtask.status !== 'completed' && (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  updateSubtaskStatusMutation.mutate({
-                                    subtaskId: subtask.id,
-                                    status: 'resolved'
-                                  });
-                                }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                              >
-                                Mark Resolved
-                              </Button>
-                            )}
-                            
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingSubtask(subtask);
-                                  setIsEditModalOpen(true);
-                                }}
-                                className="flex items-center gap-2"
-                              >
-                                <Edit className="h-4 w-4" />
-                                {t('common.edit')}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  if (confirm(t('subtasks.deleteConfirm'))) {
-                                    deleteSubtaskMutation.mutate(subtask.id);
-                                  }
-                                }}
-                                className="flex items-center gap-2 text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                {t('common.delete')}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                            </CardHeader>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <BlameAnalytics roadblocks={roadblocks || []} />
+          </TabsContent>
+
+          <TabsContent value="new" className="space-y-6">
+            <RoadblockForm 
+              activities={activities || []} 
+              onSuccess={() => {
+                // Could switch back to roadblocks tab after creation
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+
+        {/* Edit Subtask Modal */}
+        <EditSubtaskModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          subtask={editingSubtask}
+        />
+
+        <TaskCelebration
+          isVisible={celebration.isVisible}
+          taskType={celebration.taskType}
+          taskTitle={celebration.taskTitle}
+          onComplete={() => setCelebration({ ...celebration, isVisible: false })}
+        />
       </div>
-
-      {/* Edit Subtask Modal */}
-      <EditSubtaskModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-        subtask={editingSubtask}
-      />
-
-      <TaskCelebration
-        isVisible={celebration.isVisible}
-        taskType={celebration.taskType}
-        taskTitle={celebration.taskTitle}
-        onComplete={() => setCelebration({ ...celebration, isVisible: false })}
-      />
     </AppLayout>
   );
 }
