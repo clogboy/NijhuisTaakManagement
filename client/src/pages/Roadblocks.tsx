@@ -288,7 +288,7 @@ export default function Roadblocks() {
                                     <div className="flex-1">
                                       <CardTitle className="text-base text-neutral-dark dark:text-white flex items-center gap-2">
                                         <span>{getSeverityIcon(roadblock.severity)}</span>
-                                        <span>{getCategoryIcon(roadblock.blameCategory)}</span>
+                                        <span>{getCategoryIcon(roadblock.oorzaakCategory)}</span>
                                         {roadblock.title}
                                       </CardTitle>
                                       <p className="text-sm text-neutral-medium dark:text-gray-400 mt-1">
@@ -303,9 +303,9 @@ export default function Roadblocks() {
                                       <Badge className={getSeverityColor(roadblock.severity)}>
                                         {roadblock.severity} severity
                                       </Badge>
-                                      {roadblock.blameCategory && roadblock.blameCategory !== 'unclear' && (
+                                      {roadblock.oorzaakCategory && roadblock.oorzaakCategory !== 'unclear' && (
                                         <Badge variant="outline" className="text-xs">
-                                          {roadblock.blameCategory}
+                                          {roadblock.oorzaakCategory}
                                         </Badge>
                                       )}
                                     </div>

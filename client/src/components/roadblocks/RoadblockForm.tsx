@@ -197,9 +197,9 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
               />
             </div>
 
-            {/* Root Cause Analysis Section */}
+            {/* Oorzaak Analysis Section */}
             <div className="border-t pt-6">
-              <h3 className="font-semibold text-lg mb-4">Root Cause Analysis</h3>
+              <h3 className="font-semibold text-lg mb-4">Oorzaak Analysis</h3>
               <p className="text-sm text-neutral-medium mb-4">
                 Help identify systemic patterns by categorizing the underlying cause of this roadblock.
               </p>
@@ -207,10 +207,10 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="blameCategory"
+                  name="oorzaakCategory"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Root Cause Category</FormLabel>
+                      <FormLabel>Oorzaak Category</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -218,14 +218,14 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={BLAME_CATEGORIES.PROCESS}>⚙️ Process Issues</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.RESOURCES}>💰 Resource Constraints</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.COMMUNICATION}>💬 Communication Problems</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.EXTERNAL}>🌐 External Dependencies</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.TECHNICAL}>🔧 Technical Limitations</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.PLANNING}>📋 Planning Issues</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.SKILLS}>🎓 Skills/Knowledge Gap</SelectItem>
-                          <SelectItem value={BLAME_CATEGORIES.UNCLEAR}>❓ Root Cause Unclear</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.PROCESS}>⚙️ Process Issues</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.RESOURCES}>💰 Resource Constraints</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.COMMUNICATION}>💬 Communication Problems</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.EXTERNAL}>🌐 External Dependencies</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.TECHNICAL}>🔧 Technical Limitations</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.PLANNING}>📋 Planning Issues</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.SKILLS}>🎓 Skills/Knowledge Gap</SelectItem>
+                          <SelectItem value={OORZAAK_CATEGORIES.UNCLEAR}>❓ Root Cause Unclear</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -235,18 +235,18 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
 
                 <FormField
                   control={form.control}
-                  name="blameFactor"
+                  name="oorzaakFactor"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Specific Factor (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || selectedCategory === BLAME_CATEGORIES.UNCLEAR}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || selectedCategory === OORZAAK_CATEGORIES.UNCLEAR}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select specific factor" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {availableFactors.map((factor) => (
+                          {availableFactors.map((factor: string) => (
                             <SelectItem key={factor} value={factor}>
                               {factor.replace('_', ' ')}
                             </SelectItem>
