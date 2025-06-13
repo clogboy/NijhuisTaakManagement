@@ -1,10 +1,20 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Calendar, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, Calendar, Activity, Wrench } from "lucide-react";
 import { format } from "date-fns";
+import RoadblockForm from "@/components/roadblocks/RoadblockForm";
 
-export default function OverdueTasksList() {
+interface OverdueTasksListProps {
+  autoShowRescue?: boolean;
+}
+
+export default function OverdueTasksList({ autoShowRescue = false }: OverdueTasksListProps) {
+  const [showRescuePanel, setShowRescuePanel] = useState(autoShowRescue);
+  const [selectedTaskForRescue, setSelectedTaskForRescue] = useState<any>(null);
+
   const { data: subtasks = [] } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
   });
@@ -69,26 +79,81 @@ export default function OverdueTasksList() {
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{task.description}</p>
               )}
               
-              <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>Vervaldatum: {format(new Date(task.dueDate), "dd/MM/yyyy")}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>Vervaldatum: {format(new Date(task.dueDate), "dd/MM/yyyy")}</span>
+                  </div>
+                  
+                  {linkedActivity && (
+                    <div className="flex items-center gap-1">
+                      <Activity className="h-3 w-3" />
+                      <span>{linkedActivity.title}</span>
+                    </div>
+                  )}
                 </div>
                 
-                {linkedActivity && (
-                  <div className="flex items-center gap-1">
-                    <Activity className="h-3 w-3" />
-                    <span>{linkedActivity.title}</span>
-                  </div>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    setSelectedTaskForRescue(task);
+                    setShowRescuePanel(true);
+                  }}
+                >
+                  <Wrench className="h-3 w-3 mr-1" />
+                  Rescue
+                </Button>
               </div>
             </div>
           );
         })}
         
-        <div className="text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 p-2 rounded">
-          Deze taken worden automatisch omgezet naar knelpunten om middernacht als ze niet voltooid worden.
-        </div>
+        {!showRescuePanel && (
+          <div className="text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 p-2 rounded">
+            Deze taken worden automatisch omgezet naar knelpunten om middernacht als ze niet voltooid worden.
+          </div>
+        )}
+
+        {showRescuePanel && (
+          <div className="mt-4 p-4 border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-medium text-orange-800 dark:text-orange-200 flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                Task Rescue Panel
+                {selectedTaskForRescue && (
+                  <span className="text-sm font-normal">- {selectedTaskForRescue.title}</span>
+                )}
+              </h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowRescuePanel(false);
+                  setSelectedTaskForRescue(null);
+                }}
+              >
+                ×
+              </Button>
+            </div>
+            
+            <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
+              Identify the root cause (oorzaak) to convert this overdue task into a high-priority subtask with a new deadline.
+            </p>
+            
+            <RoadblockForm
+              activities={activities}
+              linkedTaskId={selectedTaskForRescue?.id}
+              isRescueMode={true}
+              onSuccess={() => {
+                setShowRescuePanel(false);
+                setSelectedTaskForRescue(null);
+              }}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

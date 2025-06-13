@@ -446,10 +446,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Overdue Tasks Alert */}
-        <div className="mb-6">
-          <OverdueTasksList />
-        </div>
+        {/* Overdue Tasks Alert - Auto-show task rescue panel */}
+        {stats && stats.overdueCount > 0 && (
+          <div className="mb-6">
+            <OverdueTasksList autoShowRescue={true} />
+          </div>
+        )}
 
         {/* Today's Tasks and Activities */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

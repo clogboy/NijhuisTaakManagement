@@ -16,13 +16,16 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface RoadblockFormProps {
   activities: Activity[];
+  linkedTaskId?: number;
+  isRescueMode?: boolean;
   onSuccess?: () => void;
 }
 
-export default function RoadblockForm({ activities, onSuccess }: RoadblockFormProps) {
+export default function RoadblockForm({ activities, linkedTaskId, isRescueMode = false, onSuccess }: RoadblockFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [showResolutionFields, setShowResolutionFields] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertRoadblockSchema),
@@ -34,8 +37,10 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
       oorzaakCategory: OORZAAK_CATEGORIES.UNCLEAR,
       oorzaakFactor: "",
       departmentImpact: [],
-      linkedActivityId: undefined,
+      linkedActivityId: linkedTaskId,
       reportedDate: new Date().toISOString(),
+      resolution: "",
+      newDeadline: "",
     },
   });
 
