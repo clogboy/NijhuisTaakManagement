@@ -79,7 +79,8 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("user"), // 'admin' | 'manager' | 'user'
   department: text("department"), // e.g., 'Engineering', 'Sales', 'Operations'
   managerId: integer("manager_id").references(() => users.id), // Self-referencing for hierarchy
-  microsoftId: text("microsoft_id").unique(),
+  microsoftId: text("microsoft_id").unique(), // Keep for future Microsoft migration
+  replitId: text("replit_id").unique(), // Add Replit ID field for auth
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -342,7 +343,14 @@ export const insertDailyAgendaSchema = createInsertSchema(dailyAgendas).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type UpsertUser = typeof users.$inferInsert;
+export type UpsertUser = {
+  id?: string;
+  email: string;
+  name: string;
+  role?: string;
+  microsoftId?: string;
+  replitId?: string;
+};
 
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
