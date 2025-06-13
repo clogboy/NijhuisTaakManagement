@@ -538,6 +538,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Users route for ownership transfer
+  app.get("/api/users", requireAuth, async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Get users error:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   // Roadblocks routes
   app.get("/api/roadblocks", requireAuth, async (req: any, res) => {
     try {

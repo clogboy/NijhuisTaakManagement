@@ -350,8 +350,8 @@ export class DatabaseStorage implements IStorage {
     // Create activity log for the transfer
     await this.createActivityLog({
       activityId,
-      action: "ownership_transferred",
-      description: `Activity ownership transferred from user ${currentUserId} to user ${newOwnerId}`,
+      entry: `Activity ownership transferred from user ${currentUserId} to user ${newOwnerId}`,
+      entryDate: new Date(),
       createdBy: currentUserId
     });
 

@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Plus, Edit, Eye } from "lucide-react";
-import { Activity, ActivityLog } from "@shared/schema";
+import { Trash2, Plus, Edit, Eye, UserCheck } from "lucide-react";
+import { Activity, ActivityLog, User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import NewActivityModal from "@/components/modals/NewActivityModal";
 import EditActivityModal from "@/components/modals/EditActivityModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
+import { TransferOwnershipModal } from "@/components/modals/TransferOwnershipModal";
 
 export default function Activities() {
   const { t } = useTranslations();
@@ -23,6 +24,8 @@ export default function Activities() {
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
   const [isEditActivityModalOpen, setIsEditActivityModalOpen] = useState(false);
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const [isTransferOwnershipModalOpen, setIsTransferOwnershipModalOpen] = useState(false);
+  const [activityToTransfer, setActivityToTransfer] = useState<Activity | null>(null);
   const [logEntry, setLogEntry] = useState("");
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -177,6 +180,19 @@ export default function Activities() {
                       className="text-ms-blue hover:text-ms-blue-dark"
                     >
                       <Edit size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivityToTransfer(activity);
+                        setIsTransferOwnershipModalOpen(true);
+                      }}
+                      className="text-orange-500 hover:text-orange-700"
+                      title="Eigendom overdragen"
+                    >
+                      <UserCheck size={16} />
                     </Button>
                     <Button
                       variant="ghost"
