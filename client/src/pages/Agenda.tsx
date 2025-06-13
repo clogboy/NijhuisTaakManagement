@@ -169,6 +169,24 @@ export default function Agenda() {
     },
   });
 
+  const deleteEthosMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/ethos/${id}`, "DELETE"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ethos"] });
+      toast({
+        title: "Success",
+        description: "Weekly ethos deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete ethos",
+        variant: "destructive",
+      });
+    },
+  });
+
   const [agendaSuggestion, setAgendaSuggestion] = useState<AgendaSuggestion | null>(null);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
 
@@ -648,11 +666,12 @@ export default function Agenda() {
                               <Button
                                 onClick={() => {
                                   if (confirm("Are you sure you want to delete this ethos?")) {
-                                    // deleteEthosMutation.mutate(ethos.id);
+                                    deleteEthosMutation.mutate(ethos.id);
                                   }
                                 }}
                                 size="sm"
                                 variant="ghost"
+                                disabled={deleteEthosMutation.isPending}
                                 className="h-6 w-6 p-0 hover:bg-red-50 micro-button-press"
                               >
                                 <Trash2 size={12} className="text-red-600" />

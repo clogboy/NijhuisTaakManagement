@@ -950,10 +950,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const ethosData = insertWeeklyEthosSchema.parse(req.body);
-      const ethos = await storage.createWeeklyEthos({
-        ...ethosData,
-        createdBy: req.session.userId,
-      });
+      
+      // Check if ethos already exists for this day
+      const existingEthos = await storage.getWeeklyEthosByDay(req.session.userId, ethosData.dayOfWeek);
+      
+      let ethos;
+      if (existingEthos) {
+        // Update existing ethos if one exists for this day
+        ethos = await storage.updateWeeklyEthos(existingEthos.id, ethosData);
+      } else {
+        // Create new ethos
+        ethos = await storage.createWeeklyEthos({
+          ...ethosData,
+          createdBy: req.session.userId,
+        });
+      }
       
       res.json(ethos);
     } catch (error) {
@@ -976,6 +987,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update weekly ethos error:", error);
       res.status(500).json({ message: "Failed to update weekly ethos" });
+    }
+  });
+
+  app.delete("/api/ethos/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const id = parseInt(req.params.id);
+      await storage.deleteWeeklyEthos(id);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete weekly ethos error:", error);
+      res.status(500).json({ message: "Failed to delete weekly ethos" });
     }
   });
 
