@@ -148,8 +148,24 @@ export default function Subtasks() {
       subtask.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       activityMap[subtask.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesType = selectedType === "all" || subtask.type === selectedType;
+    // Get the effective task type (participant-specific or base type)
+    const userEmail = currentUser?.user?.email;
+    const effectiveType = userEmail && subtask.participantTypes 
+      ? (subtask.participantTypes as Record<string, string>)[userEmail] || subtask.type
+      : subtask.type;
     
+    // For type filters, exclude completed/resolved items (only show actionable ones)
+    if (selectedType === "quick_win") {
+      return matchesSearch && effectiveType === "quick_win" && 
+             subtask.status !== "completed" && subtask.status !== "resolved";
+    }
+    if (selectedType === "roadblock") {
+      return matchesSearch && effectiveType === "roadblock" && 
+             subtask.status !== "completed" && subtask.status !== "resolved";
+    }
+    
+    // For "all", show everything
+    const matchesType = selectedType === "all" || effectiveType === selectedType;
     return matchesSearch && matchesType;
   }) || [];
 
@@ -263,6 +279,12 @@ export default function Subtasks() {
     const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
                      subtask.status !== "completed" && subtask.status !== "resolved";
     const isCompletedDaily = completionMap[subtask.id] || false;
+    
+    // Get the effective task type for display (participant-specific or base type)
+    const userEmail = currentUser?.user?.email;
+    const effectiveType = userEmail && subtask.participantTypes 
+      ? (subtask.participantTypes as Record<string, string>)[userEmail] || subtask.type
+      : subtask.type;
 
     return (
       <Card key={subtask.id} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
@@ -287,9 +309,9 @@ export default function Subtasks() {
                 </span>
               </CardTitle>
               <div className="flex gap-2 mb-2">
-                <Badge className={getTypeColor(subtask.type)}>
-                  {subtask.type === "quick_win" ? "Quick Win" : 
-                   subtask.type === "roadblock" ? "Wegversperring" : "Taak"}
+                <Badge className={getTypeColor(effectiveType)}>
+                  {effectiveType === "quick_win" ? "Quick Win" : 
+                   effectiveType === "roadblock" ? "Wegversperring" : "Taak"}
                 </Badge>
                 <Badge className={getStatusColor(subtask.status)}>
                   {subtask.status === "pending" ? "In wachtrij" :
