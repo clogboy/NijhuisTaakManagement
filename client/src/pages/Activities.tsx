@@ -42,6 +42,7 @@ export default function Activities() {
     mutationFn: (id: number) => apiRequest(`/api/activities/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
         title: "Success",
         description: "Activity deleted successfully",

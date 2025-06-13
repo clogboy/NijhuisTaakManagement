@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import WelcomeFlow from "@/components/onboarding/WelcomeFlow";

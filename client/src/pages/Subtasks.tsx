@@ -79,6 +79,7 @@ export default function Subtasks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
         title: t("success"),
         description: t("subtaskTypeUpdated"),

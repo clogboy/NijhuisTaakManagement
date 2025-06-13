@@ -106,6 +106,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setNewSubtask({
         title: "",
         description: "",
