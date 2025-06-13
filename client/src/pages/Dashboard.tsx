@@ -427,8 +427,8 @@ export default function Dashboard() {
                 completedCount: stats.completedCount,
                 activeContacts: stats.activeContacts,
                 overdueCount: stats.overdueCount,
-                roadblocksCount: roadblocks?.filter(r => !r.completed).length || 0,
-                quickWinsCount: quickWins?.filter(q => !q.completed).length || 0,
+                roadblocksCount: roadblocks?.filter(r => r.status !== 'completed').length || 0,
+                quickWinsCount: quickWins?.filter(q => q.status !== 'completed').length || 0,
                 subtasksCompleted: subtasks?.filter(s => s.completed).length || 0,
                 totalSubtasks: subtasks?.length || 0,
               }}
