@@ -33,6 +33,7 @@ export interface IStorage {
   updateActivity(id: number, activity: Partial<InsertActivity>, userId?: number, userEmail?: string): Promise<Activity>;
   deleteActivity(id: number, userId?: number, userEmail?: string): Promise<void>;
   canUserAccessActivity(activityId: number, userId: number, userEmail: string): Promise<{ canView: boolean; canEdit: boolean }>;
+  transferActivityOwnership(activityId: number, newOwnerId: number, currentUserId: number): Promise<Activity>;
 
   // Activity Logs
   getActivityLogs(activityId: number): Promise<ActivityLog[]>;
@@ -312,6 +313,51 @@ export class DatabaseStorage implements IStorage {
     return { canView, canEdit };
   }
 
+  async transferActivityOwnership(activityId: number, newOwnerId: number, currentUserId: number): Promise<Activity> {
+    // Verify current user owns the activity
+    const [activity] = await db.select().from(activities).where(eq(activities.id, activityId));
+    if (!activity) {
+      throw new Error("Activity not found");
+    }
+    
+    if (activity.createdBy !== currentUserId) {
+      throw new Error("Only the activity owner can transfer ownership");
+    }
+
+    // Verify new owner exists
+    const [newOwner] = await db.select().from(users).where(eq(users.id, newOwnerId));
+    if (!newOwner) {
+      throw new Error("New owner not found");
+    }
+
+    // Transfer ownership of the main activity
+    const [updatedActivity] = await db.update(activities)
+      .set({ 
+        createdBy: newOwnerId,
+        updatedAt: new Date()
+      })
+      .where(eq(activities.id, activityId))
+      .returning();
+
+    // Transfer ownership of all related subtasks
+    await db.update(subtasks)
+      .set({ 
+        createdBy: newOwnerId,
+        updatedAt: new Date()
+      })
+      .where(eq(subtasks.linkedActivityId, activityId));
+
+    // Create activity log for the transfer
+    await this.createActivityLog({
+      activityId,
+      action: "ownership_transferred",
+      description: `Activity ownership transferred from user ${currentUserId} to user ${newOwnerId}`,
+      createdBy: currentUserId
+    });
+
+    return updatedActivity;
+  }
+
   async getActivityLogs(activityId: number): Promise<ActivityLog[]> {
     return await db.select().from(activityLogs)
       .where(eq(activityLogs.activityId, activityId))
@@ -447,11 +493,14 @@ export class DatabaseStorage implements IStorage {
     dueThisWeek: number;
     completedCount: number;
     activeContacts: number;
+    overdueCount: number;
   }> {
     const now = new Date();
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
 
-    // Get urgent count
+    // Get urgent activities count
     const urgentActivities = await db.select().from(activities).where(
       and(
         eq(activities.priority, 'urgent'),
@@ -459,7 +508,28 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
-    // Get due this week count
+    // Get urgent subtasks count (includes priority and due date urgency)
+    const urgentSubtasks = await db.select().from(subtasks).where(
+      and(
+        or(
+          eq(subtasks.priority, 'urgent'),
+          sql`${subtasks.dueDate} <= ${now.toISOString()}`
+        ),
+        sql`${subtasks.completedDate} IS NULL`,
+        !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+      )
+    );
+
+    // Get overdue subtasks count
+    const overdueSubtasks = await db.select().from(subtasks).where(
+      and(
+        sql`${subtasks.dueDate} < ${today.toISOString()}`,
+        sql`${subtasks.completedDate} IS NULL`,
+        !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+      )
+    );
+
+    // Get due this week count (activities and subtasks)
     const dueThisWeekActivities = await db.select().from(activities).where(
       and(
         sql`${activities.dueDate} <= ${weekFromNow.toISOString()}`,
@@ -468,7 +538,16 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
-    // Get completed count
+    const dueThisWeekSubtasks = await db.select().from(subtasks).where(
+      and(
+        sql`${subtasks.dueDate} <= ${weekFromNow.toISOString()}`,
+        sql`${subtasks.dueDate} >= ${now.toISOString()}`,
+        sql`${subtasks.completedDate} IS NULL`,
+        !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+      )
+    );
+
+    // Get completed count (activities and subtasks)
     const completedActivities = await db.select().from(activities).where(
       and(
         eq(activities.status, 'completed'),
@@ -476,14 +555,22 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
+    const completedSubtasks = await db.select().from(subtasks).where(
+      and(
+        sql`${subtasks.completedDate} IS NOT NULL`,
+        !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+      )
+    );
+
     // Get active contacts count
     const activeContacts = await db.select().from(contacts).where(eq(contacts.createdBy, userId));
 
     return {
-      urgentCount: urgentActivities.length,
-      dueThisWeek: dueThisWeekActivities.length,
-      completedCount: completedActivities.length,
+      urgentCount: urgentActivities.length + urgentSubtasks.length,
+      dueThisWeek: dueThisWeekActivities.length + dueThisWeekSubtasks.length,
+      completedCount: completedActivities.length + completedSubtasks.length,
       activeContacts: activeContacts.length,
+      overdueCount: overdueSubtasks.length,
     };
   }
 

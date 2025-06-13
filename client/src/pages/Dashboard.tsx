@@ -46,6 +46,7 @@ interface DashboardStats {
   dueThisWeek: number;
   completedCount: number;
   activeContacts: number;
+  overdueCount: number;
 }
 
 export default function Dashboard() {

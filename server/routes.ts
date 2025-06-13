@@ -417,6 +417,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Transfer ownership route
+  app.post("/api/activities/:id/transfer-ownership", requireAuth, async (req: any, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const { newOwnerId } = req.body;
+      
+      if (!newOwnerId || typeof newOwnerId !== 'number') {
+        return res.status(400).json({ message: "New owner ID is required" });
+      }
+
+      const updatedActivity = await storage.transferActivityOwnership(
+        activityId, 
+        newOwnerId, 
+        req.user.id
+      );
+      
+      res.json(updatedActivity);
+    } catch (error) {
+      console.error("Transfer ownership error:", error);
+      res.status(400).json({ message: error.message || "Failed to transfer ownership" });
+    }
+  });
+
   // Archive/Unarchive activity routes
   app.patch("/api/activities/:id/archive", requireAuth, async (req: any, res) => {
     try {
