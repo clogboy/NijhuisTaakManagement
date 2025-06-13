@@ -37,6 +37,7 @@ import EditActivityModal from "@/components/modals/EditActivityModal";
 import EmailModal from "@/components/modals/EmailModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
+import ProductivityHealthCard from "@/components/productivity/ProductivityHealthCard";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -86,6 +87,37 @@ export default function Dashboard() {
 
   const { data: subtasks } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
+  });
+
+  const { data: roadblocks } = useQuery<any[]>({
+    queryKey: ["/api/roadblocks"],
+  });
+
+  const { data: userPreferences } = useQuery<any>({
+    queryKey: ["/api/user/preferences"],
+  });
+
+  const [healthCardDismissed, setHealthCardDismissed] = useState(false);
+
+  // Productivity health preferences mutation
+  const updatePreferencesMutation = useMutation({
+    mutationFn: async (preferences: any) => {
+      return apiRequest("/api/user/preferences", "PUT", preferences);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/preferences"] });
+      toast({
+        title: "Voorkeuren bijgewerkt",
+        description: "Je productiviteitsinstellingen zijn opgeslagen",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Fout",
+        description: "Kon voorkeuren niet bijwerken",
+        variant: "destructive",
+      });
+    },
   });
 
   // Archive/Unarchive mutations
@@ -384,6 +416,32 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Productivity Health Card */}
+        {userPreferences?.productivityHealthEnabled !== false && !healthCardDismissed && stats && (
+          <div className="mb-6">
+            <ProductivityHealthCard
+              stats={{
+                urgentCount: stats.urgentCount,
+                dueThisWeek: stats.dueThisWeek,
+                completedCount: stats.completedCount,
+                activeContacts: stats.activeContacts,
+                overdueCount: stats.overdueCount,
+                roadblocksCount: roadblocks?.filter(r => !r.completed).length || 0,
+                quickWinsCount: quickWins?.filter(q => !q.completed).length || 0,
+                subtasksCompleted: subtasks?.filter(s => s.completed).length || 0,
+                totalSubtasks: subtasks?.length || 0,
+              }}
+              onDismiss={() => setHealthCardDismissed(true)}
+              onDisable={() => {
+                updatePreferencesMutation.mutate({
+                  productivityHealthEnabled: false
+                });
+              }}
+              showSettings={true}
+            />
+          </div>
+        )}
 
         {/* Today's Tasks and Activities */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
