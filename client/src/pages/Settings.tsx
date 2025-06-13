@@ -230,21 +230,21 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserIcon className="h-5 w-5" />
-                Profile Information
+                {t('settings.profileInformation')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">{t('settings.fullName')}</Label>
                   <Input id="name" value={user?.user.name || ""} disabled />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t('settings.emailAddress')}</Label>
                   <Input id="email" value={user?.user.email || ""} disabled />
                 </div>
                 <div>
-                  <Label htmlFor="department">Department</Label>
+                  <Label htmlFor="department">{t('settings.department')}</Label>
                   <Input 
                     id="department" 
                     value={profileData.department}
@@ -253,7 +253,7 @@ export default function Settings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">{t('settings.location')}</Label>
                   <Input 
                     id="location" 
                     value={profileData.location}
@@ -262,7 +262,7 @@ export default function Settings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">{t('settings.phoneNumber')}</Label>
                   <Input 
                     id="phone" 
                     value={profileData.phone}
@@ -272,12 +272,12 @@ export default function Settings() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio">{t('settings.bio')}</Label>
                 <Textarea 
                   id="bio" 
                   value={profileData.bio}
                   onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                  placeholder="Tell us about yourself..."
+                  placeholder={t('settings.tellUsAboutYourself')}
                   rows={3}
                 />
               </div>
@@ -289,7 +289,7 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Working Hours & Schedule
+                {t('settings.workingHoursSchedule')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

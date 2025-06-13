@@ -322,7 +322,6 @@ export const nlTranslations = {
     startScheduler: "Planner starten",
     running: "Actief",
     stopped: "Gestopt",
-    active: "Actief",
     inactive: "Inactief",
     nextSync: "Volgende synchronisatie",
     lastSync: "Laatste synchronisatie",
