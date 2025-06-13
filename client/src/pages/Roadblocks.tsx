@@ -118,10 +118,12 @@ export default function Roadblocks() {
     },
   });
 
-  // Filter subtasks that are classified as roadblocks by participants
+  // Filter subtasks that are classified as roadblocks by participants and exclude completed ones
   const roadblockSubtasks = (subtasks as any[]).filter((subtask: any) => {
     const participantTypes = subtask.participantTypes as Record<string, string> || {};
-    return subtask.type === "roadblock" || Object.values(participantTypes).includes("roadblock");
+    const isRoadblock = subtask.type === "roadblock" || Object.values(participantTypes).includes("roadblock");
+    const isNotCompleted = !subtask.completedDate;
+    return isRoadblock && isNotCompleted;
   });
 
   // Filter roadblock subtasks based on search query

@@ -119,10 +119,12 @@ export default function QuickWins() {
     },
   });
 
-  // Filter subtasks that are classified as quick wins by participants
+  // Filter subtasks that are classified as quick wins by participants and exclude completed ones
   const quickWinSubtasks = (subtasks as any[]).filter((subtask: any) => {
     const participantTypes = subtask.participantTypes as Record<string, string> || {};
-    return subtask.type === "quick_win" || Object.values(participantTypes).includes("quick_win");
+    const isQuickWin = subtask.type === "quick_win" || Object.values(participantTypes).includes("quick_win");
+    const isNotCompleted = !subtask.completedDate;
+    return isQuickWin && isNotCompleted;
   });
 
   // Filter quick win subtasks based on search query
