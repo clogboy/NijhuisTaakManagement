@@ -43,6 +43,7 @@ export const nlTranslations = {
     participants: "Deelnemers",
     recentQuickWins: "Recente Quick Wins",
     sortByPriority: "Sorteer op prioriteit",
+    sortByDueDate: "Sorteer op vervaldatum",
     activity: "Activiteit",
     actions: "Acties",
     inProgress: "In uitvoering",

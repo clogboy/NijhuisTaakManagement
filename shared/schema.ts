@@ -449,6 +449,57 @@ export const timeBlocks = pgTable("time_blocks", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const calendarIntegrations = pgTable("calendar_integrations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  provider: text("provider").notNull(), // 'google', 'outlook', 'ical'
+  accountId: text("account_id").notNull(),
+  accountEmail: text("account_email").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiry: timestamp("token_expiry"),
+  isActive: boolean("is_active").notNull().default(true),
+  syncEnabled: boolean("sync_enabled").notNull().default(true),
+  lastSync: timestamp("last_sync"),
+  settings: json("settings").default({}), // sync preferences, calendar selections
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const calendarEvents = pgTable("calendar_events", {
+  id: serial("id").primaryKey(),
+  integrationId: integer("integration_id").notNull().references(() => calendarIntegrations.id, { onDelete: "cascade" }),
+  externalId: text("external_id").notNull(), // calendar provider's event ID
+  activityId: integer("activity_id").references(() => activities.id),
+  subtaskId: integer("subtask_id").references(() => subtasks.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  isAllDay: boolean("is_all_day").notNull().default(false),
+  location: text("location"),
+  attendees: json("attendees").default([]), // array of email addresses
+  reminderMinutes: integer("reminder_minutes").default(15),
+  eventType: text("event_type").notNull().default("deadline"), // 'deadline', 'meeting', 'reminder', 'block'
+  status: text("status").notNull().default("confirmed"), // 'confirmed', 'tentative', 'cancelled'
+  lastModified: timestamp("last_modified"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const deadlineReminders = pgTable("deadline_reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  activityId: integer("activity_id").references(() => activities.id),
+  subtaskId: integer("subtask_id").references(() => subtasks.id),
+  reminderTime: timestamp("reminder_time").notNull(),
+  reminderType: text("reminder_type").notNull(), // 'email', 'notification', 'calendar'
+  message: text("message").notNull(),
+  sent: boolean("sent").notNull().default(false),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertTimeBlockSchema = createInsertSchema(timeBlocks).omit({
   id: true,
   createdAt: true,
@@ -475,6 +526,35 @@ export type InsertTimeBlock = z.infer<typeof insertTimeBlockSchema>;
 
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+
+export const insertCalendarIntegrationSchema = createInsertSchema(calendarIntegrations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDeadlineReminderSchema = createInsertSchema(deadlineReminders).omit({
+  id: true,
+  userId: true,
+  sent: true,
+  sentAt: true,
+  createdAt: true,
+});
+
+export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
+export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegrationSchema>;
+
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
+
+export type DeadlineReminder = typeof deadlineReminders.$inferSelect;
+export type InsertDeadlineReminder = z.infer<typeof insertDeadlineReminderSchema>;
 
 export const documentReferences = pgTable("document_references", {
   id: serial("id").primaryKey(),

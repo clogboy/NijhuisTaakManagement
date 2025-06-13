@@ -402,7 +402,7 @@ export default function Dashboard() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="priority">{t('dashboard.sortByPriority')}</SelectItem>
-                      <SelectItem value="dueDate">Sort by Due Date</SelectItem>
+                      <SelectItem value="dueDate">{t('dashboard.sortByDueDate')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button
@@ -643,9 +643,9 @@ export default function Dashboard() {
         <Card className="mt-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-neutral-dark">Recent Quick Wins</h3>
+              <h3 className="text-lg font-semibold text-neutral-dark">{t('dashboard.recentQuickWins')}</h3>
               <Button variant="ghost" className="text-sm text-ms-blue hover:text-ms-blue-dark font-medium">
-                View All
+                {t('dashboard.viewAll')}
               </Button>
             </div>
           </div>
