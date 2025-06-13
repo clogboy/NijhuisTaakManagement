@@ -367,7 +367,7 @@ export default function TodaysTasks() {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 dueDate.setHours(0, 0, 0, 0);
-                return dueDate < today;
+                return dueDate <= today; // Include tasks due today as well as overdue
               })();
               
               const getTypeColor = (type: string) => {
