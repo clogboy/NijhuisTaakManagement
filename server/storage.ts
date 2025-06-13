@@ -9,7 +9,7 @@ import {
   type DeadlineReminder, type InsertDeadlineReminder
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
+import { eq, and, inArray, desc, sql, or, not } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -531,6 +531,7 @@ export class DatabaseStorage implements IStorage {
       and(
         sql`${subtasks.dueDate} < ${today.toISOString()}`,
         sql`${subtasks.completedDate} IS NULL`,
+        sql`${subtasks.status} NOT IN ('completed', 'resolved')`,
         !isAdmin ? eq(subtasks.createdBy, userId) : undefined
       )
     );

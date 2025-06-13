@@ -38,6 +38,7 @@ import EmailModal from "@/components/modals/EmailModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import ProductivityHealthCard from "@/components/productivity/ProductivityHealthCard";
+import OverdueTasksList from "@/components/OverdueTasksList";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -444,6 +445,11 @@ export default function Dashboard() {
             />
           </div>
         )}
+
+        {/* Overdue Tasks Alert */}
+        <div className="mb-6">
+          <OverdueTasksList />
+        </div>
 
         {/* Today's Tasks and Activities */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
