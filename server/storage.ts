@@ -1,10 +1,12 @@
 import { 
   users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions,
-  teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences,
+  teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences, calendarIntegrations, calendarEvents, deadlineReminders,
   type User, type InsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder,
   type TeamsBoard, type InsertTeamsBoard, type TeamsCard, type InsertTeamsCard,
   type BimcollabProject, type InsertBimcollabProject, type BimcollabIssue, type InsertBimcollabIssue,
-  type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference
+  type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference,
+  type CalendarIntegration, type InsertCalendarIntegration, type CalendarEvent, type InsertCalendarEvent,
+  type DeadlineReminder, type InsertDeadlineReminder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or } from "drizzle-orm";
@@ -1158,6 +1160,199 @@ export class DatabaseStorage implements IStorage {
       ));
 
     return result.rowCount > 0;
+  }
+
+  // Calendar Integration Methods
+  async getCalendarIntegrations(userId: number): Promise<CalendarIntegration[]> {
+    return await db.select()
+      .from(calendarIntegrations)
+      .where(eq(calendarIntegrations.userId, userId))
+      .orderBy(desc(calendarIntegrations.createdAt));
+  }
+
+  async getCalendarIntegration(id: number): Promise<CalendarIntegration | undefined> {
+    const [integration] = await db.select()
+      .from(calendarIntegrations)
+      .where(eq(calendarIntegrations.id, id));
+    return integration || undefined;
+  }
+
+  async createCalendarIntegration(integration: InsertCalendarIntegration & { userId: number }): Promise<CalendarIntegration> {
+    const [created] = await db.insert(calendarIntegrations)
+      .values({
+        ...integration,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return created;
+  }
+
+  async updateCalendarIntegration(id: number, updates: Partial<InsertCalendarIntegration>): Promise<CalendarIntegration> {
+    const [updated] = await db.update(calendarIntegrations)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(calendarIntegrations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCalendarIntegration(id: number): Promise<void> {
+    await db.delete(calendarIntegrations).where(eq(calendarIntegrations.id, id));
+  }
+
+  // Calendar Events Methods
+  async getCalendarEvents(integrationId: number, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]> {
+    let whereConditions = [eq(calendarEvents.integrationId, integrationId)];
+    
+    if (startDate) {
+      whereConditions.push(sql`${calendarEvents.startTime} >= ${startDate.toISOString()}`);
+    }
+    if (endDate) {
+      whereConditions.push(sql`${calendarEvents.endTime} <= ${endDate.toISOString()}`);
+    }
+
+    return await db.select()
+      .from(calendarEvents)
+      .where(and(...whereConditions))
+      .orderBy(calendarEvents.startTime);
+  }
+
+  async getCalendarEventsByUser(userId: number, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]> {
+    const userIntegrations = await this.getCalendarIntegrations(userId);
+    if (userIntegrations.length === 0) return [];
+
+    const integrationIds = userIntegrations.map(i => i.id);
+    let whereConditions = [sql`${calendarEvents.integrationId} = ANY(${integrationIds})`];
+    
+    if (startDate) {
+      whereConditions.push(sql`${calendarEvents.startTime} >= ${startDate.toISOString()}`);
+    }
+    if (endDate) {
+      whereConditions.push(sql`${calendarEvents.endTime} <= ${endDate.toISOString()}`);
+    }
+
+    return await db.select()
+      .from(calendarEvents)
+      .where(and(...whereConditions))
+      .orderBy(calendarEvents.startTime);
+  }
+
+  async createCalendarEvent(event: InsertCalendarEvent): Promise<CalendarEvent> {
+    const [created] = await db.insert(calendarEvents)
+      .values({
+        ...event,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return created;
+  }
+
+  async updateCalendarEvent(id: number, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent> {
+    const [updated] = await db.update(calendarEvents)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(calendarEvents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCalendarEvent(id: number): Promise<void> {
+    await db.delete(calendarEvents).where(eq(calendarEvents.id, id));
+  }
+
+  // Deadline Reminders Methods
+  async getUpcomingDeadlineReminders(userId: number, daysAhead: number = 7): Promise<DeadlineReminder[]> {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysAhead);
+
+    return await db.select()
+      .from(deadlineReminders)
+      .where(
+        and(
+          eq(deadlineReminders.userId, userId),
+          eq(deadlineReminders.sent, false),
+          sql`${deadlineReminders.reminderTime} <= ${futureDate.toISOString()}`
+        )
+      )
+      .orderBy(deadlineReminders.reminderTime);
+  }
+
+  async createDeadlineReminder(reminder: InsertDeadlineReminder & { userId: number }): Promise<DeadlineReminder> {
+    const [created] = await db.insert(deadlineReminders)
+      .values({
+        ...reminder,
+        createdAt: new Date()
+      })
+      .returning();
+    return created;
+  }
+
+  async markReminderAsSent(id: number): Promise<void> {
+    await db.update(deadlineReminders)
+      .set({
+        sent: true,
+        sentAt: new Date()
+      })
+      .where(eq(deadlineReminders.id, id));
+  }
+
+  async createDeadlineRemindersForActivity(activityId: number, userId: number): Promise<void> {
+    const activity = await this.getActivity(activityId);
+    if (!activity || !activity.dueDate) return;
+
+    const dueDate = new Date(activity.dueDate);
+    const reminders = [
+      { days: 7, type: 'email' as const },
+      { days: 3, type: 'notification' as const },
+      { days: 1, type: 'email' as const },
+    ];
+
+    for (const reminder of reminders) {
+      const reminderTime = new Date(dueDate);
+      reminderTime.setDate(reminderTime.getDate() - reminder.days);
+      
+      if (reminderTime > new Date()) {
+        await this.createDeadlineReminder({
+          userId,
+          activityId,
+          reminderTime,
+          reminderType: reminder.type,
+          message: `Activity "${activity.title}" is due in ${reminder.days} day${reminder.days > 1 ? 's' : ''}`
+        });
+      }
+    }
+  }
+
+  async createDeadlineRemindersForSubtask(subtaskId: number, userId: number): Promise<void> {
+    const subtask = await this.getSubtask(subtaskId);
+    if (!subtask || !subtask.dueDate) return;
+
+    const dueDate = new Date(subtask.dueDate);
+    const reminders = [
+      { days: 3, type: 'notification' as const },
+      { days: 1, type: 'email' as const },
+    ];
+
+    for (const reminder of reminders) {
+      const reminderTime = new Date(dueDate);
+      reminderTime.setDate(reminderTime.getDate() - reminder.days);
+      
+      if (reminderTime > new Date()) {
+        await this.createDeadlineReminder({
+          userId,
+          subtaskId,
+          reminderTime,
+          reminderType: reminder.type,
+          message: `Subtask "${subtask.title}" is due in ${reminder.days} day${reminder.days > 1 ? 's' : ''}`
+        });
+      }
+    }
   }
 }
 

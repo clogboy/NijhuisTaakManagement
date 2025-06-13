@@ -1863,5 +1863,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Calendar Integration API
+  app.get("/api/calendar/integrations", requireAuth, async (req: any, res) => {
+    try {
+      const integrations = await storage.getCalendarIntegrations(req.user.id);
+      res.json(integrations);
+    } catch (error) {
+      console.error("Get calendar integrations error:", error);
+      res.status(500).json({ message: "Failed to get calendar integrations" });
+    }
+  });
+
+  app.post("/api/calendar/integrations", requireAuth, async (req: any, res) => {
+    try {
+      const integrationData = {
+        ...req.body,
+        userId: req.user.id
+      };
+      
+      const integration = await storage.createCalendarIntegration(integrationData);
+      res.status(201).json(integration);
+    } catch (error) {
+      console.error("Create calendar integration error:", error);
+      res.status(500).json({ message: "Failed to create calendar integration" });
+    }
+  });
+
+  app.put("/api/calendar/integrations/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const integration = await storage.updateCalendarIntegration(parseInt(id), req.body);
+      res.json(integration);
+    } catch (error) {
+      console.error("Update calendar integration error:", error);
+      res.status(500).json({ message: "Failed to update calendar integration" });
+    }
+  });
+
+  app.delete("/api/calendar/integrations/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteCalendarIntegration(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete calendar integration error:", error);
+      res.status(500).json({ message: "Failed to delete calendar integration" });
+    }
+  });
+
+  app.get("/api/calendar/events", requireAuth, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      const start = startDate ? new Date(startDate) : undefined;
+      const end = endDate ? new Date(endDate) : undefined;
+      
+      const events = await storage.getCalendarEventsByUser(req.user.id, start, end);
+      res.json(events);
+    } catch (error) {
+      console.error("Get calendar events error:", error);
+      res.status(500).json({ message: "Failed to get calendar events" });
+    }
+  });
+
+  app.post("/api/calendar/events", requireAuth, async (req: any, res) => {
+    try {
+      const event = await storage.createCalendarEvent(req.body);
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Create calendar event error:", error);
+      res.status(500).json({ message: "Failed to create calendar event" });
+    }
+  });
+
+  app.get("/api/deadline-reminders", requireAuth, async (req: any, res) => {
+    try {
+      const { daysAhead } = req.query;
+      const days = daysAhead ? parseInt(daysAhead) : 7;
+      
+      const reminders = await storage.getUpcomingDeadlineReminders(req.user.id, days);
+      res.json(reminders);
+    } catch (error) {
+      console.error("Get deadline reminders error:", error);
+      res.status(500).json({ message: "Failed to get deadline reminders" });
+    }
+  });
+
+  app.post("/api/deadline-reminders", requireAuth, async (req: any, res) => {
+    try {
+      const reminderData = {
+        ...req.body,
+        userId: req.user.id
+      };
+      
+      const reminder = await storage.createDeadlineReminder(reminderData);
+      res.status(201).json(reminder);
+    } catch (error) {
+      console.error("Create deadline reminder error:", error);
+      res.status(500).json({ message: "Failed to create deadline reminder" });
+    }
+  });
+
+  app.post("/api/activities/:id/deadline-reminders", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.createDeadlineRemindersForActivity(parseInt(id), req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Create activity deadline reminders error:", error);
+      res.status(500).json({ message: "Failed to create deadline reminders" });
+    }
+  });
+
+  app.post("/api/subtasks/:id/deadline-reminders", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.createDeadlineRemindersForSubtask(parseInt(id), req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Create subtask deadline reminders error:", error);
+      res.status(500).json({ message: "Failed to create deadline reminders" });
+    }
+  });
+
   return httpServer;
 }
