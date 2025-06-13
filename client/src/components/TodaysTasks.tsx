@@ -72,11 +72,6 @@ export default function TodaysTasks() {
           });
         }
       }
-      
-      toast({
-        title: "Task updated",
-        description: "Task completion status updated successfully",
-      });
     },
     onError: () => {
       toast({
@@ -107,11 +102,6 @@ export default function TodaysTasks() {
           });
         }
       }
-      
-      toast({
-        title: "Status updated",
-        description: "Task status updated successfully",
-      });
     },
     onError: () => {
       toast({

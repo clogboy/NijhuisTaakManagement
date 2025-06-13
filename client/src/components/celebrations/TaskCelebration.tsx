@@ -42,6 +42,7 @@ export default function TaskCelebration({
         title: config.message,
         description: `${config.description} ${taskTitle}`,
         duration: 3000,
+        className: "celebration-toast"
       });
       
       // Complete immediately since we're using toast

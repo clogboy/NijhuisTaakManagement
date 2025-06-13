@@ -156,8 +156,24 @@ export default function Subtasks() {
   const subtasksByStatus = {
     pending: filteredSubtasks.filter(s => s.status === "pending"),
     in_progress: filteredSubtasks.filter(s => s.status === "in_progress"),
-    completed: filteredSubtasks.filter(s => s.status === "completed"),
-    resolved: filteredSubtasks.filter(s => s.status === "resolved"),
+    completed: filteredSubtasks.filter(s => s.status === "completed").sort((a, b) => {
+      // Sort completed tasks by completion date (descending - most recent first)
+      if (a.completedDate && b.completedDate) {
+        return new Date(b.completedDate).getTime() - new Date(a.completedDate).getTime();
+      }
+      if (a.completedDate && !b.completedDate) return -1;
+      if (!a.completedDate && b.completedDate) return 1;
+      return 0;
+    }),
+    resolved: filteredSubtasks.filter(s => s.status === "resolved").sort((a, b) => {
+      // Sort resolved tasks by completion date (descending - most recent first)  
+      if (a.completedDate && b.completedDate) {
+        return new Date(b.completedDate).getTime() - new Date(a.completedDate).getTime();
+      }
+      if (a.completedDate && !b.completedDate) return -1;
+      if (!a.completedDate && b.completedDate) return 1;
+      return 0;
+    }),
   };
 
   const getTypeColor = (type: string) => {
