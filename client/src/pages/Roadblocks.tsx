@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import TaskCelebration from "@/components/celebrations/TaskCelebration";
 
 export default function Roadblocks() {
   const { t } = useTranslations();

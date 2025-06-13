@@ -537,6 +537,13 @@ export default function TodaysTasks() {
           onClose={() => setIsTaskDetailModalOpen(false)}
         />
       )}
+
+      <TaskCelebration
+        isVisible={celebration.isVisible}
+        taskType={celebration.taskType}
+        taskTitle={celebration.taskTitle}
+        onComplete={() => setCelebration({ ...celebration, isVisible: false })}
+      />
     </Card>
   );
 }
