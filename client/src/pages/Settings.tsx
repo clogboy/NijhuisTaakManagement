@@ -295,7 +295,7 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start-time">Start Time</Label>
+                  <Label htmlFor="start-time">{t('settings.startTime')}</Label>
                   <Select value={preferences.workingHours?.start || "09:00"} onValueChange={(value) => 
                     handleWorkingHoursChange('start', value)
                   }>
@@ -311,7 +311,7 @@ export default function Settings() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="end-time">End Time</Label>
+                  <Label htmlFor="end-time">{t('settings.endTime')}</Label>
                   <Select value={preferences.workingHours?.end || "17:00"} onValueChange={(value) => 
                     handleWorkingHoursChange('end', value)
                   }>
@@ -328,7 +328,7 @@ export default function Settings() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="timezone">Timezone</Label>
+                <Label htmlFor="timezone">{t('settings.timezone')}</Label>
                 <Select value={preferences.timezone} onValueChange={(value) => 
                   handlePreferenceChange('timezone', value)
                 }>
