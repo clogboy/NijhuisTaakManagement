@@ -9,7 +9,7 @@ import {
   type DeadlineReminder, type InsertDeadlineReminder
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, inArray, desc, sql, or, not } from "drizzle-orm";
+import { eq, and, inArray, desc, sql, or, not, ne } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -526,15 +526,26 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
-    // Get overdue subtasks count
-    const overdueSubtasks = await db.select().from(subtasks).where(
+    // Get user email for participant filtering
+    const user = await this.getUser(userId);
+    const userEmail = user?.email;
+
+    // Get all subtasks first, then filter
+    const allSubtasks = await db.select().from(subtasks).where(
       and(
-        sql`${subtasks.dueDate} < ${today.toISOString()}`,
+        sql`${subtasks.dueDate} IS NOT NULL`,
+        sql`${subtasks.dueDate} < ${now.toISOString()}`,
         sql`${subtasks.completedDate} IS NULL`,
-        sql`${subtasks.status} NOT IN ('completed', 'resolved')`,
-        !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+        sql`${subtasks.status} != 'completed'`
       )
     );
+
+    // Filter for user-assigned tasks (either created by user or user is participant)
+    const overdueSubtasks = allSubtasks.filter(subtask => {
+      if (isAdmin) return true;
+      return subtask.createdBy === userId || 
+             (userEmail && subtask.participants?.includes(userEmail));
+    });
 
     // Get due this week count (activities and subtasks)
     const dueThisWeekActivities = await db.select().from(activities).where(
