@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Calendar, Activity, Wrench } from "lucide-react";
 import { format } from "date-fns";
-import RoadblockForm from "@/components/roadblocks/RoadblockForm";
+import StreamlinedRoadblockForm from "@/components/roadblocks/StreamlinedRoadblockForm";
 
 interface OverdueTasksListProps {
   autoShowRescue?: boolean;
@@ -113,7 +113,7 @@ export default function OverdueTasksList({ autoShowRescue = false }: OverdueTask
         
         {!showRescuePanel && (
           <div className="text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 p-2 rounded">
-            Deze taken worden automatisch omgezet naar knelpunten om middernacht als ze niet voltooid worden.
+            Deze taken worden automatisch omgezet naar wegversperringen om middernacht als ze niet voltooid worden.
           </div>
         )}
 
@@ -143,15 +143,28 @@ export default function OverdueTasksList({ autoShowRescue = false }: OverdueTask
               Identify the root cause (oorzaak) to convert this overdue task into a high-priority subtask with a new deadline.
             </p>
             
-            <RoadblockForm
-              activities={activities}
-              linkedTaskId={selectedTaskForRescue?.id}
-              isRescueMode={true}
-              onSuccess={() => {
-                setShowRescuePanel(false);
-                setSelectedTaskForRescue(null);
-              }}
-            />
+            {selectedTaskForRescue && (
+              <StreamlinedRoadblockForm
+                taskData={{
+                  id: selectedTaskForRescue.id,
+                  title: selectedTaskForRescue.title,
+                  description: selectedTaskForRescue.description,
+                  linkedActivityId: selectedTaskForRescue.linkedActivityId,
+                  dueDate: selectedTaskForRescue.dueDate,
+                  priority: selectedTaskForRescue.priority,
+                }}
+                onSubmit={(data) => {
+                  // Handle rescue submission via the useRescueWorkflow hook
+                  console.log('Rescue data:', data);
+                  setShowRescuePanel(false);
+                  setSelectedTaskForRescue(null);
+                }}
+                onCancel={() => {
+                  setShowRescuePanel(false);
+                  setSelectedTaskForRescue(null);
+                }}
+              />
+            )}
           </div>
         )}
       </CardContent>
