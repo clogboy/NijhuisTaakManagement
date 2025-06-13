@@ -182,12 +182,16 @@ export default function TodaysTasks() {
 
   // Filter overdue subtasks that will be converted to roadblocks
   const overdueSubtasks = subtasks.filter(subtask => {
-    if (!subtask.dueDate || subtask.completedDate || subtask.status === 'completed') return false;
+    // Exclude completed tasks (both status 'completed' and 'resolved' are considered done)
+    if (!subtask.dueDate || subtask.completedDate || subtask.status === 'completed' || subtask.status === 'resolved') return false;
+    
     const dueDate = new Date(subtask.dueDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
-    return dueDate < today;
+    const isOverdue = dueDate < today;
+    
+    return isOverdue;
   });
 
   const hasOverdueWarning = overdueSubtasks.length > 0;
@@ -336,7 +340,7 @@ export default function TodaysTasks() {
               <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
-                  {overdueSubtasks.length} Verlopen taak{overdueSubtasks.length > 1 ? 'en' : ''}
+                  {overdueSubtasks.length} Verlopen {overdueSubtasks.length === 1 ? 'taak' : 'taken'}
                 </h4>
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1 leading-relaxed">
                   Deze worden automatisch omgezet naar knelpunten om middernacht als ze niet voltooid zijn.
@@ -358,7 +362,7 @@ export default function TodaysTasks() {
           <div className="space-y-3">
             {allTodaysTasks.map((task: any) => {
               const isCompleted = completionMap[task.id] || false;
-              const isOverdue = task.dueDate && !task.completedDate && task.status !== 'completed' && (() => {
+              const isOverdue = task.dueDate && !task.completedDate && task.status !== 'completed' && task.status !== 'resolved' && (() => {
                 const dueDate = new Date(task.dueDate);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
