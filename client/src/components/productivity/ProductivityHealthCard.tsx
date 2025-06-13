@@ -28,21 +28,27 @@ export default function ProductivityHealthCard({
 }: ProductivityHealthProps) {
   
   const getReflectionMessage = () => {
-    const completionRate = stats.totalSubtasks > 0 ? (stats.subtasksCompleted / stats.totalSubtasks) * 100 : 0;
-    const workload = stats.urgentCount + stats.overdueCount + stats.roadblocksCount;
+    // Focus on supportive observations without scoring or judgment
+    const messages = [
+      "Elke stap voorwaarts telt, ook de kleine. Vooruitgang hoeft niet perfect te zijn om waardevol te zijn.",
+      "Planning en nadenken over prioriteiten zijn productieve activiteiten op zich.",
+      "Flexibiliteit en aanpassingsvermogen zijn belangrijke vaardigheden in een dynamische werkdag.",
+      "Het is oké om je tempo aan te passen aan wat de dag vraagt.",
+      "Verschillende dagen vragen om verschillende energieën en benaderingen.",
+    ];
     
-    if (stats.completedCount >= 3 && completionRate > 70) {
-      return "Je hebt vandaag goed gefocust. De voortgang op je taken toont aan dat je prioriteiten helder zijn.";
-    } else if (stats.urgentCount > 2) {
-      return "Er zijn meerdere urgente zaken. Overweeg om één prioriteit te kiezen en daar volledig op te focussen.";
-    } else if (stats.overdueCount > 0) {
-      return "Sommige taken lopen achter. Een kleine tijdsinvestering nu voorkomt mogelijk stress later.";
-    } else if (stats.activeContacts > 3) {
-      return "Je hebt veel actieve samenwerkingen. Dat toont je betrokkenheid bij verschillende projecten.";
-    } else if (workload === 0 && stats.completedCount === 0) {
-      return "Een rustige dag biedt ruimte voor planning en reflectie op langetermijndoelen.";
+    // Prioritize observations based on what's most relevant
+    if (stats.overdueCount > 0) {
+      return `Er zijn ${stats.overdueCount} verlopen taken. Een kleine tijdsinvestering nu voorkomt mogelijk stress later.`;
+    } else if (stats.completedCount > 0) {
+      return "Je hebt al vooruitgang geboekt vandaag. Elke afgeronde taak draagt bij aan je doelen.";
+    } else if (stats.urgentCount > 0) {
+      return "Urgente zaken vragen focus en aandacht. Neem de tijd die je nodig hebt.";
+    } else if (stats.dueThisWeek > 0) {
+      return `${stats.dueThisWeek} taken zijn deze week af te ronden. Een goede planning helpt bij het behalen van deadlines.`;
     } else {
-      return "Je werkdag verloopt evenwichtig. Blijf de balans bewaken tussen nieuwe taken en lopende projecten.";
+      // Return a random supportive message for quiet days
+      return messages[Math.floor(Math.random() * messages.length)];
     }
   };
 
@@ -88,12 +94,22 @@ export default function ProductivityHealthCard({
         
         <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200/30 dark:border-gray-700/30">
           <span>{stats.completedCount} voltooid</span>
-          <span>•</span>
-          <span>{stats.activeContacts} contacten</span>
           {stats.urgentCount > 0 && (
             <>
               <span>•</span>
               <span className="text-orange-600 dark:text-orange-400">{stats.urgentCount} urgent</span>
+            </>
+          )}
+          {stats.overdueCount > 0 && (
+            <>
+              <span>•</span>
+              <span className="text-red-600 dark:text-red-400">{stats.overdueCount} verlopen</span>
+            </>
+          )}
+          {stats.dueThisWeek > 0 && (
+            <>
+              <span>•</span>
+              <span className="text-blue-600 dark:text-blue-400">{stats.dueThisWeek} deze week</span>
             </>
           )}
         </div>

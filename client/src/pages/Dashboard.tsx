@@ -341,81 +341,83 @@ export default function Dashboard() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="p-3 sm:p-4">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
-          <Card className="micro-card micro-fadeIn">
-            <CardContent className="p-2 sm:p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="text-white" size={10} />
-                  </div>
-                </div>
-                <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.urgentTasks")}</p>
-                  <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="micro-card micro-fadeIn" style={{ animationDelay: '0.1s' }}>
-            <CardContent className="p-2 sm:p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-orange-500 rounded-lg flex items-center justify-center micro-scaleIn">
-                    <Clock className="text-white" size={10} />
-                  </div>
-                </div>
-                <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.dueThisWeek")}</p>
-                  <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="micro-card micro-fadeIn" style={{ animationDelay: '0.2s' }}>
-            <CardContent className="p-2 sm:p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-green-500 rounded-lg flex items-center justify-center micro-scaleIn">
-                    <CheckCircle className="text-white" size={10} />
-                  </div>
-                </div>
-                <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.completedTasks")}</p>
-                  <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="micro-card micro-fadeIn micro-button-press cursor-pointer"
-            style={{ animationDelay: '0.3s' }}
-            onClick={() => window.location.href = "/contacts"}
-          >
-            <CardContent className="p-2 sm:p-4 lg:p-6">
-              <div className="flex items-center justify-between">
+        {/* Stats Cards - Hidden when productivity reflection is active */}
+        {(userPreferences?.productivityHealthEnabled === false || healthCardDismissed) && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+            <Card className="micro-card micro-fadeIn">
+              <CardContent className="p-2 sm:p-4 lg:p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-ms-blue rounded-lg flex items-center justify-center">
-                      <Users className="text-white" size={10} />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                      <AlertTriangle className="text-white" size={10} />
                     </div>
                   </div>
                   <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.activeContacts")}</p>
-                    <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.urgentTasks")}</p>
+                    <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.urgentCount || 0}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark micro-button-press micro-hover-lift">
-                  Manage →
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+
+            <Card className="micro-card micro-fadeIn" style={{ animationDelay: '0.1s' }}>
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-orange-500 rounded-lg flex items-center justify-center micro-scaleIn">
+                      <Clock className="text-white" size={10} />
+                    </div>
+                  </div>
+                  <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.dueThisWeek")}</p>
+                    <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.dueThisWeek || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="micro-card micro-fadeIn" style={{ animationDelay: '0.2s' }}>
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-green-500 rounded-lg flex items-center justify-center micro-scaleIn">
+                      <CheckCircle className="text-white" size={10} />
+                    </div>
+                  </div>
+                  <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.completedTasks")}</p>
+                    <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="micro-card micro-fadeIn micro-button-press cursor-pointer"
+              style={{ animationDelay: '0.3s' }}
+              onClick={() => window.location.href = "/contacts"}
+            >
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-ms-blue rounded-lg flex items-center justify-center">
+                        <Users className="text-white" size={10} />
+                      </div>
+                    </div>
+                    <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.activeContacts")}</p>
+                      <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark micro-button-press micro-hover-lift">
+                    Manage →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Productivity Health Card */}
         {userPreferences?.productivityHealthEnabled !== false && !healthCardDismissed && stats && (
