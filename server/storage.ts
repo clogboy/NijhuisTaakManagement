@@ -163,6 +163,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByReplitId(replitId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.replitId, replitId));
+    return user || undefined;
+  }
+
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(users.createdAt);
   }
@@ -181,19 +186,43 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.email,
-        set: {
+    // First try to find existing user by replit ID or email
+    let existingUser;
+    if (userData.replitId) {
+      existingUser = await this.getUserByReplitId(userData.replitId);
+    }
+    if (!existingUser && userData.email) {
+      existingUser = await this.getUserByEmail(userData.email);
+    }
+
+    if (existingUser) {
+      // Update existing user
+      const [user] = await db
+        .update(users)
+        .set({
           name: userData.name,
+          email: userData.email,
+          role: userData.role || existingUser.role,
+          replitId: userData.replitId || existingUser.replitId,
+          microsoftId: userData.microsoftId || existingUser.microsoftId,
+        })
+        .where(eq(users.id, existingUser.id))
+        .returning();
+      return user;
+    } else {
+      // Create new user
+      const [user] = await db
+        .insert(users)
+        .values({
+          email: userData.email,
+          name: userData.name,
+          role: userData.role || "user",
+          replitId: userData.replitId,
           microsoftId: userData.microsoftId,
-          role: userData.role,
-        },
-      })
-      .returning();
-    return user;
+        })
+        .returning();
+      return user;
+    }
   }
 
   async getContacts(createdBy: number): Promise<Contact[]> {

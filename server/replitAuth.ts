@@ -59,13 +59,12 @@ async function upsertUser(
 ) {
   // Map Replit user claims to our user schema
   const userData = {
-    id: claims["sub"], // Use Replit's stable user ID
     email: claims["email"],
     name: claims["first_name"] && claims["last_name"] 
       ? `${claims["first_name"]} ${claims["last_name"]}`.trim()
       : claims["email"]?.split('@')[0] || "Unknown User",
     role: claims["email"] === "b.weinreder@nijhuis.nl" ? "admin" : "user",
-    microsoftId: null, // Keep for future Microsoft migration
+    replitId: claims["sub"], // Use Replit's stable user ID
   };
 
   await storage.upsertUser(userData);

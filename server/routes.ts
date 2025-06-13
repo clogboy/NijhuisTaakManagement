@@ -15,6 +15,7 @@ import { digiOfficeService } from "./digioffice-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import "./types";
 
 const loginUserSchema = z.object({
