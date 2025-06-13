@@ -1916,6 +1916,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OAuth callback handler for Microsoft calendar
+  app.post("/api/calendar/oauth/callback", requireAuth, async (req: any, res) => {
+    try {
+      const { code, redirectUri } = req.body;
+
+      if (!code) {
+        return res.status(400).json({ error: "Authorization code is required" });
+      }
+
+      const clientId = process.env.MICROSOFT_CLIENT_ID;
+      const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+
+      if (!clientId || !clientSecret) {
+        return res.status(500).json({ error: "Microsoft OAuth not configured" });
+      }
+
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+          scope: 'https://graph.microsoft.com/Calendars.ReadWrite offline_access',
+        }),
+      });
+
+      const tokenData = await tokenResponse.json();
+
+      if (!tokenResponse.ok) {
+        console.error('Token exchange failed:', tokenData);
+        return res.status(400).json({ error: "Failed to exchange authorization code" });
+      }
+
+      // Get user's calendar information
+      const profileResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+        },
+      });
+
+      const profileData = await profileResponse.json();
+
+      if (!profileResponse.ok) {
+        console.error('Profile fetch failed:', profileData);
+        return res.status(400).json({ error: "Failed to fetch user profile" });
+      }
+
+      // Store the calendar integration
+      const integration = await storage.createCalendarIntegration({
+        userId: req.user.id,
+        provider: 'outlook',
+        accountEmail: profileData.mail || profileData.userPrincipalName,
+        accountId: profileData.id,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        tokenExpiry: new Date(Date.now() + tokenData.expires_in * 1000),
+        isActive: true,
+        syncEnabled: true,
+      });
+
+      res.json({
+        success: true,
+        integration: {
+          id: integration.id,
+          provider: integration.provider,
+          accountEmail: integration.accountEmail,
+          isActive: integration.isActive,
+          syncEnabled: integration.syncEnabled,
+        }
+      });
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.status(500).json({ error: "Failed to process OAuth callback" });
+    }
+  });
+
   app.put("/api/calendar/integrations/:id", requireAuth, async (req: any, res) => {
     try {
       const { id } = req.params;
