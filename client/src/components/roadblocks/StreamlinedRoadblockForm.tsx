@@ -13,7 +13,6 @@ import { Calendar, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 const rescueFormSchema = z.object({
   oorzaakCategory: z.string().min(1, "Selecteer een oorzaak categorie"),
-  oorzaakFactor: z.string().optional(),
   resolution: z.string().min(10, "Oplossing moet minimaal 10 karakters bevatten"),
   newDeadline: z.string().min(1, "Nieuwe deadline is verplicht"),
 });
@@ -67,7 +66,6 @@ export default function StreamlinedRoadblockForm({
     resolver: zodResolver(rescueFormSchema),
     defaultValues: {
       oorzaakCategory: "",
-      oorzaakFactor: "",
       resolution: "",
       newDeadline: "",
     },
@@ -77,7 +75,6 @@ export default function StreamlinedRoadblockForm({
     setSelectedCategory(category);
     setShowResolutionFields(true);
     form.setValue("oorzaakCategory", category);
-    form.setValue("oorzaakFactor", ""); // Reset factor when category changes
   };
 
   const handleSubmit = (data: z.infer<typeof rescueFormSchema>) => {
@@ -89,7 +86,6 @@ export default function StreamlinedRoadblockForm({
       
       // New roadblock-specific data
       oorzaakCategory: data.oorzaakCategory,
-      oorzaakFactor: data.oorzaakFactor,
       resolution: data.resolution,
       newDeadline: data.newDeadline,
       
@@ -192,33 +188,7 @@ export default function StreamlinedRoadblockForm({
                 )}
               />
 
-              {/* Factor Selection (appears after category) */}
-              {selectedCategory && (
-                <FormField
-                  control={form.control}
-                  name="oorzaakFactor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Specifieke Factor (optioneel)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Kies een specifieke factor..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {oorzaakFactors[selectedCategory]?.map((factor) => (
-                            <SelectItem key={factor} value={factor}>
-                              {factor.replace('_', ' ')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+
 
               {/* Resolution Fields (appear after category selection) */}
               {showResolutionFields && (
