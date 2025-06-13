@@ -32,7 +32,16 @@ export class DatabasePool {
   }
 
   private initializeSupabase(url: string, serviceKey: string) {
-    this.supabaseClient = createClient(url, serviceKey);
+    this.supabaseClient = createClient(url, serviceKey, {
+      global: {
+        headers: {
+          'Cache-Control': 'max-age=300', // 5 minutes cache
+        },
+      },
+      auth: {
+        persistSession: false, // Server-side doesn't need session persistence
+      },
+    });
     
     // Use the direct database URL for postgres.js if available
     const dbUrl = process.env.DATABASE_URL || this.constructSupabaseUrl(url);
@@ -41,6 +50,11 @@ export class DatabasePool {
       max: this.maxConnections,
       idle_timeout: this.idleTimeout / 1000,
       connect_timeout: 10,
+      // Enable connection pooling optimizations
+      prepare: false,
+      types: {
+        bigint: postgres.BigInt,
+      },
     });
     
     this.db = drizzle(this.client, { schema });
