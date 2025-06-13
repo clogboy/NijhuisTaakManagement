@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertRoadblockSchema, OORZAAK_CATEGORIES, OORZAAK_FACTORS, Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -75,6 +75,15 @@ export default function RoadblockForm({ activities, linkedTaskId, isRescueMode =
 
   const selectedCategory = form.watch("oorzaakCategory");
   const availableFactors = selectedCategory ? OORZAAK_FACTORS[selectedCategory as keyof typeof OORZAAK_FACTORS] || [] : [];
+
+  // Watch for oorzaak category changes to auto-show resolution fields
+  useEffect(() => {
+    if (selectedCategory && selectedCategory !== OORZAAK_CATEGORIES.UNCLEAR) {
+      setShowResolutionFields(true);
+    } else {
+      setShowResolutionFields(false);
+    }
+  }, [selectedCategory]);
 
   const departmentOptions = [
     "Engineering", "Design", "Product", "Operations", "Sales", "Marketing", 
@@ -301,12 +310,73 @@ export default function RoadblockForm({ activities, linkedTaskId, isRescueMode =
               )}
             </div>
 
+            {/* Resolution Fields - Auto-show when oorzaak is selected */}
+            {showResolutionFields && (
+              <div className="border-t pt-6 space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <h3 className="font-semibold text-lg text-green-800 dark:text-green-200">
+                    Oplossing (Solution)
+                  </h3>
+                </div>
+                <p className="text-sm text-neutral-medium mb-4">
+                  {isRescueMode 
+                    ? "Provide a solution to rescue this overdue task and set a new deadline. This will create a high-priority subtask."
+                    : "Describe how this roadblock will be resolved."
+                  }
+                </p>
+
+                <FormField
+                  control={form.control}
+                  name="resolution"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Resolution Plan</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe the specific steps to resolve this issue..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {isRescueMode && (
+                  <FormField
+                    control={form.control}
+                    name="newDeadline"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Deadline</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="datetime-local"
+                            {...field}
+                            value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : '')}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            )}
+
             <Button 
               type="submit" 
               disabled={createRoadblockMutation.isPending}
               className="w-full md:w-auto"
             >
-              {createRoadblockMutation.isPending ? "Creating..." : "Create Roadblock"}
+              {createRoadblockMutation.isPending 
+                ? "Processing..." 
+                : isRescueMode && showResolutionFields 
+                  ? "Rescue Task & Create Solution" 
+                  : "Create Roadblock"
+              }
             </Button>
           </form>
         </Form>

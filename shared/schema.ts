@@ -209,6 +209,7 @@ export const roadblocks = pgTable("roadblocks", {
   reportedDate: timestamp("reported_date").notNull(),
   resolvedDate: timestamp("resolved_date"),
   resolution: text("resolution"),
+  newDeadline: timestamp("new_deadline"), // For rescue mode: new deadline when converting to subtask
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
