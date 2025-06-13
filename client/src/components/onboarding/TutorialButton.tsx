@@ -119,7 +119,7 @@ export default function TutorialButton() {
             >
               <HelpCircle 
                 className="text-white" 
-                style={{ width: '48px', height: '48px' }}
+                style={{ width: '32px', height: '32px' }}
               />
             </motion.div>
             
