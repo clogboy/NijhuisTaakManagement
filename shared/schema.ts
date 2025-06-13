@@ -3,6 +3,75 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { culturalDateSchema } from "./validation/date-utils";
 
+// Blame categorization for roadblock analysis
+export const BLAME_CATEGORIES = {
+  PROCESS: "process", // Workflow, procedure, or policy issues
+  RESOURCES: "resources", // Lack of tools, budget, personnel
+  COMMUNICATION: "communication", // Unclear requirements, poor coordination
+  EXTERNAL: "external", // Third-party dependencies, client delays
+  TECHNICAL: "technical", // System limitations, technical debt
+  PLANNING: "planning", // Unrealistic timelines, scope creep
+  SKILLS: "skills", // Training needs, knowledge gaps
+  UNCLEAR: "unclear" // Root cause not yet identified
+} as const;
+
+export const BLAME_FACTORS = {
+  PROCESS: [
+    "outdated_procedures",
+    "missing_approval_process", 
+    "unclear_workflow",
+    "conflicting_policies",
+    "bottleneck_in_chain"
+  ],
+  RESOURCES: [
+    "insufficient_budget",
+    "understaffed_team",
+    "missing_tools",
+    "hardware_limitations",
+    "software_licensing"
+  ],
+  COMMUNICATION: [
+    "unclear_requirements",
+    "missing_stakeholder_input",
+    "poor_documentation",
+    "language_barriers",
+    "timezone_coordination"
+  ],
+  EXTERNAL: [
+    "vendor_delays",
+    "client_feedback_delay",
+    "regulatory_approval",
+    "third_party_integration",
+    "market_conditions"
+  ],
+  TECHNICAL: [
+    "legacy_system_limitations",
+    "integration_complexity",
+    "performance_bottlenecks",
+    "security_constraints",
+    "technical_debt"
+  ],
+  PLANNING: [
+    "unrealistic_timeline",
+    "scope_creep",
+    "missing_dependencies",
+    "resource_allocation",
+    "priority_conflicts"
+  ],
+  SKILLS: [
+    "training_needed",
+    "knowledge_transfer",
+    "expertise_gap",
+    "learning_curve",
+    "certification_required"
+  ],
+  UNCLEAR: [
+    "investigation_needed",
+    "multiple_factors",
+    "root_cause_unknown"
+  ]
+} as const;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -133,6 +202,9 @@ export const roadblocks = pgTable("roadblocks", {
   severity: text("severity").notNull().default("medium"), // 'low', 'medium', 'high', 'critical'
   status: text("status").notNull().default("open"), // 'open', 'in_progress', 'resolved'
   assignedTo: text("assigned_to"),
+  blameCategory: text("blame_category").notNull().default("unclear"), // Root cause categorization for management analysis
+  blameFactor: text("blame_factor"), // Specific factor within the category
+  departmentImpact: text("department_impact").array().default([]), // Which departments are affected
   linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   reportedDate: timestamp("reported_date").notNull(),
   resolvedDate: timestamp("resolved_date"),
@@ -202,6 +274,17 @@ export const insertRoadblockSchema = createInsertSchema(roadblocks).omit({
   createdBy: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  blameCategory: z.enum([
+    BLAME_CATEGORIES.PROCESS,
+    BLAME_CATEGORIES.RESOURCES,
+    BLAME_CATEGORIES.COMMUNICATION,
+    BLAME_CATEGORIES.EXTERNAL,
+    BLAME_CATEGORIES.TECHNICAL,
+    BLAME_CATEGORIES.PLANNING,
+    BLAME_CATEGORIES.SKILLS,
+    BLAME_CATEGORIES.UNCLEAR
+  ]).default(BLAME_CATEGORIES.UNCLEAR),
 });
 
 export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
