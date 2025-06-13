@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { insertRoadblockSchema, BLAME_CATEGORIES, BLAME_FACTORS, Activity } from "@shared/schema";
+import { insertRoadblockSchema, OORZAAK_CATEGORIES, OORZAAK_FACTORS, Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
 interface RoadblockFormProps {
@@ -31,8 +31,8 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
       description: "",
       severity: "medium",
       assignedTo: "",
-      blameCategory: BLAME_CATEGORIES.UNCLEAR,
-      blameFactor: "",
+      oorzaakCategory: OORZAAK_CATEGORIES.UNCLEAR,
+      oorzaakFactor: "",
       departmentImpact: [],
       linkedActivityId: undefined,
       reportedDate: new Date().toISOString(),
@@ -68,8 +68,8 @@ export default function RoadblockForm({ activities, onSuccess }: RoadblockFormPr
     },
   });
 
-  const selectedCategory = form.watch("blameCategory");
-  const availableFactors = selectedCategory ? BLAME_FACTORS[selectedCategory as keyof typeof BLAME_FACTORS] || [] : [];
+  const selectedCategory = form.watch("oorzaakCategory");
+  const availableFactors = selectedCategory ? OORZAAK_FACTORS[selectedCategory as keyof typeof OORZAAK_FACTORS] || [] : [];
 
   const departmentOptions = [
     "Engineering", "Design", "Product", "Operations", "Sales", "Marketing", 

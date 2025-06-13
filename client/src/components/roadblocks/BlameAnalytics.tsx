@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, AlertTriangle, Users } from "lucide-react";
-import { BLAME_CATEGORIES, BLAME_FACTORS, Roadblock } from "@shared/schema";
+import { OORZAAK_CATEGORIES, OORZAAK_FACTORS, Roadblock } from "@shared/schema";
 
 interface BlameAnalyticsProps {
   roadblocks: Roadblock[];
@@ -9,9 +9,9 @@ interface BlameAnalyticsProps {
 }
 
 export default function BlameAnalytics({ roadblocks, className }: BlameAnalyticsProps) {
-  // Analyze blame patterns
-  const blameAnalysis = roadblocks.reduce((acc, roadblock) => {
-    const category = roadblock.blameCategory || 'unclear';
+  // Analyze oorzaak patterns
+  const oorzaakAnalysis = roadblocks.reduce((acc, roadblock) => {
+    const category = roadblock.oorzaakCategory || 'unclear';
     if (!acc[category]) {
       acc[category] = {
         count: 0,
@@ -23,9 +23,9 @@ export default function BlameAnalytics({ roadblocks, className }: BlameAnalytics
     
     acc[category].count++;
     
-    // Track blame factors
-    if (roadblock.blameFactor) {
-      acc[category].factors[roadblock.blameFactor] = (acc[category].factors[roadblock.blameFactor] || 0) + 1;
+    // Track oorzaak factors
+    if (roadblock.oorzaakFactor) {
+      acc[category].factors[roadblock.oorzaakFactor] = (acc[category].factors[roadblock.oorzaakFactor] || 0) + 1;
     }
     
     // Track department impact
@@ -68,8 +68,8 @@ export default function BlameAnalytics({ roadblocks, className }: BlameAnalytics
   };
 
   const totalRoadblocks = roadblocks.length;
-  const topCategories = Object.entries(blameAnalysis)
-    .sort(([,a], [,b]) => b.count - a.count)
+  const topCategories = Object.entries(oorzaakAnalysis)
+    .sort(([,a], [,b]) => (b as any).count - (a as any).count)
     .slice(0, 3);
 
   if (totalRoadblocks === 0) {
@@ -148,8 +148,8 @@ export default function BlameAnalytics({ roadblocks, className }: BlameAnalytics
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Object.entries(blameAnalysis)
-              .sort(([,a], [,b]) => b.count - a.count)
+            {Object.entries(oorzaakAnalysis)
+              .sort(([,a], [,b]) => (b as any).count - (a as any).count)
               .map(([category, data]) => (
                 <div key={category} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
