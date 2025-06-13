@@ -117,7 +117,10 @@ export default function TutorialButton() {
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.2 }}
             >
-              <HelpCircle className="h-10 w-10 text-white" />
+              <HelpCircle 
+                className="text-white" 
+                style={{ width: '48px', height: '48px' }}
+              />
             </motion.div>
             
             {!onboardingState.hasCompletedTutorial && (
