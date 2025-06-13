@@ -49,10 +49,13 @@ export const useRescueWorkflow = () => {
       queryKeys.forEach(key => {
         queryClient.invalidateQueries({ queryKey: key });
       });
+      
+      // Force immediate refetch of stats to update dashboard metrics
+      queryClient.refetchQueries({ queryKey: ["/api/stats"] });
 
       toast({
-        title: "Task Successfully Rescued",
-        description: `High-priority subtask created with new deadline. Original task marked as resolved.`,
+        title: "Rescue Succesvol",
+        description: "Wegversperring aangemaakt en nieuwe taak ingepland",
       });
 
       // Reset state

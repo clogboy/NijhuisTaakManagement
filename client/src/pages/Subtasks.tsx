@@ -225,6 +225,7 @@ export default function Subtasks() {
       apiRequest(`/api/subtasks/${data.id}`, "PUT", data.updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
         title: "Succes",
         description: "Subtaak succesvol bijgewerkt",
