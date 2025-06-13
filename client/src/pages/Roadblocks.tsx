@@ -22,6 +22,15 @@ export default function Roadblocks() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSubtask, setEditingSubtask] = useState<any>(null);
+  const [celebration, setCelebration] = useState<{
+    isVisible: boolean;
+    taskType: 'activity' | 'quickwin' | 'roadblock';
+    taskTitle: string;
+  }>({
+    isVisible: false,
+    taskType: 'roadblock',
+    taskTitle: ''
+  });
 
   const { data: roadblocks, isLoading: roadblocksLoading } = useQuery<Roadblock[]>({
     queryKey: ["/api/roadblocks"],
@@ -58,6 +67,52 @@ export default function Roadblocks() {
       toast({
         title: t('common.error'),
         description: t('subtasks.deleteFailed'),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateSubtaskStatusMutation = useMutation({
+    mutationFn: async ({ subtaskId, status }: { subtaskId: number; status: string }) => {
+      const response = await fetch(`/api/subtasks/${subtaskId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update subtask status");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (_, { subtaskId, status }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      
+      // Show celebration for resolved roadblocks
+      if (status === 'resolved' || status === 'completed') {
+        const subtask = subtasks.find(s => s.id === subtaskId);
+        if (subtask) {
+          setCelebration({
+            isVisible: true,
+            taskType: 'roadblock',
+            taskTitle: subtask.title
+          });
+        }
+      }
+      
+      toast({
+        title: t('common.success'),
+        description: "Roadblock status updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t('common.error'),
+        description: "Failed to update roadblock status",
         variant: "destructive",
       });
     },
@@ -453,33 +508,50 @@ export default function Roadblocks() {
                             )}
                           </div>
                           
-                          {/* Edit and Delete Actions */}
-                          <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingSubtask(subtask);
-                                setIsEditModalOpen(true);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Edit className="h-4 w-4" />
-                              {t('common.edit')}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                if (confirm(t('subtasks.deleteConfirm'))) {
-                                  deleteSubtaskMutation.mutate(subtask.id);
-                                }
-                              }}
-                              className="flex items-center gap-2 text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              {t('common.delete')}
-                            </Button>
+                          {/* Status and Actions */}
+                          <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            {subtask.status !== 'resolved' && subtask.status !== 'completed' && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  updateSubtaskStatusMutation.mutate({
+                                    subtaskId: subtask.id,
+                                    status: 'resolved'
+                                  });
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                Mark Resolved
+                              </Button>
+                            )}
+                            
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingSubtask(subtask);
+                                  setIsEditModalOpen(true);
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Edit className="h-4 w-4" />
+                                {t('common.edit')}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(t('subtasks.deleteConfirm'))) {
+                                    deleteSubtaskMutation.mutate(subtask.id);
+                                  }
+                                }}
+                                className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                {t('common.delete')}
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -497,6 +569,13 @@ export default function Roadblocks() {
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         subtask={editingSubtask}
+      />
+
+      <TaskCelebration
+        isVisible={celebration.isVisible}
+        taskType={celebration.taskType}
+        taskTitle={celebration.taskTitle}
+        onComplete={() => setCelebration({ ...celebration, isVisible: false })}
       />
     </AppLayout>
   );
