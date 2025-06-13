@@ -400,7 +400,7 @@ export class DatabaseStorage implements IStorage {
       .limit(10);
 
     // Convert to QuickWin format for compatibility
-    return recentSubtasks.map(subtask => ({
+    return recentSubtasks.map((subtask: any) => ({
       id: subtask.id,
       title: subtask.title,
       description: subtask.description || '',

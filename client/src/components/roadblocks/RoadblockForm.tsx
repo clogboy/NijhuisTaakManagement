@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -50,18 +50,26 @@ export default function RoadblockForm({ activities, linkedTaskId, isRescueMode =
         ...data,
         departmentImpact: selectedDepartments,
         linkedActivityId: parseInt(data.linkedActivityId),
+        isRescueMode,
+        linkedTaskId,
       });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      
       toast({
         title: "Success",
-        description: "Roadblock created successfully",
+        description: isRescueMode && showResolutionFields 
+          ? "Task rescued! High-priority subtask created with new deadline."
+          : "Roadblock created successfully",
       });
+      
       form.reset();
       setSelectedDepartments([]);
+      setShowResolutionFields(false);
       onSuccess?.();
     },
     onError: (error) => {

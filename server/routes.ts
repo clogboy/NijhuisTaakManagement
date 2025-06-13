@@ -562,11 +562,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/roadblocks", requireAuth, async (req: any, res) => {
     try {
-      const roadblockData = insertRoadblockSchema.parse(req.body);
+      const { isRescueMode, linkedTaskId, ...roadblockData } = req.body;
+      
       const roadblock = await storage.createRoadblock({
         ...roadblockData,
         createdBy: req.user.id,
       });
+
+      // If this is rescue mode with resolution, create high-priority subtask
+      if (isRescueMode && roadblockData.resolution && roadblockData.newDeadline && linkedTaskId) {
+        const rescueSubtask = await storage.createSubtask({
+          title: `[RESCUED] ${roadblockData.title}`,
+          description: `Rescued task with solution: ${roadblockData.resolution}`,
+          type: "task",
+          status: "pending",
+          priority: "high",
+          dueDate: new Date(roadblockData.newDeadline),
+          participants: [req.user.email],
+          participantTypes: { [req.user.email]: "task" },
+          linkedActivityId: roadblockData.linkedActivityId,
+          createdBy: req.user.id,
+        });
+
+        // Mark original subtask as resolved via roadblock rescue
+        if (linkedTaskId) {
+          await storage.updateSubtask(linkedTaskId, {
+            status: "resolved",
+            completedDate: new Date(),
+          });
+        }
+
+        return res.json({ roadblock, rescueSubtask });
+      }
+
       res.json(roadblock);
     } catch (error) {
       console.error("Create roadblock error:", error);
