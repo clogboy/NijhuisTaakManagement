@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Construction, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, CheckCircle, Clock, AlertTriangle, Users, Calendar, Target, Zap, Construction, Edit, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Subtask, Activity, Contact } from "@shared/schema";
 import { format } from "date-fns";
@@ -22,6 +22,7 @@ export default function Subtasks() {
   const [selectedType, setSelectedType] = useState<"all" | "quick_win" | "roadblock">("all");
   const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(true);
 
   const { data: subtasks = [], isLoading: subtasksLoading, error: subtasksError } = useQuery<Subtask[]>({
     queryKey: ["/api/subtasks"],
@@ -549,13 +550,23 @@ export default function Subtasks() {
             {/* Completed/Resolved */}
             {(subtasksByStatus.completed.length > 0 || subtasksByStatus.resolved.length > 0) && (
               <div>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <button
+                  onClick={() => setShowCompleted(!showCompleted)}
+                  className="w-full text-left mb-3 flex items-center gap-2 text-lg font-semibold hover:text-green-600 transition-colors"
+                >
+                  {showCompleted ? (
+                    <ChevronDown className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-green-500" />
+                  )}
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   Voltooid ({subtasksByStatus.completed.length + subtasksByStatus.resolved.length})
-                </h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {[...subtasksByStatus.completed, ...subtasksByStatus.resolved].map(renderSubtaskCard)}
-                </div>
+                </button>
+                {showCompleted && (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {[...subtasksByStatus.completed, ...subtasksByStatus.resolved].map(renderSubtaskCard)}
+                  </div>
+                )}
               </div>
             )}
           </div>
