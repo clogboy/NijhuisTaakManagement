@@ -178,9 +178,9 @@ export default function EditSubtaskModal({ open, onOpenChange, subtask }: EditSu
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">{t('common.priorityLow')}</SelectItem>
-                        <SelectItem value="normal">{t('common.priorityNormal')}</SelectItem>
-                        <SelectItem value="urgent">{t('common.priorityUrgent')}</SelectItem>
+                        <SelectItem value="low">Laag</SelectItem>
+                        <SelectItem value="normal">Normaal</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -201,9 +201,9 @@ export default function EditSubtaskModal({ open, onOpenChange, subtask }: EditSu
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="pending">{t('common.statusPending')}</SelectItem>
-                        <SelectItem value="in_progress">{t('common.statusInProgress')}</SelectItem>
-                        <SelectItem value="completed">{t('common.statusCompleted')}</SelectItem>
+                        <SelectItem value="pending">In wachtrij</SelectItem>
+                        <SelectItem value="in_progress">In uitvoering</SelectItem>
+                        <SelectItem value="completed">Voltooid</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -226,9 +226,9 @@ export default function EditSubtaskModal({ open, onOpenChange, subtask }: EditSu
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="task">{t('subtasks.typeTask')}</SelectItem>
-                        <SelectItem value="quick_win">{t('subtasks.typeQuickWin')}</SelectItem>
-                        <SelectItem value="roadblock">{t('subtasks.typeRoadblock')}</SelectItem>
+                        <SelectItem value="task">Taak</SelectItem>
+                        <SelectItem value="quick_win">Quick Win</SelectItem>
+                        <SelectItem value="roadblock">Wegversperring</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

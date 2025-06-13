@@ -796,8 +796,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSubtask(id: number, subtaskUpdate: Partial<InsertSubtask>): Promise<Subtask> {
+    // Convert date strings to Date objects if needed
+    const processedUpdate = { ...subtaskUpdate };
+    if (processedUpdate.dueDate && typeof processedUpdate.dueDate === 'string') {
+      processedUpdate.dueDate = new Date(processedUpdate.dueDate);
+    }
+    
     const [updatedSubtask] = await db.update(subtasks)
-      .set({ ...subtaskUpdate, updatedAt: new Date() })
+      .set({ ...processedUpdate, updatedAt: new Date() })
       .where(eq(subtasks.id, id))
       .returning();
     return updatedSubtask;
