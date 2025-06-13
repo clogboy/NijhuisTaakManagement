@@ -182,11 +182,11 @@ export default function TodaysTasks() {
 
   // Filter overdue subtasks that will be converted to roadblocks
   const overdueSubtasks = subtasks.filter(subtask => {
-    if (!subtask.dueDate || subtask.completedDate) return false;
+    if (!subtask.dueDate || subtask.completedDate || subtask.status === 'completed') return false;
     const dueDate = new Date(subtask.dueDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    dueDate.setHours(23, 59, 59, 999);
+    dueDate.setHours(0, 0, 0, 0);
     return dueDate < today;
   });
 
@@ -303,7 +303,7 @@ export default function TodaysTasks() {
             <span>Mijn acties</span>
             {hasOverdueWarning && (
               <Badge variant="destructive" className="text-xs">
-                {overdueSubtasks.length} overdue
+                {overdueSubtasks.length} verlopen
               </Badge>
             )}
           </div>
@@ -316,14 +316,14 @@ export default function TodaysTasks() {
             >
               <ArrowUpDown className="h-3 w-3" />
               <span className="hidden sm:inline">
-                {sortOrder === "desc" ? "High → Low" : "Low → High"}
+                {sortOrder === "desc" ? "Hoog → Laag" : "Laag → Hoog"}
               </span>
               <span className="sm:hidden">
                 {sortOrder === "desc" ? "H→L" : "L→H"}
               </span>
             </Button>
             <Badge variant="secondary" className="text-xs">
-              {allTodaysTasks.length} tasks
+              {allTodaysTasks.length} taken
             </Badge>
           </div>
         </CardTitle>
@@ -336,10 +336,10 @@ export default function TodaysTasks() {
               <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
-                  {overdueSubtasks.length} Overdue Subtask{overdueSubtasks.length > 1 ? 's' : ''}
+                  {overdueSubtasks.length} Verlopen taak{overdueSubtasks.length > 1 ? 'en' : ''}
                 </h4>
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1 leading-relaxed">
-                  These will automatically convert to roadblocks at midnight if not completed.
+                  Deze worden automatisch omgezet naar knelpunten om middernacht als ze niet voltooid zijn.
                 </p>
               </div>
             </div>
@@ -349,16 +349,22 @@ export default function TodaysTasks() {
         {allTodaysTasks.length === 0 ? (
           <div className="text-center py-8">
             <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-sm font-medium text-gray-900">No tasks for today</h3>
+            <h3 className="mt-4 text-sm font-medium text-gray-900">Geen taken voor vandaag</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Great! You're all caught up for today.
+              Prima! Je bent helemaal bij voor vandaag.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {allTodaysTasks.map((task: any) => {
               const isCompleted = completionMap[task.id] || false;
-              const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "completed";
+              const isOverdue = task.dueDate && !task.completedDate && task.status !== 'completed' && (() => {
+                const dueDate = new Date(task.dueDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                dueDate.setHours(0, 0, 0, 0);
+                return dueDate < today;
+              })();
               
               const getTypeColor = (type: string) => {
                 switch (type) {
