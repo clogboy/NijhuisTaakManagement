@@ -17,6 +17,7 @@ import Subtasks from "@/pages/Subtasks";
 import Agenda from "@/pages/Agenda";
 import TimeBlocking from "@/pages/TimeBlocking";
 import CalendarIntegration from "@/pages/CalendarIntegration";
+import CalendarCallback from "@/pages/CalendarCallback";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Integrations from "@/pages/Integrations";
@@ -102,6 +103,7 @@ function AuthenticatedApp() {
       <Route path="/calendar">
         <CalendarIntegration />
       </Route>
+      <Route path="/calendar/callback" component={CalendarCallback} />
       <Route path="/analytics">
         <AppLayout
           title="Analytics"

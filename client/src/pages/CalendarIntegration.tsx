@@ -128,19 +128,31 @@ export default function CalendarIntegrationPage() {
     },
   });
 
-  const handleCreateIntegration = () => {
-    if (!newIntegration.accountEmail) {
+  const handleOutlookAuth = () => {
+    // Redirect to Microsoft OAuth endpoint
+    const clientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
+    const redirectUri = encodeURIComponent(`${window.location.origin}/calendar/callback`);
+    const scope = encodeURIComponent("https://graph.microsoft.com/Calendars.ReadWrite offline_access");
+    
+    if (!clientId) {
       toast({
-        title: t('common.error'),
-        description: "Please enter an email address",
+        title: "Configuration Error",
+        description: "Microsoft integration is not configured. Please contact your administrator.",
         variant: "destructive",
       });
       return;
     }
     
-    createIntegrationMutation.mutate({
-      ...newIntegration,
-      accountId: newIntegration.accountEmail, // Using email as account ID for simplicity
+    const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&response_mode=query&scope=${scope}&state=calendar_integration`;
+    
+    window.location.href = authUrl;
+  };
+
+  const handleCreateIntegration = () => {
+    toast({
+      title: "Security Notice",
+      description: "Please use the secure OAuth authentication to connect your calendar",
+      variant: "destructive",
     });
   };
 
@@ -186,46 +198,51 @@ export default function CalendarIntegrationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Add Calendar Integration
+              Connect Your Calendar
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="provider">Calendar Provider</Label>
-                <Select value={newIntegration.provider} onValueChange={(value) => 
-                  setNewIntegration(prev => ({ ...prev, provider: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="google">Google Calendar</SelectItem>
-                    <SelectItem value="outlook">Microsoft Outlook</SelectItem>
-                    <SelectItem value="ical">iCal/CalDAV</SelectItem>
-                  </SelectContent>
-                </Select>
+          <CardContent>
+            <div className="text-center space-y-6 py-8">
+              <div className="mx-auto w-20 h-20 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                <Calendar className="h-10 w-10 text-blue-600" />
               </div>
               <div>
-                <Label htmlFor="email">Account Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newIntegration.accountEmail}
-                  onChange={(e) => setNewIntegration(prev => ({ ...prev, accountEmail: e.target.value }))}
-                  placeholder="your.email@example.com"
-                />
+                <h3 className="text-xl font-semibold mb-3">Microsoft Outlook Calendar</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                  Securely connect your Microsoft Outlook calendar to enable automatic deadline tracking, 
+                  schedule optimization, and seamless task management integration.
+                </p>
               </div>
-              <div className="flex items-end">
+              
+              <div className="space-y-4">
                 <Button 
-                  onClick={handleCreateIntegration}
+                  onClick={handleOutlookAuth}
                   disabled={createIntegrationMutation.isPending}
-                  className="w-full"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg micro-button-press micro-hover-lift"
+                  size="lg"
                 >
-                  {createIntegrationMutation.isPending && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                  Add Integration
+                  {createIntegrationMutation.isPending && <RefreshCw className="h-5 w-5 mr-3 animate-spin" />}
+                  <span className="mr-3">🔒</span>
+                  Connect Outlook Calendar
                 </Button>
+                
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 max-w-md mx-auto">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="font-medium">Secure Authentication</span>
+                  </div>
+                  <ul className="text-sm text-green-600 dark:text-green-400 space-y-1">
+                    <li>• OAuth 2.0 encryption</li>
+                    <li>• Read-only calendar access</li>
+                    <li>• No password storage</li>
+                    <li>• Revoke access anytime</li>
+                  </ul>
+                </div>
               </div>
+              
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Your calendar data remains private and is only used for deadline management within NijFlow
+              </p>
             </div>
           </CardContent>
         </Card>
