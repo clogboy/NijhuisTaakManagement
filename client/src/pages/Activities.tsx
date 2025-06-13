@@ -368,6 +368,17 @@ export default function Activities() {
           onClose={() => setIsTaskDetailModalOpen(false)}
         />
       )}
+
+      {activityToTransfer && (
+        <TransferOwnershipModal
+          isOpen={isTransferOwnershipModalOpen}
+          onClose={() => {
+            setIsTransferOwnershipModalOpen(false);
+            setActivityToTransfer(null);
+          }}
+          activity={activityToTransfer}
+        />
+      )}
     </div>
   );
 }

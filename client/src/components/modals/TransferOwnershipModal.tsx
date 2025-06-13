@@ -87,7 +87,7 @@ export function TransferOwnershipModal({ isOpen, onClose, activity }: TransferOw
                   Let op: Deze actie kan niet ongedaan worden gemaakt
                 </p>
                 <p className="text-amber-600 dark:text-amber-400 mt-1">
-                  Je verliest alle toegang tot dit dossier na overdracht.
+                  Je verliest alle toegang tot dit dossier na overdracht. Taak-toewijzingen aan projectleden blijven behouden.
                 </p>
               </div>
             </div>

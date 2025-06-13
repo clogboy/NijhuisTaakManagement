@@ -339,18 +339,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(activities.id, activityId))
       .returning();
 
-    // Transfer ownership of all related subtasks
+    // Only transfer ownership of subtasks created by the activity owner
+    // Leave subtasks assigned to other team members unchanged
     await db.update(subtasks)
       .set({ 
         createdBy: newOwnerId,
         updatedAt: new Date()
       })
-      .where(eq(subtasks.linkedActivityId, activityId));
+      .where(and(
+        eq(subtasks.linkedActivityId, activityId),
+        eq(subtasks.createdBy, currentUserId)
+      ));
 
     // Create activity log for the transfer
     await this.createActivityLog({
       activityId,
-      entry: `Activity ownership transferred from user ${currentUserId} to user ${newOwnerId}`,
+      entry: `Activity ownership transferred from user ${currentUserId} to user ${newOwnerId}. Task assignments to project members preserved.`,
       entryDate: new Date(),
       createdBy: currentUserId
     });
