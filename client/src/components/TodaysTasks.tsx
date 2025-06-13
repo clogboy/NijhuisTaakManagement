@@ -12,11 +12,21 @@ import { TaskProgress } from "@/components/TaskProgress";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import TaskCelebration from "@/components/celebrations/TaskCelebration";
 
 export default function TodaysTasks() {
   const [selectedTask, setSelectedTask] = useState<Activity | null>(null);
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [celebration, setCelebration] = useState<{
+    isVisible: boolean;
+    taskType: 'activity' | 'quickwin' | 'roadblock';
+    taskTitle: string;
+  }>({
+    isVisible: false,
+    taskType: 'activity',
+    taskTitle: ''
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const today = new Date();
@@ -46,10 +56,23 @@ export default function TodaysTasks() {
         completed,
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, { activityId, completed }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/daily-task-completions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      
+      // Show celebration for completed tasks
+      if (completed) {
+        const activity = activities.find(a => a.id === activityId);
+        if (activity) {
+          setCelebration({
+            isVisible: true,
+            taskType: 'activity',
+            taskTitle: activity.title
+          });
+        }
+      }
+      
       toast({
         title: "Task updated",
         description: "Task completion status updated successfully",
@@ -69,9 +92,22 @@ export default function TodaysTasks() {
       const endpoint = isSubtask ? `/api/subtasks/${taskId}/status` : `/api/activities/${taskId}/status`;
       return apiRequest(endpoint, "PATCH", { status });
     },
-    onSuccess: () => {
+    onSuccess: (_, { taskId, status, isSubtask }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      
+      // Show celebration for completed subtasks
+      if (status === 'completed' && isSubtask) {
+        const subtask = subtasks.find(s => s.id === taskId);
+        if (subtask) {
+          setCelebration({
+            isVisible: true,
+            taskType: 'activity',
+            taskTitle: subtask.title
+          });
+        }
+      }
+      
       toast({
         title: "Status updated",
         description: "Task status updated successfully",
