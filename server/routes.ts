@@ -15,8 +15,14 @@ import { digiOfficeService } from "./digioffice-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import session from "express-session";
+import MemoryStore from "memorystore";
+// import { setupAuth, isAuthenticated } from "./replitAuth"; // Ready for future migration
 import "./types";
+
+const MemStore = MemoryStore(session);
 
 const loginUserSchema = z.object({
   email: z.string().email(),
@@ -25,6 +31,21 @@ const loginUserSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Session setup for authentication
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+    store: new MemStore({
+      checkPeriod: 86400000
+    }),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+    }
+  }));
+
   // Add rate limiting middleware
   app.use("/api", apiLimiter.middleware());
 
