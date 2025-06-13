@@ -40,7 +40,14 @@ export const nlTranslations = {
     status: "Status",
     dueDate: "Vervaldatum",
     assignedTo: "Toegewezen aan",
-    participants: "Deelnemers"
+    participants: "Deelnemers",
+    recentQuickWins: "Recente Quick Wins",
+    sortByPriority: "Sorteer op prioriteit",
+    activity: "Activiteit",
+    actions: "Acties",
+    inProgress: "In uitvoering",
+    active: "Actief",
+    noParticipants: "Geen deelnemers"
   },
   activities: {
     title: "Activiteiten",
@@ -214,7 +221,9 @@ export const nlTranslations = {
     open: "Open",
     inProgress: "In behandeling",
     taskSpecific: "Wegversperringen zijn nu taakspecifiek",
-    taskSpecificDescription: "Wegversperringen worden nu beheerd binnen individuele taken. Dit dashboard toont alle wegversperringen van je taken. Om nieuwe wegversperringen te rapporteren, ga naar Activiteiten en open de detailweergave van een taak."
+    taskSpecificDescription: "Wegversperringen worden nu beheerd binnen individuele taken. Dit dashboard toont alle wegversperringen van je taken. Om nieuwe wegversperringen te rapporteren, ga naar Activiteiten en open de detailweergave van een taak.",
+    noRoadblocks: "Geen wegversperringen gemeld",
+    reportRoadblocks: "Rapporteer wegversperringen door een taak te openen in de Activiteiten sectie"
   },
   profile: {
     title: "Profiel",
@@ -298,6 +307,15 @@ export const nlTranslations = {
     aiSuggestions: "AI-suggesties",
     downloadTranslations: "Vertalingen downloaden",
     schedulerStatus: "Planner status",
+    profileInformation: "Profiel informatie",
+    fullName: "Volledige naam",
+    emailAddress: "E-mailadres",
+    department: "Afdeling",
+    location: "Locatie",
+    phoneNumber: "Telefoonnummer",
+    bio: "Bio",
+    workingHoursSchedule: "Werkuren & Planning",
+    tellUsAboutYourself: "Vertel ons over jezelf...",
     manualSync: "Handmatige synchronisatie",
     triggerSync: "Synchronisatie starten",
     stopScheduler: "Planner stoppen",

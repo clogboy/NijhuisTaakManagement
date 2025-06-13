@@ -394,14 +394,14 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <Card>
               <div className="px-4 md:px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-neutral-dark mb-3">Recent Activities</h3>
+                <h3 className="text-lg font-semibold text-neutral-dark mb-3">{t('dashboard.recentActivities')}</h3>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                   <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-full sm:w-40">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="priority">Sort by Priority</SelectItem>
+                      <SelectItem value="priority">{t('dashboard.sortByPriority')}</SelectItem>
                       <SelectItem value="dueDate">Sort by Due Date</SelectItem>
                     </SelectContent>
                   </Select>

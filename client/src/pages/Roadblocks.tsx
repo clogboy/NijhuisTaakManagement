@@ -222,11 +222,11 @@ export default function Roadblocks() {
           <div className="text-center py-12">
             <AlertTriangle className="h-12 w-12 text-neutral-light mx-auto mb-4" />
             <p className="text-neutral-medium text-lg mb-2">
-              {roadblocks?.length === 0 && roadblockSubtasks.length === 0 ? "No roadblocks reported" : "No roadblocks match your search"}
+              {roadblocks?.length === 0 && roadblockSubtasks.length === 0 ? t('roadblocks.noRoadblocks') : "No roadblocks match your search"}
             </p>
             <p className="text-neutral-medium">
               {roadblocks?.length === 0 && roadblockSubtasks.length === 0
-                ? "Report roadblocks by opening any task in the Activities section" 
+                ? t('roadblocks.reportRoadblocks') 
                 : "Try adjusting your search criteria"
               }
             </p>
