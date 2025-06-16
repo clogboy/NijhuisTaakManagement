@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -379,6 +381,128 @@ export default function Dashboard() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="p-3 sm:p-4">
+        {/* Header with Low Stimulus Mode Toggle */}
+        <div className="flex justify-between items-center mb-4">
+          <div></div>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="low-stimulus-mode" className="text-sm text-neutral-medium">
+              {lowStimulusMode ? "🟠 Focus modus" : "🟢 Alle functies"}
+            </Label>
+            <Switch 
+              id="low-stimulus-mode"
+              checked={lowStimulusMode}
+              onCheckedChange={setLowStimulusMode}
+            />
+          </div>
+        </div>
+        {/* Low Stimulus Mode - Simplified View */}
+        {lowStimulusMode ? (
+          <div className="space-y-6">
+            {/* Gentle intro message */}
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
+                  <p className="text-orange-800 text-sm">
+                    Focus modus actief. Alleen vandaag's taken, snelle wins en delegeerbare taken worden getoond.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Today's Tasks - Simplified */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center">
+                  <Clock className="mr-2" size={20} />
+                  Vandaag's Taken
+                </h2>
+                <TodaysTasks />
+              </CardContent>
+            </Card>
+
+            {/* Quick Wins */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center">
+                  <Trophy className="mr-2" size={20} />
+                  Snelle Wins
+                </h2>
+                <div className="space-y-3">
+                  {allQuickWins?.slice(0, 5).map((win) => (
+                    <div key={win.id} className="p-3 border border-gray-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-neutral-dark">{win.title}</h4>
+                          <p className="text-sm text-neutral-medium mt-1">{win.description}</p>
+                        </div>
+                        <Badge className={`ml-2 ${win.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {win.status === 'completed' ? 'Klaar' : 'Te doen'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                  {!allQuickWins?.length && (
+                    <p className="text-neutral-medium text-center py-4">Geen snelle wins beschikbaar</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delegatable Tasks (Third Quadrant) */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center">
+                  <Users className="mr-2" size={20} />
+                  Delegeerbare Taken
+                </h2>
+                <div className="space-y-3">
+                  {activities?.filter(activity => 
+                    activity.priority === 'urgent' && 
+                    activity.impact === 'low' &&
+                    activity.status !== 'completed'
+                  ).slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-neutral-dark">{activity.title}</h4>
+                          <p className="text-sm text-neutral-medium mt-1">{activity.description}</p>
+                          {activity.dueDate && (
+                            <p className="text-xs text-orange-600 mt-1">
+                              Deadline: {format(new Date(activity.dueDate), 'dd MMM yyyy')}
+                            </p>
+                          )}
+                        </div>
+                        <Badge className="ml-2 bg-purple-100 text-purple-800">
+                          Delegeren
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                  {!activities?.filter(activity => 
+                    activity.priority === 'urgent' && 
+                    activity.impact === 'low' &&
+                    activity.status !== 'completed'
+                  ).length && (
+                    <p className="text-neutral-medium text-center py-4">Geen delegeerbare taken gevonden</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Simple Exit Message */}
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-green-800 text-sm">
+                    Klaar om meer te doen? Schakel terug naar alle functies met de toggle rechtsboven.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <>
         {/* Stats Cards - Hidden when productivity reflection is active */}
         {(userPreferences?.productivityHealthEnabled === false || healthCardDismissed) && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
@@ -856,6 +980,8 @@ export default function Dashboard() {
         </Card>
           </div>
         </div>
+          </>
+        )}
 
       {/* Filter Panel */}
       {isFilterPanelOpen && (
