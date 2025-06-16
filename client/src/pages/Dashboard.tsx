@@ -401,7 +401,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         </div>
         {/* Low Stimulus Mode - Simplified View */}
         {lowStimulus ? (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in-0 duration-500">
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
               <ProductivityHealthCard
@@ -1138,6 +1138,8 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           onClose={() => setIsTaskDetailModalOpen(false)}
         />
       )}
+          </div>
+        )}
 
       {/* Onboarding Components */}
       <WelcomeFlow
