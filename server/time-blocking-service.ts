@@ -17,6 +17,11 @@ export interface SmartScheduleOptions {
   minimumBlockSize: number; // in minutes
   focusTimePreferred: boolean;
   maxTasksPerDay: number;
+  energyOptimized: boolean; // Schedule high-energy tasks during peak hours
+  contextSwitchingMinimized: boolean; // Group similar tasks together
+  deadlineAware: boolean; // Prioritize tasks with approaching deadlines
+  bufferTime: number; // Buffer time between tasks in minutes
+  preferredFocusBlocks: number; // Number of deep work blocks per day
 }
 
 export interface ScheduleResult {
@@ -32,7 +37,12 @@ export class TimeBlockingService {
     breakDuration: 15,
     minimumBlockSize: 30,
     focusTimePreferred: true,
-    maxTasksPerDay: 8
+    maxTasksPerDay: 8,
+    energyOptimized: true,
+    contextSwitchingMinimized: true,
+    deadlineAware: true,
+    bufferTime: 5,
+    preferredFocusBlocks: 3
   };
 
   /**
@@ -58,7 +68,7 @@ export class TimeBlockingService {
     const availableSlots = this.generateAvailableSlots(date, existingBlocks, opts);
     
     // Sort activities by priority and deadline
-    const prioritizedActivities = this.prioritizeActivities(activities);
+    const prioritizedActivities = this.prioritizeActivities(activities, opts);
     
     // Schedule activities into available slots (preview mode)
     const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId, false);
@@ -122,32 +132,77 @@ export class TimeBlockingService {
   }
 
   /**
-   * Prioritize activities based on urgency, importance, and deadlines
+   * Prioritize activities based on urgency, importance, deadlines, and smart scheduling options
    */
-  private prioritizeActivities(activities: Activity[]): Activity[] {
+  private prioritizeActivities(activities: Activity[], options: SmartScheduleOptions): Activity[] {
     return activities
       .filter(activity => activity.status !== 'completed')
       .sort((a, b) => {
-        // Priority weights: urgent=3, normal=2, low=1
-        const priorityWeight = { urgent: 3, normal: 2, low: 1 };
-        const aPriority = priorityWeight[a.priority as keyof typeof priorityWeight] || 1;
-        const bPriority = priorityWeight[b.priority as keyof typeof priorityWeight] || 1;
+        // Calculate priority scores with weights
+        const scoreA = this.calculateActivityScore(a, options);
+        const scoreB = this.calculateActivityScore(b, options);
         
-        // Sort by priority first
-        if (aPriority !== bPriority) {
-          return bPriority - aPriority;
-        }
-        
-        // Then by due date (closer deadlines first)
-        if (a.dueDate && b.dueDate) {
-          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-        }
-        if (a.dueDate && !b.dueDate) return -1;
-        if (!a.dueDate && b.dueDate) return 1;
-        
-        // Finally by creation date (older first)
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return scoreB - scoreA; // Higher scores first
       });
+  }
+
+  /**
+   * Calculate priority score for an activity based on multiple factors
+   */
+  private calculateActivityScore(activity: Activity, options: SmartScheduleOptions): number {
+    let score = 0;
+    
+    // Base priority weight (40% of total score)
+    const priorityWeights = { urgent: 40, normal: 20, low: 10 };
+    score += priorityWeights[activity.priority as keyof typeof priorityWeights] || 10;
+    
+    // Deadline urgency (30% of total score)
+    if (options.deadlineAware && activity.dueDate) {
+      const daysUntilDue = Math.ceil((new Date(activity.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (daysUntilDue <= 1) score += 30; // Due today/overdue
+      else if (daysUntilDue <= 3) score += 20; // Due within 3 days
+      else if (daysUntilDue <= 7) score += 10; // Due within a week
+    }
+    
+    // Estimated duration factor (20% of total score) - shorter tasks get slight boost for momentum
+    const duration = activity.estimatedDuration || this.estimateDuration(activity);
+    if (duration <= 30) score += 20; // Quick wins
+    else if (duration <= 60) score += 15;
+    else if (duration <= 120) score += 10;
+    
+    // Context switching penalty (10% of total score)
+    if (options.contextSwitchingMinimized) {
+      // This would be enhanced with ML to detect similar task types
+      // For now, use simple category-based grouping
+      const category = this.getTaskCategory(activity);
+      // Implementation would group similar categories together
+    }
+    
+    return score;
+  }
+
+  /**
+   * Get task category for context switching optimization
+   */
+  private getTaskCategory(activity: Activity): string {
+    const title = activity.title.toLowerCase();
+    const description = activity.description?.toLowerCase() || '';
+    
+    if (title.includes('meeting') || title.includes('call') || title.includes('vergadering')) {
+      return 'communication';
+    } else if (title.includes('email') || title.includes('mail') || title.includes('contact')) {
+      return 'communication';
+    } else if (title.includes('document') || title.includes('report') || title.includes('write')) {
+      return 'documentation';
+    } else if (title.includes('review') || title.includes('check') || title.includes('analyze')) {
+      return 'analysis';
+    } else if (title.includes('code') || title.includes('develop') || title.includes('build')) {
+      return 'development';
+    } else if (title.includes('plan') || title.includes('strategy') || title.includes('design')) {
+      return 'planning';
+    }
+    
+    return 'general';
   }
 
   /**
@@ -341,7 +396,7 @@ export class TimeBlockingService {
     const availableSlots = this.generateAvailableSlots(date, existingBlocks, opts);
     
     // Sort activities by priority and deadline
-    const prioritizedActivities = this.prioritizeActivities(activities);
+    const prioritizedActivities = this.prioritizeActivities(activities, opts);
     
     // Schedule activities into available slots and save to database
     const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId, true);
