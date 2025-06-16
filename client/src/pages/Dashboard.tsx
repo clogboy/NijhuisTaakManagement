@@ -459,8 +459,8 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   {activities?.filter(activity => 
                     activity.priority === 'urgent' && 
-                    activity.impact === 'low' &&
-                    activity.status !== 'completed'
+                    activity.status !== 'completed' &&
+                    activity.estimatedDuration && activity.estimatedDuration <= 60 // Tasks <= 1 hour are more delegatable
                   ).slice(0, 5).map((activity) => (
                     <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between">
@@ -481,8 +481,8 @@ export default function Dashboard() {
                   ))}
                   {!activities?.filter(activity => 
                     activity.priority === 'urgent' && 
-                    activity.impact === 'low' &&
-                    activity.status !== 'completed'
+                    activity.status !== 'completed' &&
+                    activity.estimatedDuration && activity.estimatedDuration <= 60
                   ).length && (
                     <p className="text-neutral-medium text-center py-4">Geen delegeerbare taken gevonden</p>
                   )}
