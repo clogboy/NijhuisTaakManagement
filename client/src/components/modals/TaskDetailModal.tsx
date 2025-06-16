@@ -115,14 +115,14 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
         dueDate: "",
       });
       toast({
-        title: "Subtaak toegevoegd",
-        description: "Subtaak is toegevoegd aan deze activiteit",
+        title: "Actiepunt toegevoegd",
+        description: "Actiepunt is toegevoegd aan deze activiteit",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Fout",
-        description: error.message || "Kon subtaak niet toevoegen",
+        description: error.message || "Kon actiepunt niet toevoegen",
         variant: "destructive",
       });
     },
@@ -266,15 +266,15 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <ListChecks className="h-5 w-5" />
-                        Subtaak toevoegen
+                        Actiepunt toevoegen
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        Maak subtaken die deelnemers kunnen markeren als taken, quick wins of wegversperringen.
+                        Maak actiepunten die deelnemers kunnen markeren als taken, quick wins of wegversperringen.
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <Input
-                        placeholder="Subtaak titel..."
+                        placeholder="Actiepunt titel..."
                         value={newSubtask.title}
                         onChange={(e) => setNewSubtask({ ...newSubtask, title: e.target.value })}
                       />
@@ -395,7 +395,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                         className="w-full"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Subtaak toevoegen
+                        Actiepunt toevoegen
                       </Button>
                     </CardContent>
                   </Card>
