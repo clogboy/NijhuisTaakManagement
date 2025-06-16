@@ -204,7 +204,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
           <Tabs defaultValue="comments" className="flex flex-col h-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="comments">Opmerkingen</TabsTrigger>
-              <TabsTrigger value="subtasks">Subtaken</TabsTrigger>
+              <TabsTrigger value="subtasks">Actiepunten</TabsTrigger>
             </TabsList>
 
             <TabsContent value="comments" className="flex-1 overflow-hidden">

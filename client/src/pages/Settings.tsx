@@ -629,7 +629,7 @@ export default function Settings() {
 
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Nijhuis Activity Management System v2.0
+              NijFlow Activity Management System v2.0
             </p>
             <p className="text-xs text-gray-500">
               Settings are automatically saved. Changes take effect immediately.

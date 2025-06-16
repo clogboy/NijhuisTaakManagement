@@ -175,7 +175,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               <CharacterAvatar character={currentStepData.character} />
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Nijhuis Gids
+                  NijFlow Gids
                 </h2>
                 <Badge variant="secondary" className="text-xs">
                   Stap {currentStep + 1} van {tutorialSteps.length}
@@ -235,7 +235,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 <span className="text-sm font-medium">Pro Tip:</span>
               </div>
               <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                Je kunt altijd terug naar het dashboard door op het Nijhuis logo te klikken!
+                Je kunt altijd terug naar het dashboard door op het NijFlow logo te klikken!
               </p>
             </div>
           )}

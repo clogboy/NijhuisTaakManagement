@@ -511,7 +511,7 @@ export const nlTranslations = {
     retry: "Opnieuw proberen"
   },
   subtasks: {
-    title: "Subtaken",
+    title: "Actiepunten",
     noSubtasks: "Geen subtaken gevonden",
     createFirst: "Maak je eerste subtaak aan",
     formTitle: "Titel",
@@ -576,7 +576,7 @@ export const nlTranslations = {
         description: "In de Activiteiten sectie beheer je al je taken."
       },
       subtasks: {
-        title: "Subtaken Organiseren",
+        title: "Actiepunten Organiseren",
         description: "Elke activiteit kan subtaken hebben voor betere organisatie."
       },
       timeBlocking: {
@@ -617,6 +617,6 @@ export const nlTranslations = {
     invalidCredentials: "Ongeldige inloggegevens",
     loginSuccess: "Succesvol ingelogd",
     loggingIn: "Inloggen...",
-    welcomeMessage: "Welkom bij het Nijhuis Activiteiten Management Systeem"
+    welcomeMessage: "Welkom bij het NijFlow Activiteiten Management Systeem"
   }
 };
