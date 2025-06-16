@@ -19,6 +19,7 @@ interface OnboardingContextType {
   hideGuide: () => void;
   updateTutorialStep: (step: number) => void;
   resetOnboarding: () => void;
+  closeTutorial: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -31,7 +32,8 @@ const defaultState: OnboardingState = {
   isFirstVisit: true,
   showCharacterGuide: false,
   guidanceMessage: "",
-  guideCharacter: "productivity"
+  guideCharacter: "productivity",
+  showTutorial: false
 };
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
@@ -63,7 +65,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setState(prev => ({
       ...prev,
       currentTutorialStep: 0,
-      isFirstVisit: false
+      isFirstVisit: false,
+      showTutorial: true
     }));
   };
 
