@@ -904,10 +904,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subtasks/:id/rescue", requireAuth, async (req: any, res) => {
     try {
       const subtaskId = parseInt(req.params.id);
-      const { proposedResolution, newDeadline } = req.body;
+      const { proposedResolution, newDeadline, oorzaakCategory, oorzaakFactor, severity } = req.body;
       
-      if (!proposedResolution || !newDeadline) {
-        return res.status(400).json({ error: "Proposed resolution and new deadline are required" });
+      if (!proposedResolution || !newDeadline || !oorzaakCategory) {
+        return res.status(400).json({ error: "Proposed resolution, new deadline, and root cause category are required" });
       }
 
       const subtask = await storage.getSubtask(subtaskId);

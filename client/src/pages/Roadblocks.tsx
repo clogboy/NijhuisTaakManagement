@@ -20,6 +20,8 @@ import StreamlinedRoadblockForm from "@/components/roadblocks/StreamlinedRoadblo
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OORZAAK_CATEGORIES, OORZAAK_FACTORS } from "@shared/schema";
 
 export default function Roadblocks() {
   const { t } = useTranslations();
@@ -85,18 +87,37 @@ export default function Roadblocks() {
   const [rescuingSubtask, setRescuingSubtask] = useState<any>(null);
   const [proposedResolution, setProposedResolution] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
+  const [oorzaakCategory, setOorzaakCategory] = useState("");
+  const [oorzaakFactor, setOorzaakFactor] = useState("");
+  const [severity, setSeverity] = useState("medium");
 
   const rescueSubtaskMutation = useMutation({
-    mutationFn: async ({ subtaskId, proposedResolution, newDeadline }: { 
+    mutationFn: async ({ 
+      subtaskId, 
+      proposedResolution, 
+      newDeadline, 
+      oorzaakCategory, 
+      oorzaakFactor, 
+      severity 
+    }: { 
       subtaskId: number, 
       proposedResolution: string, 
-      newDeadline: string 
+      newDeadline: string,
+      oorzaakCategory: string,
+      oorzaakFactor: string,
+      severity: string
     }) => {
       const response = await fetch(`/api/subtasks/${subtaskId}/rescue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ proposedResolution, newDeadline }),
+        body: JSON.stringify({ 
+          proposedResolution, 
+          newDeadline, 
+          oorzaakCategory, 
+          oorzaakFactor, 
+          severity 
+        }),
       });
       
       if (!response.ok) {
@@ -514,6 +535,52 @@ export default function Roadblocks() {
               <DialogTitle>Rescue Task: {rescuingSubtask?.title}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="oorzaak-category">Root Cause Category</Label>
+                  <Select value={oorzaakCategory} onValueChange={setOorzaakCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(OORZAAK_CATEGORIES).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>{value}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="severity">Severity</Label>
+                  <Select value={severity} onValueChange={setSeverity}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select severity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {oorzaakCategory && OORZAAK_FACTORS[oorzaakCategory] && (
+                <div>
+                  <Label htmlFor="oorzaak-factor">Specific Factor</Label>
+                  <Select value={oorzaakFactor} onValueChange={setOorzaakFactor}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specific factor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(OORZAAK_FACTORS[oorzaakCategory] || {}).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>{value}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div>
                 <Label htmlFor="proposed-resolution">Proposed Resolution</Label>
                 <Textarea
@@ -546,15 +613,18 @@ export default function Roadblocks() {
                 </Button>
                 <Button
                   onClick={() => {
-                    if (rescuingSubtask && proposedResolution && newDeadline) {
+                    if (rescuingSubtask && proposedResolution && newDeadline && oorzaakCategory) {
                       rescueSubtaskMutation.mutate({
                         subtaskId: rescuingSubtask.id,
                         proposedResolution,
-                        newDeadline
+                        newDeadline,
+                        oorzaakCategory,
+                        oorzaakFactor,
+                        severity
                       });
                     }
                   }}
-                  disabled={!proposedResolution || !newDeadline || rescueSubtaskMutation.isPending}
+                  disabled={!proposedResolution || !newDeadline || !oorzaakCategory || rescueSubtaskMutation.isPending}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {rescueSubtaskMutation.isPending ? "Creating Rescue Task..." : "Create Rescue Task"}
