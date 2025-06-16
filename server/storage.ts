@@ -580,12 +580,24 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
+    // Get overdue activities - incomplete activities past their due date
+    const overdueActivities = await db.select().from(activities).where(
+      and(
+        sql`${activities.dueDate} IS NOT NULL`,
+        sql`DATE(${activities.dueDate}) < DATE('now')`,
+        ne(activities.status, 'completed'),
+        !isAdmin ? eq(activities.createdBy, userId) : undefined
+      )
+    );
+
     // Get overdue subtasks count - only truly overdue incomplete tasks
     const overdueSubtasks = await db.select().from(subtasks).where(
       and(
         sql`${subtasks.dueDate} IS NOT NULL`,
         sql`DATE(${subtasks.dueDate}) < DATE('now')`,
         sql`${subtasks.completedDate} IS NULL`,
+        ne(subtasks.status, 'completed'),
+        ne(subtasks.status, 'resolved'),
         !isAdmin ? eq(subtasks.createdBy, userId) : undefined
       )
     );
@@ -639,9 +651,15 @@ export class DatabaseStorage implements IStorage {
     const activeContacts = await db.select().from(contacts).where(eq(contacts.createdBy, userId));
 
     // Filter out subtasks that belong to urgent activities to avoid double counting
-    const urgentActivityIds = new Set(urgentActivities.map(a => a.id));
+    const urgentActivityIds = new Set(urgentActivities.map((a: any) => a.id));
     const urgentSubtasksNotFromUrgentActivities = urgentSubtasks.filter(
-      subtask => !urgentActivityIds.has(subtask.linkedActivityId || 0)
+      (subtask: any) => !urgentActivityIds.has(subtask.linkedActivityId || 0)
+    );
+
+    // Filter out overdue subtasks that belong to overdue activities to avoid double counting
+    const overdueActivityIds = new Set(overdueActivities.map((a: any) => a.id));
+    const overdueSubtasksNotFromOverdueActivities = overdueSubtasks.filter(
+      (subtask: any) => !overdueActivityIds.has(subtask.linkedActivityId || 0)
     );
 
     return {
@@ -650,7 +668,7 @@ export class DatabaseStorage implements IStorage {
       completedCount: completedActivitiesThisWeek.length + completedSubtasksThisWeek.length,
       roadblocksCount: roadblocksCount.length,
       activeContacts: activeContacts.length,
-      overdueCount: overdueSubtasks.length,
+      overdueCount: overdueActivities.length + overdueSubtasksNotFromOverdueActivities.length,
     };
   }
 
