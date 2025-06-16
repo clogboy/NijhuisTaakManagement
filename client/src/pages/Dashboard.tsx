@@ -398,103 +398,110 @@ export default function Dashboard() {
         {/* Low Stimulus Mode - Simplified View */}
         {lowStimulusMode ? (
           <div className="space-y-6">
+            {/* Productivity Health Card - Keep this visible in focus mode */}
+            {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
+              <ProductivityHealthCard
+                onDismiss={() => setHealthCardDismissed(true)}
+                userPreferences={userPreferences}
+                updatePreferences={updatePreferencesMutation.mutate}
+              />
+            )}
+
             {/* Gentle intro message */}
-            <Card className="border-orange-200 bg-orange-50">
+            <Card className="border-blue-100 bg-blue-50">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-                  <p className="text-orange-800 text-sm">
-                    Focus modus actief. Alleen vandaag's taken, snelle wins en delegeerbare taken worden getoond.
+                  <div className="w-3 h-3 bg-blue-300 rounded-full"></div>
+                  <p className="text-blue-700 text-sm">
+                    Focus modus actief. Rustige weergave van je belangrijkste taken.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Today's Tasks - Simplified */}
-            <Card>
+            <Card className="border-gray-100">
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center">
-                  <Clock className="mr-2" size={20} />
-                  Vandaag's Taken
+                <h2 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
+                  <Clock className="mr-2 text-gray-500" size={20} />
+                  Mijn acties
                 </h2>
                 <TodaysTasks />
               </CardContent>
             </Card>
 
-            {/* Quick Wins */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center">
-                  <Trophy className="mr-2" size={20} />
-                  Snelle Wins
-                </h2>
-                <div className="space-y-3">
-                  {allQuickWins?.slice(0, 5).map((win) => (
-                    <div key={win.id} className="p-3 border border-gray-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-neutral-dark">{win.title}</h4>
-                          <p className="text-sm text-neutral-medium mt-1">{win.description}</p>
+            {/* Quick Wins - Only show if there are any */}
+            {allQuickWins && allQuickWins.length > 0 && (
+              <Card className="border-gray-100">
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
+                    <Trophy className="mr-2 text-gray-500" size={20} />
+                    Quick wins
+                  </h2>
+                  <div className="space-y-3">
+                    {allQuickWins.slice(0, 5).map((win) => (
+                      <div key={win.id} className="p-3 border border-gray-100 rounded-lg bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-700">{win.title}</h4>
+                            <p className="text-sm text-gray-500 mt-1">{win.description}</p>
+                          </div>
+                          <Badge className={`ml-2 ${win.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                            {win.status === 'completed' ? 'Klaar' : 'Te doen'}
+                          </Badge>
                         </div>
-                        <Badge className={`ml-2 ${win.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                          {win.status === 'completed' ? 'Klaar' : 'Te doen'}
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
-                  {!allQuickWins?.length && (
-                    <p className="text-neutral-medium text-center py-4">Geen snelle wins beschikbaar</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Delegatable Tasks (Third Quadrant) */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center">
-                  <Users className="mr-2" size={20} />
-                  Delegeerbare Taken
-                </h2>
-                <div className="space-y-3">
-                  {activities?.filter(activity => 
-                    activity.priority === 'urgent' && 
-                    activity.status !== 'completed' &&
-                    activity.estimatedDuration && activity.estimatedDuration <= 60 // Tasks <= 1 hour are more delegatable
-                  ).slice(0, 5).map((activity) => (
-                    <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-neutral-dark">{activity.title}</h4>
-                          <p className="text-sm text-neutral-medium mt-1">{activity.description}</p>
-                          {activity.dueDate && (
-                            <p className="text-xs text-orange-600 mt-1">
-                              Deadline: {format(new Date(activity.dueDate), 'dd MMM yyyy')}
-                            </p>
-                          )}
+            {/* Delegatable Tasks - Only show if there are any */}
+            {activities?.filter(activity => 
+              activity.priority === 'urgent' && 
+              activity.status !== 'completed' &&
+              activity.estimatedDuration && activity.estimatedDuration <= 60
+            ).length > 0 && (
+              <Card className="border-gray-100">
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
+                    <Users className="mr-2 text-gray-500" size={20} />
+                    Delegeerbare taken
+                  </h2>
+                  <div className="space-y-3">
+                    {activities?.filter(activity => 
+                      activity.priority === 'urgent' && 
+                      activity.status !== 'completed' &&
+                      activity.estimatedDuration && activity.estimatedDuration <= 60
+                    ).slice(0, 5).map((activity) => (
+                      <div key={activity.id} className="p-3 border border-gray-100 rounded-lg bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-700">{activity.title}</h4>
+                            <p className="text-sm text-gray-500 mt-1">{activity.description}</p>
+                            {activity.dueDate && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                Deadline: {format(new Date(activity.dueDate), 'dd MMM yyyy')}
+                              </p>
+                            )}
+                          </div>
+                          <Badge className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
+                            Delegeren
+                          </Badge>
                         </div>
-                        <Badge className="ml-2 bg-purple-100 text-purple-800">
-                          Delegeren
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
-                  {!activities?.filter(activity => 
-                    activity.priority === 'urgent' && 
-                    activity.status !== 'completed' &&
-                    activity.estimatedDuration && activity.estimatedDuration <= 60
-                  ).length && (
-                    <p className="text-neutral-medium text-center py-4">Geen delegeerbare taken gevonden</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Simple Exit Message */}
-            <Card className="border-green-200 bg-green-50">
+            <Card className="border-green-100 bg-green-50">
               <CardContent className="p-4">
                 <div className="text-center">
-                  <p className="text-green-800 text-sm">
+                  <p className="text-green-700 text-sm">
                     Klaar om meer te doen? Schakel terug naar alle functies met de toggle rechtsboven.
                   </p>
                 </div>

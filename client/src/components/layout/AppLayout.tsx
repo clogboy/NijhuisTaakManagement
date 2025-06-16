@@ -47,6 +47,7 @@ interface AppLayoutProps {
   showCreateButton?: boolean;
   title?: string;
   subtitle?: string;
+  hideSidebar?: boolean;
 }
 
 export default function AppLayout({ 
@@ -56,7 +57,8 @@ export default function AppLayout({
   showFilterButton = false,
   showCreateButton = false,
   title = "Activity Dashboard",
-  subtitle = "Manage your dossiers and track progress"
+  subtitle = "Manage your dossiers and track progress",
+  hideSidebar = false
 }: AppLayoutProps) {
   const [location] = useLocation();
   const queryClient = useQueryClient();
@@ -161,25 +163,26 @@ export default function AppLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Mobile Menu Overlay */}
-      {isMobile && isMobileMenuOpen && (
+      {!hideSidebar && isMobile && isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`
-        ${isMobile ? 
-          `fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
-            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }` : 
-          `${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`
-        } 
-        shadow-2xl border-r border-sidebar-border flex flex-col
-        ${isMobile ? 'bg-white dark:bg-gray-900' : 'bg-sidebar-background'}
-        ${!isMobile ? 'shadow-[4px_0_20px_rgba(0,0,0,0.1)]' : ''}
-      `}>
+      {/* Sidebar - Hidden in low stimulus mode */}
+      {!hideSidebar && (
+        <div className={`
+          ${isMobile ? 
+            `fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
+              isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }` : 
+            `${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`
+          } 
+          shadow-2xl border-r border-sidebar-border flex flex-col
+          ${isMobile ? 'bg-white dark:bg-gray-900' : 'bg-sidebar-background'}
+          ${!isMobile ? 'shadow-[4px_0_20px_rgba(0,0,0,0.1)]' : ''}
+        `}>
         {/* Header */}
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
@@ -323,9 +326,8 @@ export default function AppLayout({
             })}
           </ul>
         </nav>
-
-
-      </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -333,8 +335,8 @@ export default function AppLayout({
         <header className="bg-background shadow-sm border-b border-border px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              {/* Mobile Menu Button */}
-              {isMobile && (
+              {/* Mobile Menu Button - Only show if sidebar is not hidden */}
+              {!hideSidebar && isMobile && (
                 <Button
                   variant="ghost"
                   size="sm"
