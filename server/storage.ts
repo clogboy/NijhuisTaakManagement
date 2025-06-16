@@ -636,12 +636,12 @@ export class DatabaseStorage implements IStorage {
     const activeContacts = await db.select().from(contacts).where(eq(contacts.createdBy, userId));
 
     return {
-      urgentCount: urgentSubtasks.length,
-      dueThisWeek: dueThisWeekSubtasks.length,
-      completedCount: completedSubtasksThisWeek.length,
+      urgentCount: urgentActivities.length + urgentSubtasks.length,
+      dueThisWeek: dueThisWeekActivities.length + dueThisWeekSubtasks.length,
+      completedCount: completedActivitiesThisWeek.length + completedSubtasksThisWeek.length,
       roadblocksCount: roadblocksCount.length,
       activeContacts: activeContacts.length,
-      overdueCount: 0, // Temporarily set to 0 to fix incorrect count
+      overdueCount: overdueSubtasks.length,
     };
   }
 
