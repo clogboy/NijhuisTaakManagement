@@ -212,8 +212,10 @@ export default function Roadblocks() {
   // Filter subtasks that are classified as roadblocks by participants and exclude completed ones
   const roadblockSubtasks = (subtasks as any[]).filter((subtask: any) => {
     const participantTypes = subtask.participantTypes as Record<string, string> || {};
-    const isRoadblock = subtask.type === "roadblock" || Object.values(participantTypes).includes("roadblock");
-    const isNotCompleted = !subtask.completedDate;
+    const isRoadblock = subtask.type === "roadblock" || 
+                       Object.values(participantTypes).includes("roadblock") ||
+                       subtask.status === "roadblock";
+    const isNotCompleted = subtask.status !== "completed" && subtask.status !== "resolved";
     return isRoadblock && isNotCompleted;
   });
 
@@ -605,8 +607,12 @@ export default function Roadblocks() {
                   variant="outline"
                   onClick={() => {
                     setRescueModalOpen(false);
+                    setRescuingSubtask(null);
                     setProposedResolution("");
                     setNewDeadline("");
+                    setOorzaakCategory("");
+                    setOorzaakFactor("");
+                    setSeverity("medium");
                   }}
                 >
                   Cancel
