@@ -513,34 +513,21 @@ export default function Roadblocks() {
               <DialogTitle>Taak Redden: {rescuingSubtask?.title}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="oorzaak-category">Oorzaak Categorie</Label>
-                  <Select value={oorzaakCategory} onValueChange={setOorzaakCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer categorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(OORZAAK_CATEGORIES).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>{value}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="severity">Ernst Niveau</Label>
-                  <Select value={severity} onValueChange={setSeverity}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer ernst" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Laag</SelectItem>
-                      <SelectItem value="medium">Gemiddeld</SelectItem>
-                      <SelectItem value="high">Hoog</SelectItem>
-                      <SelectItem value="critical">Kritiek</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="oorzaak-category">Oorzaak</Label>
+                <Select value={oorzaakCategory} onValueChange={setOorzaakCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer oorzaak" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="process">Proces Problemen</SelectItem>
+                    <SelectItem value="resources">Resource Beperkingen</SelectItem>
+                    <SelectItem value="communication">Communicatie Problemen</SelectItem>
+                    <SelectItem value="external">Externe Afhankelijkheden</SelectItem>
+                    <SelectItem value="technical">Technische Problemen</SelectItem>
+                    <SelectItem value="unclear">Onduidelijk</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               {oorzaakCategory && OORZAAK_FACTORS[oorzaakCategory as keyof typeof OORZAAK_FACTORS] && (
@@ -602,7 +589,7 @@ export default function Roadblocks() {
                         newDeadline,
                         oorzaakCategory,
                         oorzaakFactor,
-                        severity
+                        severity: "medium" // Default severity since it's not user-specified anymore
                       });
                     }
                   }}
