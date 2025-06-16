@@ -48,6 +48,7 @@ import EmailModal from "@/components/modals/EmailModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import ProductivityHealthCard from "@/components/productivity/ProductivityHealthCard";
+import SmartInsights from "@/components/SmartInsights";
 import OverdueTasksList from "@/components/OverdueTasksList";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -707,6 +708,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             </CardContent>
           </Card>
         )}
+
+        {/* Smart Insights Section */}
+        <div className="mb-6">
+          <SmartInsights onActivitySelect={handleEditActivity} />
+        </div>
 
         {/* Today's Tasks and Activities */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

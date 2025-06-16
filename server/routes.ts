@@ -12,6 +12,7 @@ import { analyticsService } from "./analytics-service";
 import { auditService } from "./audit-service";
 import { azureMigrationService } from "./azure-migration-service";
 import { digiOfficeService } from "./digioffice-service";
+import { smartPrioritizationService } from "./smart-prioritization-service";
 import { z } from "zod";
 import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
@@ -557,6 +558,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get stats error:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Smart prioritization endpoint
+  app.get("/api/smart-insights", requireAuth, async (req: any, res) => {
+    try {
+      const activities = await storage.getActivities(req.user.id, req.user.role === "admin");
+      const insights = smartPrioritizationService.getPersonalizedRecommendations(activities);
+      res.json(insights);
+    } catch (error) {
+      console.error("Get smart insights error:", error);
+      res.status(500).json({ message: "Failed to fetch smart insights" });
     }
   });
 
