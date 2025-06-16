@@ -55,7 +55,14 @@ function AuthenticatedApp() {
         </AppLayout>
       </Route>
       <Route path="/quickwins" component={QuickWins} />
-      <Route path="/roadblocks" component={Roadblocks} />
+      <Route path="/roadblocks">
+        <AppLayout
+          title="Roadblocks"
+          subtitle="Track and analyze systemic obstacles"
+        >
+          <Roadblocks />
+        </AppLayout>
+      </Route>
       <Route path="/subtasks" component={Subtasks} />
       <Route path="/agenda" component={Agenda} />
       <Route path="/timeblocking" component={TimeBlocking} />

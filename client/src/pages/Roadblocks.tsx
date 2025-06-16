@@ -7,7 +7,7 @@ import { AlertTriangle, Search, Activity as ActivityIcon, AlertCircle, User, Lis
 import { Roadblock, Activity } from "@shared/schema";
 import { format } from "date-fns";
 import { useState } from "react";
-import AppLayout from "@/components/layout/AppLayout";
+
 import { useTranslations } from "@/hooks/useTranslations";
 import EditSubtaskModal from "@/components/modals/EditSubtaskModal";
 import { Button } from "@/components/ui/button";
@@ -286,20 +286,7 @@ export default function Roadblocks() {
   };
 
   return (
-    <AppLayout>
-      <div className="p-3 sm:p-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-dark dark:text-white flex items-center gap-2">
-              <AlertTriangle className="h-6 w-6 text-red-500" />
-              {t('roadblocks.title')}
-            </h1>
-            <p className="text-neutral-medium dark:text-gray-400 mt-1">
-              Track and analyze systemic obstacles that impact productivity
-            </p>
-          </div>
-        </div>
+    <div className="space-y-6">
 
         <Tabs defaultValue="roadblocks" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -428,9 +415,15 @@ export default function Roadblocks() {
                   </div>
                 )}
 
+                {/* TEST: Force render a roadblock section */}
+                <div style={{backgroundColor: 'yellow', padding: '10px', margin: '10px'}}>
+                  <h2>TEST: This should always be visible</h2>
+                  <p>Filtered roadblock subtasks count: {filteredRoadblockSubtasks.length}</p>
+                </div>
+
                 {/* Subtasks Classified as Roadblocks */}
                 {filteredRoadblockSubtasks.length > 0 && (
-                  <div>
+                  <div style={{backgroundColor: 'lightgreen', padding: '20px', border: '2px solid red'}}>
                     <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
                       <ListChecks className="h-5 w-5" />
                       Task Roadblocks ({filteredRoadblockSubtasks.length})
@@ -648,7 +641,6 @@ export default function Roadblocks() {
           taskTitle={celebration.taskTitle}
           onComplete={() => setCelebration({ ...celebration, isVisible: false })}
         />
-      </div>
-    </AppLayout>
+    </div>
   );
 }
