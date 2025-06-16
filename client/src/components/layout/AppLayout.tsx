@@ -177,12 +177,11 @@ export default function AppLayout({
             `fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
               isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
             }` : 
-            `${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-500`
+            `${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`
           } 
           shadow-2xl border-r border-sidebar-border flex flex-col
           ${isMobile ? 'bg-white dark:bg-gray-900' : 'bg-sidebar-background'}
           ${!isMobile ? 'shadow-[4px_0_20px_rgba(0,0,0,0.1)]' : ''}
-          animate-in slide-in-from-left-5 fade-in-0 duration-500
         `}>
         {/* Header */}
         <div className="p-4 border-b border-sidebar-border">
