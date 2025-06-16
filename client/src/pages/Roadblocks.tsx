@@ -425,6 +425,35 @@ export default function Roadblocks() {
                                     <div className="text-xs text-neutral-medium dark:text-gray-500">
                                       Reported: {format(new Date(roadblock.reportedDate), "MMM dd, yyyy")}
                                     </div>
+
+                                    {/* Action buttons */}
+                                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                                      {roadblock.isSubtask ? (
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          className="bg-green-600 hover:bg-green-700 text-white"
+                                          onClick={() => {
+                                            setRescuingSubtask(roadblock.originalSubtask);
+                                            setRescueModalOpen(true);
+                                          }}
+                                        >
+                                          <Shield className="h-4 w-4 mr-1" />
+                                          Rescue
+                                        </Button>
+                                      ) : (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            // Handle traditional roadblock actions
+                                          }}
+                                        >
+                                          <Edit className="h-4 w-4 mr-1" />
+                                          Edit
+                                        </Button>
+                                      )}
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>
