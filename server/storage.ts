@@ -10,6 +10,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or, not, ne } from "drizzle-orm";
+import { startOfWeek } from "date-fns";
 
 export interface IStorage {
   // Users
@@ -601,18 +602,30 @@ export class DatabaseStorage implements IStorage {
       )
     );
 
-    // Get completed count (activities and subtasks)
-    const completedActivities = await db.select().from(activities).where(
+    // Get completed count for this week only (activities and subtasks)
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday start
+    
+    const completedActivitiesThisWeek = await db.select().from(activities).where(
       and(
         eq(activities.status, 'completed'),
+        sql`${activities.updatedAt} >= ${weekStart.toISOString()}`,
         !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
     );
 
-    const completedSubtasks = await db.select().from(subtasks).where(
+    const completedSubtasksThisWeek = await db.select().from(subtasks).where(
       and(
         sql`${subtasks.completedDate} IS NOT NULL`,
+        sql`${subtasks.completedDate} >= ${weekStart.toISOString()}`,
         !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+      )
+    );
+
+    // Get roadblocks count
+    const roadblocksCount = await db.select().from(roadblocks).where(
+      and(
+        ne(roadblocks.status, 'resolved'),
+        !isAdmin ? eq(roadblocks.createdBy, userId) : undefined
       )
     );
 
@@ -622,7 +635,8 @@ export class DatabaseStorage implements IStorage {
     return {
       urgentCount: urgentSubtasks.length,
       dueThisWeek: dueThisWeekSubtasks.length,
-      completedCount: completedSubtasks.length,
+      completedCount: completedSubtasksThisWeek.length,
+      roadblocksCount: roadblocksCount.length,
       activeContacts: activeContacts.length,
       overdueCount: 0, // Temporarily set to 0 to fix incorrect count
     };

@@ -35,7 +35,8 @@ import {
   X,
   Download,
   Archive,
-  ArchiveRestore
+  ArchiveRestore,
+  Shield
 } from "lucide-react";
 import { Activity, Contact, QuickWin } from "@shared/schema";
 import NewActivityModal from "@/components/modals/NewActivityModal";
@@ -404,7 +405,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.completedTasks")}</p>
+                    <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Deze week voltooid</p>
                     <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.completedCount || 0}</p>
                   </div>
                 </div>
@@ -469,6 +470,35 @@ export default function Dashboard() {
           <div className="mb-6">
             <OverdueTasksList autoShowRescue={true} />
           </div>
+        )}
+
+        {/* Roadblocks Alert */}
+        {stats?.roadblocksCount > 0 && (
+          <Card 
+            className="mb-4 border-red-200 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors micro-button-press"
+            onClick={() => window.location.href = "/roadblocks"}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
+                    <Shield className="text-white" size={16} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-red-800">
+                      {stats.roadblocksCount} Wegversperring{stats.roadblocksCount > 1 ? 'en' : ''}
+                    </h3>
+                    <p className="text-sm text-red-600">
+                      Klik hier om ze op te lossen via de Rescue workflow
+                    </p>
+                  </div>
+                </div>
+                <div className="text-red-500">
+                  <AlertTriangle size={20} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Today's Tasks and Activities */}
