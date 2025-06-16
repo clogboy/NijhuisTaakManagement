@@ -274,7 +274,7 @@ export class DatabaseStorage implements IStorage {
             eq(activities.createdBy, userId),
             sql`${userEmail} = ANY(${activities.participants})`,
             sql`${userEmail} = ANY(${activities.collaborators})`,
-            eq(activities.isPublic, true)
+            eq(activities.isPublic, sql`true`)
           )
         )
         .orderBy(desc(activities.createdAt));

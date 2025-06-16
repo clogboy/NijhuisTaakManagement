@@ -7,6 +7,7 @@ interface OnboardingState {
   showCharacterGuide: boolean;
   guidanceMessage: string;
   guideCharacter: "productivity" | "helper" | "expert";
+  showTutorial: boolean;
 }
 
 interface OnboardingContextType {
