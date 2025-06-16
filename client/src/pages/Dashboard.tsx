@@ -77,6 +77,7 @@ export default function Dashboard() {
   const [showArchived, setShowArchived] = useState(false);
   const [showWelcomeFlow, setShowWelcomeFlow] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [lowStimulusMode, setLowStimulusMode] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
