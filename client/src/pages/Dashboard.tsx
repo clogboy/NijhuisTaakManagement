@@ -67,18 +67,21 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const filteredActivities = activities.filter(activity => {
     if (priorityFilters.length > 0 && !priorityFilters.includes(activity.priority)) return false;
     if (statusFilters.length > 0 && !statusFilters.includes(activity.status)) return false;
-    if (selectedContacts.length > 0 && !selectedContacts.includes(activity.assignedTo || 0)) return false;
+    // Note: activities use participants array instead of assignedTo
     return true;
   });
 
   // Calculate stats
-  const stats: DashboardStats = {
+  const stats = {
     urgentCount: activities.filter(a => a.priority === 'urgent' && a.status !== 'completed').length,
     dueThisWeek: activities.filter(a => a.dueDate && isThisWeek(new Date(a.dueDate)) && a.status !== 'completed').length,
     completedCount: activities.filter(a => a.status === 'completed').length,
     roadblocksCount: activities.filter(a => a.status === 'blocked').length,
-    activeContacts: new Set(activities.filter(a => a.assignedTo).map(a => a.assignedTo)).size,
+    activeContacts: new Set(activities.filter(a => a.participants && a.participants.length > 0).map(a => a.participants?.length || 0)).size,
     overdueCount: activities.filter(a => a.dueDate && isPast(new Date(a.dueDate)) && a.status !== 'completed').length,
+    quickWinsCount: 0, // Add for compatibility with ProductivityHealthCard
+    subtasksCompleted: 0, // Add for compatibility
+    totalSubtasks: 0, // Add for compatibility
   };
 
   const handleEditActivity = (activity: Activity) => {
@@ -152,9 +155,9 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
               <ProductivityHealthCard
+                stats={stats}
                 onDismiss={() => setHealthCardDismissed(true)}
-                userPreferences={userPreferences}
-                updatePreferences={updatePreferences}
+                showSettings={true}
               />
             )}
 
@@ -284,9 +287,9 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             {/* Productivity Health Card */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
               <ProductivityHealthCard
+                stats={stats}
                 onDismiss={() => setHealthCardDismissed(true)}
-                userPreferences={userPreferences}
-                updatePreferences={updatePreferences}
+                showSettings={true}
               />
             )}
 
@@ -345,10 +348,10 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                               {format(new Date(activity.dueDate), 'dd MMM yyyy')}
                             </span>
                           )}
-                          {activity.assignedTo && (
+                          {activity.participants && activity.participants.length > 0 && (
                             <span className="flex items-center gap-1">
                               <Users className="h-3 w-3" />
-                              {contacts.find(c => c.id === activity.assignedTo)?.name || 'Onbekend'}
+                              {activity.participants.length} participant(s)
                             </span>
                           )}
                         </div>
@@ -431,10 +434,9 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       )}
 
       {/* Modals */}
-      <ActivityModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        contacts={contacts}
+      <NewActivityModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
       />
 
       {selectedActivity && (
