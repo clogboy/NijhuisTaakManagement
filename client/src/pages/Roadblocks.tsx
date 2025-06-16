@@ -565,7 +565,7 @@ export default function Roadblocks() {
                 </div>
               </div>
               
-              {oorzaakCategory && OORZAAK_FACTORS[oorzaakCategory] && (
+              {oorzaakCategory && OORZAAK_FACTORS[oorzaakCategory as keyof typeof OORZAAK_FACTORS] && (
                 <div>
                   <Label htmlFor="oorzaak-factor">Specific Factor</Label>
                   <Select value={oorzaakFactor} onValueChange={setOorzaakFactor}>
@@ -573,8 +573,8 @@ export default function Roadblocks() {
                       <SelectValue placeholder="Select specific factor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(OORZAAK_FACTORS[oorzaakCategory] || {}).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>{value}</SelectItem>
+                      {Object.entries(OORZAAK_FACTORS[oorzaakCategory as keyof typeof OORZAAK_FACTORS] || {}).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>{String(value)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

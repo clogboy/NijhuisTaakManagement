@@ -78,7 +78,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   role: text("role").notNull().default("user"), // 'admin' | 'manager' | 'user'
   department: text("department"), // e.g., 'Engineering', 'Sales', 'Operations'
-  managerId: integer("manager_id").references(() => users.id), // Self-referencing for hierarchy
+  managerId: integer("manager_id").references((): any => users.id), // Self-referencing for hierarchy
   microsoftId: text("microsoft_id").unique(), // Keep for future Microsoft migration
   replitId: text("replit_id").unique(), // Add Replit ID field for auth
   createdAt: timestamp("created_at").defaultNow().notNull(),
