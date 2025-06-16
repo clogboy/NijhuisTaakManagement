@@ -38,7 +38,7 @@ export default function WelcomeFlow({ isOpen, onClose }: WelcomeFlowProps) {
     {
       title: "Slimme Taakbeheer",
       subtitle: "Organiseer je werk zoals nooit tevoren",
-      description: "Beheer activiteiten, subtaken en deadlines met intelligente prioritering en automatische planning.",
+      description: "Beheer activiteiten, actiepunten en deadlines met intelligente prioritering en automatische planning.",
       icon: Target,
       character: "helper" as const,
       color: "from-blue-500 to-blue-600"

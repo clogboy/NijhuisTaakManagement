@@ -14,7 +14,8 @@ import {
   CheckCircle,
   Lightbulb,
   AlertTriangle,
-  Coffee
+  Coffee,
+  Construction
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -95,9 +96,15 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
     },
     {
       id: "subtasks",
-      title: "Subtaken Organiseren",
-      description: "Elke activiteit kan subtaken hebben. Deze kun je classificeren als taken, quick wins of wegversperringen voor betere organisatie.",
+      title: "Actiepunten Organiseren",
+      description: "Elke activiteit kan actiepunten hebben. Deze kun je classificeren als taken, quick wins of wegversperringen voor betere organisatie.",
       character: "helper"
+    },
+    {
+      id: "focus-mode",
+      title: "Focus Modus",
+      description: "Activeer Focus Modus voor rustige dagen wanneer je minder prikkels nodig hebt. Dit vereenvoudigt de interface en toont alleen essentiële informatie.",
+      character: "productivity"
     },
     {
       id: "time-blocking",
@@ -118,9 +125,15 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       character: "helper"
     },
     {
+      id: "rescue-workflow",
+      title: "Rescue Workflow",
+      description: "Wanneer je overweldigd bent, gebruik de rescue workflow om snel prioriteiten te herdefiniëren en urgente taken te identificeren voor onmiddellijke actie.",
+      character: "expert"
+    },
+    {
       id: "completion",
       title: "Klaar om te Beginnen!",
-      description: "Geweldig! Je bent nu klaar om het platform ten volle te benutten. Veel succes met je productiviteit!",
+      description: "Geweldig! Je bent nu klaar om het platform ten volle te benutten. Focus Modus en Rescue Workflow zijn altijd beschikbaar wanneer je ze nodig hebt!",
       character: "productivity",
       completion: true
     }
@@ -248,6 +261,30 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               </div>
               <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">
                 De AI analyseert je taken en stelt optimale planningen voor gebaseerd op urgentie en belangrijkheid.
+              </p>
+            </div>
+          )}
+
+          {currentStepData.id === "focus-mode" && (
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                <Target className="h-4 w-4" />
+                <span className="text-sm font-medium">Belangrijke Feature:</span>
+              </div>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                Focus Modus is perfect voor stressvolle dagen - schakel tussen 🟠 Focus modus en 🟢 Alle functies in de hoek van je scherm.
+              </p>
+            </div>
+          )}
+
+          {currentStepData.id === "rescue-workflow" && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
+                <Construction className="h-4 w-4" />
+                <span className="text-sm font-medium">Rescue Feature:</span>
+              </div>
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                Wanneer je overweldigd bent, gebruik deze workflow om snel controle terug te krijgen over je taken en prioriteiten.
               </p>
             </div>
           )}

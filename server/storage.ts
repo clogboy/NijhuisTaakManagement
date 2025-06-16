@@ -723,7 +723,7 @@ export class DatabaseStorage implements IStorage {
         sql`${timeBlocks.startTime} >= ${startDate}`,
         sql`${timeBlocks.endTime} <= ${endDate}`
       ));
-      return blocks.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      return blocks.sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     }
     
     return await db.select().from(timeBlocks)

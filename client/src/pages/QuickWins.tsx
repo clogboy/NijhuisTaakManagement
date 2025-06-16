@@ -352,7 +352,7 @@ export default function QuickWins() {
               <div>
                 <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
                   <ListChecks className="h-5 w-5" />
-                  Subtaken geclassificeerd als Quick Wins ({filteredQuickWinSubtasks.length})
+                  Actiepunten geclassificeerd als Quick Wins ({filteredQuickWinSubtasks.length})
                 </h2>
                 <div className="space-y-4">
                   {filteredQuickWinSubtasks.map((subtask: any) => {
