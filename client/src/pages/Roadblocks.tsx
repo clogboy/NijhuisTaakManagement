@@ -211,13 +211,17 @@ export default function Roadblocks() {
 
   // Filter subtasks that are classified as roadblocks by participants and exclude completed ones
   const roadblockSubtasks = (subtasks as any[]).filter((subtask: any) => {
-    const participantTypes = subtask.participantTypes as Record<string, string> || {};
+    // Handle both camelCase and snake_case field names for compatibility
+    const participantTypes = (subtask.participantTypes || subtask.participant_types || {}) as Record<string, string>;
     const isRoadblock = subtask.type === "roadblock" || 
                        Object.values(participantTypes).includes("roadblock") ||
                        subtask.status === "roadblock";
-    const isNotCompleted = subtask.status !== "completed" && subtask.status !== "resolved";
+    const isNotCompleted = subtask.status !== "completed" && subtask.status !== "resolved" && !subtask.completedDate && !subtask.completed_date;
+    
     return isRoadblock && isNotCompleted;
   });
+
+  console.log("Total roadblockSubtasks found:", roadblockSubtasks.length, roadblockSubtasks.map(s => s.id));
 
   // Filter roadblock subtasks based on search query
   const filteredRoadblockSubtasks = roadblockSubtasks.filter((subtask: any) =>
