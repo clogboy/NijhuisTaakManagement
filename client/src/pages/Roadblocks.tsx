@@ -17,6 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import TaskCelebration from "@/components/celebrations/TaskCelebration";
 import BlameAnalytics from "@/components/roadblocks/BlameAnalytics";
 import StreamlinedRoadblockForm from "@/components/roadblocks/StreamlinedRoadblockForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export default function Roadblocks() {
   const { t } = useTranslations();
@@ -78,12 +81,22 @@ export default function Roadblocks() {
     },
   });
 
+  const [rescueModalOpen, setRescueModalOpen] = useState(false);
+  const [rescuingSubtask, setRescuingSubtask] = useState<any>(null);
+  const [proposedResolution, setProposedResolution] = useState("");
+  const [newDeadline, setNewDeadline] = useState("");
+
   const rescueSubtaskMutation = useMutation({
-    mutationFn: async (subtaskId: number) => {
+    mutationFn: async ({ subtaskId, proposedResolution, newDeadline }: { 
+      subtaskId: number, 
+      proposedResolution: string, 
+      newDeadline: string 
+    }) => {
       const response = await fetch(`/api/subtasks/${subtaskId}/rescue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ proposedResolution, newDeadline }),
       });
       
       if (!response.ok) {
@@ -92,7 +105,7 @@ export default function Roadblocks() {
       
       return response.json();
     },
-    onSuccess: (_, subtaskId) => {
+    onSuccess: (_, { subtaskId }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
@@ -107,9 +120,12 @@ export default function Roadblocks() {
         });
       }
       
+      setRescueModalOpen(false);
+      setRescuingSubtask(null);
+      
       toast({
         title: "Rescue Successful",
-        description: "Task has been rescued and restructured for completion",
+        description: "High-priority resolution task created in the same dossier",
       });
     },
     onError: (error) => {
@@ -440,11 +456,13 @@ export default function Roadblocks() {
                                     variant="default"
                                     size="sm"
                                     className="bg-green-600 hover:bg-green-700 text-white"
-                                    onClick={() => rescueSubtaskMutation.mutate(subtask.id)}
-                                    disabled={rescueSubtaskMutation.isPending}
+                                    onClick={() => {
+                                      setRescuingSubtask(subtask);
+                                      setRescueModalOpen(true);
+                                    }}
                                   >
                                     <Shield className="h-4 w-4 mr-1" />
-                                    {rescueSubtaskMutation.isPending ? "Rescuing..." : "Rescue"}
+                                    Rescue
                                   </Button>
                                 </div>
                               </div>
@@ -488,6 +506,63 @@ export default function Roadblocks() {
           onOpenChange={setIsEditModalOpen}
           subtask={editingSubtask}
         />
+
+        {/* Rescue Modal */}
+        <Dialog open={rescueModalOpen} onOpenChange={setRescueModalOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Rescue Task: {rescuingSubtask?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="proposed-resolution">Proposed Resolution</Label>
+                <Textarea
+                  id="proposed-resolution"
+                  placeholder="Describe how you plan to resolve this roadblock..."
+                  value={proposedResolution}
+                  onChange={(e) => setProposedResolution(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-deadline">New Deadline</Label>
+                <Input
+                  id="new-deadline"
+                  type="datetime-local"
+                  value={newDeadline}
+                  onChange={(e) => setNewDeadline(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRescueModalOpen(false);
+                    setProposedResolution("");
+                    setNewDeadline("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (rescuingSubtask && proposedResolution && newDeadline) {
+                      rescueSubtaskMutation.mutate({
+                        subtaskId: rescuingSubtask.id,
+                        proposedResolution,
+                        newDeadline
+                      });
+                    }
+                  }}
+                  disabled={!proposedResolution || !newDeadline || rescueSubtaskMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {rescueSubtaskMutation.isPending ? "Creating Rescue Task..." : "Create Rescue Task"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <TaskCelebration
           isVisible={celebration.isVisible}
