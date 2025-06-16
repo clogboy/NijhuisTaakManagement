@@ -921,15 +921,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create a high-priority resolution task in the same activity
+      // Reset participant types to ensure it's treated as a regular task, not a roadblock
+      const cleanParticipantTypes: Record<string, string> = {};
+      subtask.participants.forEach(participant => {
+        cleanParticipantTypes[participant] = 'task';
+      });
+
       const rescueTaskData = {
         title: `Rescue: ${subtask.title}`,
         description: proposedResolution,
-        type: 'task',
-        status: 'pending',
-        priority: 'high',
+        type: 'task' as const,
+        status: 'pending' as const,
+        priority: 'high' as const,
         dueDate: new Date(newDeadline),
         participants: subtask.participants,
-        participantTypes: subtask.participantTypes,
+        participantTypes: cleanParticipantTypes as any,
         linkedActivityId: subtask.linkedActivityId,
         createdBy: req.user.id
       };
