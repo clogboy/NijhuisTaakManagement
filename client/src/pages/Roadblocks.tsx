@@ -415,15 +415,9 @@ export default function Roadblocks() {
                   </div>
                 )}
 
-                {/* TEST: Force render a roadblock section */}
-                <div style={{backgroundColor: 'yellow', padding: '10px', margin: '10px'}}>
-                  <h2>TEST: This should always be visible</h2>
-                  <p>Filtered roadblock subtasks count: {filteredRoadblockSubtasks.length}</p>
-                </div>
-
                 {/* Subtasks Classified as Roadblocks */}
                 {filteredRoadblockSubtasks.length > 0 && (
-                  <div style={{backgroundColor: 'lightgreen', padding: '20px', border: '2px solid red'}}>
+                  <div>
                     <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
                       <ListChecks className="h-5 w-5" />
                       Task Roadblocks ({filteredRoadblockSubtasks.length})
