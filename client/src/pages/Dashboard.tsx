@@ -112,6 +112,10 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     queryKey: ["/api/roadblocks"],
   });
 
+  const { data: userPreferences } = useQuery<any>({
+    queryKey: ["/api/user/preferences"],
+  });
+
   // Show loading screen if critical data is still loading
   const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
 
@@ -134,10 +138,6 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   // Total roadblocks including both traditional and task roadblocks  
   const totalActiveRoadblocks = (roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0) + 
                                (taskRoadblocks?.filter(tr => tr.status !== 'completed' && tr.status !== 'resolved').length || 0);
-
-  const { data: userPreferences } = useQuery<any>({
-    queryKey: ["/api/user/preferences"],
-  });
 
   const [healthCardDismissed, setHealthCardDismissed] = useState(false);
 
