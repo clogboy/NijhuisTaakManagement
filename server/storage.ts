@@ -557,22 +557,25 @@ export class DatabaseStorage implements IStorage {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
-    // Get urgent activities count
+    // Get urgent activities count (only incomplete activities)
     const urgentActivities = await db.select().from(activities).where(
       and(
         eq(activities.priority, 'urgent'),
+        ne(activities.status, 'completed'),
         !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
     );
 
-    // Get urgent subtasks count (includes priority and due date urgency)
+    // Get urgent subtasks count (priority urgent OR overdue, but not completed)
     const urgentSubtasks = await db.select().from(subtasks).where(
       and(
         or(
           eq(subtasks.priority, 'urgent'),
-          sql`${subtasks.dueDate} <= ${now.toISOString()}`
+          sql`${subtasks.dueDate} < ${now.toISOString()}`
         ),
         sql`${subtasks.completedDate} IS NULL`,
+        ne(subtasks.status, 'completed'),
+        ne(subtasks.status, 'resolved'),
         !isAdmin ? eq(subtasks.createdBy, userId) : undefined
       )
     );
@@ -635,8 +638,14 @@ export class DatabaseStorage implements IStorage {
     // Get active contacts count
     const activeContacts = await db.select().from(contacts).where(eq(contacts.createdBy, userId));
 
+    // Filter out subtasks that belong to urgent activities to avoid double counting
+    const urgentActivityIds = new Set(urgentActivities.map(a => a.id));
+    const urgentSubtasksNotFromUrgentActivities = urgentSubtasks.filter(
+      subtask => !urgentActivityIds.has(subtask.linkedActivityId || 0)
+    );
+
     return {
-      urgentCount: urgentActivities.length + urgentSubtasks.length,
+      urgentCount: urgentActivities.length + urgentSubtasksNotFromUrgentActivities.length,
       dueThisWeek: dueThisWeekActivities.length + dueThisWeekSubtasks.length,
       completedCount: completedActivitiesThisWeek.length + completedSubtasksThisWeek.length,
       roadblocksCount: roadblocksCount.length,
