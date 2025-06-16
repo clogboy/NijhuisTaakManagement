@@ -584,7 +584,7 @@ export class DatabaseStorage implements IStorage {
     const overdueActivities = await db.select().from(activities).where(
       and(
         sql`${activities.dueDate} IS NOT NULL`,
-        sql`DATE(${activities.dueDate}) < DATE('now')`,
+        sql`${activities.dueDate} < ${now.toISOString()}`,
         ne(activities.status, 'completed'),
         !isAdmin ? eq(activities.createdBy, userId) : undefined
       )
@@ -594,7 +594,7 @@ export class DatabaseStorage implements IStorage {
     const overdueSubtasks = await db.select().from(subtasks).where(
       and(
         sql`${subtasks.dueDate} IS NOT NULL`,
-        sql`DATE(${subtasks.dueDate}) < DATE('now')`,
+        sql`${subtasks.dueDate} < ${now.toISOString()}`,
         sql`${subtasks.completedDate} IS NULL`,
         ne(subtasks.status, 'completed'),
         ne(subtasks.status, 'resolved'),

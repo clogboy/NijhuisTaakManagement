@@ -216,6 +216,59 @@ const setupStatsRoutes = (app: Express): void => {
       handleApiError(error, res);
     }
   });
+
+  // Debug endpoint to see overdue items
+  app.get("/api/debug/overdue", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { activities, subtasks } = require("@shared/schema");
+      const { db } = require("./db");
+      const { and, sql, ne, eq } = require("drizzle-orm");
+      
+      const userId = req.user.id;
+      const isAdmin = req.user.role === 'admin';
+      
+      // Get overdue activities
+      const overdueActivities = await db.select().from(activities).where(
+        and(
+          sql`${activities.dueDate} IS NOT NULL`,
+          sql`DATE(${activities.dueDate}) < DATE('now')`,
+          ne(activities.status, 'completed'),
+          !isAdmin ? eq(activities.createdBy, userId) : undefined
+        )
+      );
+
+      // Get overdue subtasks
+      const overdueSubtasks = await db.select().from(subtasks).where(
+        and(
+          sql`${subtasks.dueDate} IS NOT NULL`,
+          sql`DATE(${subtasks.dueDate}) < DATE('now')`,
+          sql`${subtasks.completedDate} IS NULL`,
+          ne(subtasks.status, 'completed'),
+          ne(subtasks.status, 'resolved'),
+          !isAdmin ? eq(subtasks.createdBy, userId) : undefined
+        )
+      );
+
+      res.json({
+        overdueActivities: overdueActivities.map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          dueDate: a.dueDate,
+          status: a.status
+        })),
+        overdueSubtasks: overdueSubtasks.map((s: any) => ({
+          id: s.id,
+          title: s.title,
+          dueDate: s.dueDate,
+          status: s.status,
+          linkedActivityId: s.linkedActivityId
+        })),
+        totalOverdue: overdueActivities.length + overdueSubtasks.length
+      });
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
 };
 
 // Main route registration function
