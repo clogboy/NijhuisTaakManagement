@@ -218,20 +218,10 @@ export default function Roadblocks() {
                        subtask.status === "roadblock";
     const isNotCompleted = subtask.status !== "completed" && subtask.status !== "resolved" && !subtask.completedDate && !subtask.completed_date;
     
-    // Debug logging for all subtasks
-    console.log(`Subtask ${subtask.id} (${subtask.title}):`, {
-      type: subtask.type,
-      status: subtask.status,
-      participantTypes,
-      participantValues: Object.values(participantTypes),
-      includesRoadblock: Object.values(participantTypes).includes("roadblock"),
-      isRoadblock,
-      isNotCompleted,
-      finalResult: isRoadblock && isNotCompleted
-    });
-    
     return isRoadblock && isNotCompleted;
   });
+
+  console.log("Roadblock subtasks found:", roadblockSubtasks.length, roadblockSubtasks.map(s => ({id: s.id, title: s.title})));
 
   // Filter roadblock subtasks based on search query
   const filteredRoadblockSubtasks = roadblockSubtasks.filter((subtask: any) =>
@@ -239,6 +229,8 @@ export default function Roadblocks() {
     subtask.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     activityMap[subtask.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  console.log("Search query:", searchQuery, "Filtered roadblock subtasks:", filteredRoadblockSubtasks.length);
 
   // Filter roadblocks based on search query
   const filteredRoadblocks = roadblocks?.filter(roadblock =>
@@ -442,12 +434,13 @@ export default function Roadblocks() {
 
                 {/* Subtasks Classified as Roadblocks */}
                 {filteredRoadblockSubtasks.length > 0 && (
-                  <div>
+                  <div style={{backgroundColor: 'red', padding: '20px', minHeight: '200px'}}>
                     <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
                       <ListChecks className="h-5 w-5" />
                       Task Roadblocks ({filteredRoadblockSubtasks.length})
                     </h2>
                     <div className="space-y-4">
+                      {console.log("Mapping roadblock subtasks:", filteredRoadblockSubtasks.length)}
                       {filteredRoadblockSubtasks.map((subtask: any) => {
                         const linkedActivity = activityMap[subtask.linkedActivityId];
                         const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
