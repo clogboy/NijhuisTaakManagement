@@ -415,12 +415,33 @@ export default function Roadblocks() {
                   </div>
                 )}
 
-                {/* Subtasks Classified as Roadblocks */}
+                {/* Subtasks Classified as Roadblocks - ALWAYS VISIBLE FOR TESTING */}
+                <div style={{backgroundColor: '#ffeb3b', border: '3px solid #f44336', padding: '20px', margin: '20px 0'}}>
+                  <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
+                    <ListChecks className="h-5 w-5" />
+                    🚨 TEST: Task Roadblocks ({filteredRoadblockSubtasks.length}) - Should be visible
+                  </h2>
+                  <p>Debug: roadblockSubtasks.length = {roadblockSubtasks.length}</p>
+                  <p>Debug: filteredRoadblockSubtasks.length = {filteredRoadblockSubtasks.length}</p>
+                  <p>Debug: searchQuery = "{searchQuery}"</p>
+                  {roadblockSubtasks.length > 0 && (
+                    <div>
+                      <p>Detected roadblock subtasks:</p>
+                      <ul>
+                        {roadblockSubtasks.map((subtask: any) => (
+                          <li key={subtask.id}>ID: {subtask.id}, Title: {subtask.title}, Status: {subtask.status}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Original conditional section */}
                 {filteredRoadblockSubtasks.length > 0 && (
-                  <div>
+                  <div style={{backgroundColor: '#4caf50', border: '2px solid #2196f3', padding: '15px'}}>
                     <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
                       <ListChecks className="h-5 w-5" />
-                      Task Roadblocks ({filteredRoadblockSubtasks.length})
+                      Actual Task Roadblocks ({filteredRoadblockSubtasks.length})
                     </h2>
                     <div className="space-y-4">
                       {filteredRoadblockSubtasks.map((subtask: any) => {
