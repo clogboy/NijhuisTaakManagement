@@ -9,29 +9,27 @@ export default function DashboardPage() {
   const handleModeToggle = (checked: boolean) => {
     setIsTransitioning(true);
     
-    // Start transition overlay
+    // Wait for full fade to white, then switch modes
     setTimeout(() => {
       setLowStimulusMode(checked);
       
-      // End transition after mode change
+      // Wait a moment for layout changes, then fade out
       setTimeout(() => {
         setIsTransitioning(false);
-      }, 300);
-    }, 200);
+      }, 100);
+    }, 500);
   };
 
   return (
     <div className="relative">
       {/* Transition overlay */}
-      {isTransitioning && (
-        <div 
-          className="fixed inset-0 bg-white z-50 transition-opacity duration-300"
-          style={{ 
-            opacity: isTransitioning ? 0.8 : 0,
-            pointerEvents: isTransitioning ? 'auto' : 'none'
-          }}
-        />
-      )}
+      <div 
+        className="fixed inset-0 bg-white z-50 transition-opacity duration-500 ease-in-out"
+        style={{ 
+          opacity: isTransitioning ? 1 : 0,
+          pointerEvents: isTransitioning ? 'auto' : 'none'
+        }}
+      />
       
       <AppLayout
         title="Dashboard"
