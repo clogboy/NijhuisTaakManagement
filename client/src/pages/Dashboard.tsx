@@ -118,29 +118,6 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
   const [healthCardDismissed, setHealthCardDismissed] = useState(false);
 
-  // Show loading screen if critical data is still loading
-  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
-
-  if (isInitialLoading) {
-    return <DashboardLoadingScreen />;
-  }
-
-  // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
-  const taskRoadblocks = subtasks?.filter((subtask: any) => {
-    const participantTypes = subtask.participantTypes || subtask.participant_types;
-    if (!participantTypes) return false;
-    
-    const participants = typeof participantTypes === 'string' 
-      ? JSON.parse(participantTypes) 
-      : participantTypes;
-    
-    return Object.values(participants).some((type: any) => type === 'roadblock');
-  }) || [];
-
-  // Total roadblocks including both traditional and task roadblocks  
-  const totalActiveRoadblocks = (roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0) + 
-                               (taskRoadblocks?.filter(tr => tr.status !== 'completed' && tr.status !== 'resolved').length || 0);
-
   // Productivity health preferences mutation
   const updatePreferencesMutation = useMutation({
     mutationFn: async (preferences: any) => {
@@ -204,6 +181,29 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       });
     },
   });
+
+  // Show loading screen if critical data is still loading
+  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
+
+  if (isInitialLoading) {
+    return <DashboardLoadingScreen />;
+  }
+
+  // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
+  const taskRoadblocks = subtasks?.filter((subtask: any) => {
+    const participantTypes = subtask.participantTypes || subtask.participant_types;
+    if (!participantTypes) return false;
+    
+    const participants = typeof participantTypes === 'string' 
+      ? JSON.parse(participantTypes) 
+      : participantTypes;
+    
+    return Object.values(participants).some((type: any) => type === 'roadblock');
+  }) || [];
+
+  // Total roadblocks including both traditional and task roadblocks  
+  const totalActiveRoadblocks = (roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0) + 
+                               (taskRoadblocks?.filter(tr => tr.status !== 'completed' && tr.status !== 'resolved').length || 0);
 
   // Trigger onboarding for new users
   useEffect(() => {
