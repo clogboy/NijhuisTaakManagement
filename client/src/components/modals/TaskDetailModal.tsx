@@ -440,7 +440,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                     ))}
                     {subtasks.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
-                        Nog geen subtaken. Voeg er een toe om te beginnen!
+                        Nog geen actiepunten. Voeg er een toe om te beginnen!
                       </div>
                     )}
                   </div>
