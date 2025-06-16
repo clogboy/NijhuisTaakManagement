@@ -102,6 +102,22 @@ export default function Dashboard() {
     queryKey: ["/api/roadblocks"],
   });
 
+  // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
+  const taskRoadblocks = subtasks?.filter((subtask: any) => {
+    const participantTypes = subtask.participantTypes || subtask.participant_types;
+    if (!participantTypes) return false;
+    
+    const participants = typeof participantTypes === 'string' 
+      ? JSON.parse(participantTypes) 
+      : participantTypes;
+    
+    return Object.values(participants).some((type: any) => type === 'roadblock');
+  }) || [];
+
+  // Total roadblocks including both traditional and task roadblocks  
+  const totalActiveRoadblocks = (roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0) + 
+                               (taskRoadblocks?.filter(tr => tr.status !== 'completed' && tr.status !== 'resolved').length || 0);
+
   const { data: userPreferences } = useQuery<any>({
     queryKey: ["/api/user/preferences"],
   });
@@ -474,7 +490,7 @@ export default function Dashboard() {
         )}
 
         {/* Roadblocks Alert */}
-        {stats && stats.roadblocksCount > 0 && (
+        {totalActiveRoadblocks > 0 && (
           <Card 
             className="mb-4 border-red-200 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors micro-button-press"
             onClick={() => window.location.href = "/roadblocks"}
@@ -487,10 +503,15 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-red-800">
-                      {stats.roadblocksCount} Wegversperring{stats.roadblocksCount > 1 ? 'en' : ''}
+                      {totalActiveRoadblocks} Wegversperring{totalActiveRoadblocks > 1 ? 'en' : ''}
                     </h3>
                     <p className="text-sm text-red-600">
-                      Klik hier om ze op te lossen via de Rescue workflow
+                      {taskRoadblocks.length > 0 && roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length === 0 
+                        ? "Task roadblocks gedetecteerd - klik hier om ze op te lossen"
+                        : taskRoadblocks.length > 0 
+                        ? `${taskRoadblocks.length} task roadblocks + ${roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0} traditionele roadblocks`
+                        : "Klik hier om ze op te lossen via de Rescue workflow"
+                      }
                     </p>
                   </div>
                 </div>

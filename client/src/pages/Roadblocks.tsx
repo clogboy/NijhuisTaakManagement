@@ -236,11 +236,38 @@ export default function Roadblocks() {
     activityMap[roadblock.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  // Group roadblocks by status
+  // Convert subtask roadblocks to roadblock-like objects for unified display
+  const subtaskRoadblocks = filteredRoadblockSubtasks.map((subtask: any) => ({
+    id: `subtask-${subtask.id}`,
+    title: subtask.title,
+    description: subtask.description || "Task converted to roadblock",
+    severity: subtask.priority || "medium",
+    status: subtask.status === "pending" ? "open" : 
+           subtask.status === "in_progress" ? "in_progress" : "resolved",
+    assignedTo: null,
+    oorzaakCategory: "unclear",
+    oorzaakFactor: null,
+    departmentImpact: [],
+    linkedActivityId: subtask.linkedActivityId,
+    reportedDate: subtask.createdAt || new Date().toISOString(),
+    resolvedDate: subtask.completedDate,
+    resolution: null,
+    newDeadline: subtask.dueDate,
+    createdBy: subtask.createdBy,
+    createdAt: subtask.createdAt || new Date().toISOString(),
+    updatedAt: subtask.updatedAt || new Date().toISOString(),
+    isSubtask: true,
+    originalSubtask: subtask
+  }));
+
+  // Combine traditional roadblocks with subtask roadblocks
+  const allRoadblocks = [...filteredRoadblocks, ...subtaskRoadblocks];
+
+  // Group all roadblocks by status
   const roadblocksByStatus = {
-    open: filteredRoadblocks.filter(rb => rb.status === "open"),
-    in_progress: filteredRoadblocks.filter(rb => rb.status === "in_progress"),
-    resolved: filteredRoadblocks.filter(rb => rb.status === "resolved"),
+    open: allRoadblocks.filter(rb => rb.status === "open"),
+    in_progress: allRoadblocks.filter(rb => rb.status === "in_progress"),
+    resolved: allRoadblocks.filter(rb => rb.status === "resolved"),
   };
 
   const getSeverityColor = (severity: string) => {
@@ -415,76 +442,7 @@ export default function Roadblocks() {
                   </div>
                 )}
 
-                {/* Subtasks Classified as Roadblocks */}
-                {filteredRoadblockSubtasks.length > 0 && (
-                  <div>
-                    <h2 className="text-lg font-semibold text-neutral-dark dark:text-white mb-4 flex items-center gap-2">
-                      <ListChecks className="h-5 w-5" />
-                      Task Roadblocks ({filteredRoadblockSubtasks.length})
-                    </h2>
-                    <div className="space-y-4">
-                      {filteredRoadblockSubtasks.map((subtask: any) => {
-                        const linkedActivity = activityMap[subtask.linkedActivityId];
-                        const isOverdue = subtask.dueDate && new Date(subtask.dueDate) < new Date() && 
-                                         subtask.status !== "completed" && subtask.status !== "resolved";
 
-                        return (
-                          <Card key={`subtask-${subtask.id}`} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <CardTitle className="text-sm font-medium mb-2">
-                                    {subtask.title}
-                                  </CardTitle>
-                                  <div className="flex gap-2 mb-2">
-                                    <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                      Roadblock
-                                    </Badge>
-                                    <Badge className={`${
-                                      subtask.status === "completed" || subtask.status === "resolved" 
-                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                        : subtask.status === "in_progress" 
-                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                        : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                                    }`}>
-                                      {subtask.status === "pending" ? "Pending" :
-                                       subtask.status === "in_progress" ? "In Progress" :
-                                       subtask.status === "completed" ? "Completed" : "Resolved"}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditingSubtask(subtask);
-                                      setIsEditModalOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                    onClick={() => {
-                                      setRescuingSubtask(subtask);
-                                      setRescueModalOpen(true);
-                                    }}
-                                  >
-                                    <Shield className="h-4 w-4 mr-1" />
-                                    Rescue
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardHeader>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </TabsContent>
