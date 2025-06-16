@@ -465,7 +465,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 </Card>
 
                 {/* Quick Wins - Only show non-completed wins */}
-                {allQuickWins && allQuickWins.filter(win => win.status !== 'completed').length > 0 && (
+                {quickWins && quickWins.filter((win: any) => win.status !== 'completed').length > 0 && (
                   <Card className="border-gray-100">
                     <CardContent className="p-8">
                       <h2 className="text-xl font-medium text-gray-700 mb-6 flex items-center">
@@ -473,7 +473,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                         Quick wins
                       </h2>
                       <div className="space-y-4">
-                        {allQuickWins.filter(win => win.status !== 'completed').slice(0, 3).map((win) => (
+                        {quickWins.filter((win: any) => win.status !== 'completed').slice(0, 3).map((win: any) => (
                           <div key={win.id} className="p-4 border border-gray-100 rounded-xl bg-gray-50">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
