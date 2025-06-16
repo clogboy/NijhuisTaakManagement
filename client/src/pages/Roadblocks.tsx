@@ -218,10 +218,20 @@ export default function Roadblocks() {
                        subtask.status === "roadblock";
     const isNotCompleted = subtask.status !== "completed" && subtask.status !== "resolved" && !subtask.completedDate && !subtask.completed_date;
     
+    // Debug logging for all subtasks
+    console.log(`Subtask ${subtask.id} (${subtask.title}):`, {
+      type: subtask.type,
+      status: subtask.status,
+      participantTypes,
+      participantValues: Object.values(participantTypes),
+      includesRoadblock: Object.values(participantTypes).includes("roadblock"),
+      isRoadblock,
+      isNotCompleted,
+      finalResult: isRoadblock && isNotCompleted
+    });
+    
     return isRoadblock && isNotCompleted;
   });
-
-  console.log("Total roadblockSubtasks found:", roadblockSubtasks.length, roadblockSubtasks.map(s => s.id));
 
   // Filter roadblock subtasks based on search query
   const filteredRoadblockSubtasks = roadblockSubtasks.filter((subtask: any) =>
