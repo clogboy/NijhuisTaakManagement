@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Search, Activity as ActivityIcon, AlertCircle, User, ListChecks, Clock, BarChart3, Plus } from "lucide-react";
+import { AlertTriangle, Search, Activity as ActivityIcon, AlertCircle, User, ListChecks, Clock, BarChart3, Plus, Shield } from "lucide-react";
 import { Roadblock, Activity } from "@shared/schema";
 import { format } from "date-fns";
 import { useState } from "react";

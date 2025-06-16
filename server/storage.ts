@@ -77,7 +77,9 @@ export interface IStorage {
     urgentCount: number;
     dueThisWeek: number;
     completedCount: number;
+    roadblocksCount: number;
     activeContacts: number;
+    overdueCount: number;
   }>;
 
   // Weekly Ethos
@@ -546,6 +548,7 @@ export class DatabaseStorage implements IStorage {
     urgentCount: number;
     dueThisWeek: number;
     completedCount: number;
+    roadblocksCount: number;
     activeContacts: number;
     overdueCount: number;
   }> {

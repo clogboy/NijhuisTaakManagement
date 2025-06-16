@@ -54,6 +54,7 @@ interface DashboardStats {
   urgentCount: number;
   dueThisWeek: number;
   completedCount: number;
+  roadblocksCount: number;
   activeContacts: number;
   overdueCount: number;
 }
@@ -473,7 +474,7 @@ export default function Dashboard() {
         )}
 
         {/* Roadblocks Alert */}
-        {stats?.roadblocksCount > 0 && (
+        {stats && stats.roadblocksCount > 0 && (
           <Card 
             className="mb-4 border-red-200 bg-red-50 cursor-pointer hover:bg-red-100 transition-colors micro-button-press"
             onClick={() => window.location.href = "/roadblocks"}
