@@ -38,7 +38,8 @@ import {
   Download,
   Archive,
   ArchiveRestore,
-  Shield
+  Shield,
+  BarChart3
 } from "lucide-react";
 import { Activity, Contact, QuickWin } from "@shared/schema";
 import NewActivityModal from "@/components/modals/NewActivityModal";
@@ -418,6 +419,42 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   <div className="w-3 h-3 bg-blue-300 rounded-full"></div>
                   <p className="text-blue-700 text-sm">
                     Focus modus actief. Rustige weergave van je belangrijkste taken.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Productivity Reflections Box */}
+            <Card className="border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+              <CardContent className="p-5">
+                <h3 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
+                  <BarChart3 className="mr-2 text-gray-500" size={20} />
+                  Reflectie & Voortgang
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-3 bg-white rounded-lg border border-gray-100">
+                    <div className="text-2xl font-bold text-green-600">
+                      {stats?.completedCount || 0}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Afgerond vandaag</div>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg border border-gray-100">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {stats?.dueThisWeek || 0}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Deze week</div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg border border-gray-100">
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {(stats?.completedCount || 0) > 0 
+                      ? "Je hebt al vooruitgang geboekt vandaag. Elke afgeronde taak draagt bij aan je doelen."
+                      : (stats?.urgentCount || 0) > 0
+                      ? "Urgente zaken vragen focus en aandacht. Neem de tijd die je nodig hebt."
+                      : "Elke stap voorwaarts telt, ook de kleine. Vooruitgang hoeft niet perfect te zijn om waardevol te zijn."
+                    }
                   </p>
                 </div>
               </CardContent>
