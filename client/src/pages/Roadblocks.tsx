@@ -347,7 +347,7 @@ export default function Roadblocks() {
               <div className="text-center py-12">
                 <p className="text-neutral-medium">Loading roadblocks...</p>
               </div>
-            ) : filteredRoadblocks.length === 0 && filteredRoadblockSubtasks.length === 0 ? (
+            ) : (filteredRoadblocks.length === 0 && filteredRoadblockSubtasks.length === 0) ? (
               <div className="text-center py-12">
                 <AlertTriangle className="h-12 w-12 text-neutral-light mx-auto mb-4" />
                 <p className="text-neutral-medium text-lg mb-2">
@@ -362,8 +362,8 @@ export default function Roadblocks() {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Traditional Roadblocks */}
-                {filteredRoadblocks.length > 0 && (
+                {/* Show columns when we have ANY roadblocks (traditional OR task roadblocks) */}
+                {(filteredRoadblocks.length > 0 || filteredRoadblockSubtasks.length > 0) && (
                   <div className="grid gap-6 lg:grid-cols-3">
                     {/* Open, In Progress, Resolved columns */}
                     {['open', 'in_progress', 'resolved'].map((status) => (
