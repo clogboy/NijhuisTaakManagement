@@ -928,8 +928,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const rescueTaskData = {
-        title: `Rescue: ${subtask.title}`,
-        description: proposedResolution,
+        title: `🚨 RESCUE: ${subtask.title}`,
+        description: `RESCUE TASK - Original deadline missed\n\nOriginal Task: ${subtask.title}\nProposed Resolution: ${proposedResolution}\n\nRoot Cause Analysis:\n- Category: ${oorzaakCategory}\n- Factor: ${oorzaakFactor || 'Not specified'}\n- Severity: ${severity}\n\nThis is a high-priority rescue task to resolve the roadblock.`,
         type: 'task' as const,
         status: 'pending' as const,
         priority: 'high' as const,
@@ -940,6 +940,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: req.user.id
       };
 
+      // Create roadblock entry for Blame Analytics
+      const roadblockData = {
+        title: `Roadblock: ${subtask.title}`,
+        description: `Task became roadblock due to missed deadline. Original: ${subtask.description}`,
+        severity: severity || 'medium',
+        status: 'resolved' as const,
+        assignedTo: subtask.participants[0] || null,
+        oorzaakCategory,
+        oorzaakFactor: oorzaakFactor || null,
+        departmentImpact: [],
+        linkedActivityId: subtask.linkedActivityId,
+        linkedSubtaskId: subtaskId,
+        reportedDate: new Date(),
+        resolvedAt: new Date(),
+        proposedResolution,
+        newDeadline: new Date(newDeadline),
+        createdBy: req.user.id
+      };
+
+      const roadblock = await storage.createRoadblock(roadblockData);
       const rescueTask = await storage.createSubtask(rescueTaskData);
 
       // Mark the original roadblock as resolved
@@ -966,7 +986,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true, 
         subtask: updatedSubtask,
         rescueTask: rescueTask,
-        message: "High-priority resolution task created successfully"
+        roadblock: roadblock,
+        message: "High-priority resolution task created successfully with roadblock analysis"
       });
     } catch (error) {
       console.error("Error rescuing subtask:", error);
