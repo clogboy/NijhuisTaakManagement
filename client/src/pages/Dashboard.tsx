@@ -182,6 +182,23 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     },
   });
 
+  // Trigger onboarding for new users
+  useEffect(() => {
+    if (onboardingState.isFirstVisit && !onboardingState.hasCompletedTutorial) {
+      const timer = setTimeout(() => {
+        setShowWelcomeFlow(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [onboardingState.isFirstVisit, onboardingState.hasCompletedTutorial]);
+
+  // Show contextual guides based on user actions
+  useEffect(() => {
+    if (activities && activities.length === 0 && onboardingState.hasCompletedTutorial) {
+      showGuide("helper", "Het lijkt erop dat je nog geen activiteiten hebt aangemaakt. Klik op 'Nieuwe Activiteit' om te beginnen!");
+    }
+  }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
+
   // Show loading screen if critical data is still loading
   const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
 
@@ -204,23 +221,6 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   // Total roadblocks including both traditional and task roadblocks  
   const totalActiveRoadblocks = (roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0) + 
                                (taskRoadblocks?.filter(tr => tr.status !== 'completed' && tr.status !== 'resolved').length || 0);
-
-  // Trigger onboarding for new users
-  useEffect(() => {
-    if (onboardingState.isFirstVisit && !onboardingState.hasCompletedTutorial) {
-      const timer = setTimeout(() => {
-        setShowWelcomeFlow(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [onboardingState.isFirstVisit, onboardingState.hasCompletedTutorial]);
-
-  // Show contextual guides based on user actions
-  useEffect(() => {
-    if (activities && activities.length === 0 && onboardingState.hasCompletedTutorial) {
-      showGuide("helper", "Het lijkt erop dat je nog geen activiteiten hebt aangemaakt. Klik op 'Nieuwe Activiteit' om te beginnen!");
-    }
-  }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
