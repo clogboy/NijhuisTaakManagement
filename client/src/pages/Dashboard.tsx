@@ -401,7 +401,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         </div>
         {/* Low Stimulus Mode - Simplified View */}
         {lowStimulus ? (
-          <div className="space-y-6 animate-in fade-in-0 duration-500">
+          <div className="space-y-6 transition-opacity duration-500 ease-in-out opacity-100">
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
               <ProductivityHealthCard
@@ -513,7 +513,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             </Card>
           </div>
         ) : (
-          <>
+          <div className="transition-opacity duration-500 ease-in-out opacity-100">
         {/* Stats Cards - Hidden when productivity reflection is active */}
         {(userPreferences?.productivityHealthEnabled === false || healthCardDismissed) && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
@@ -991,7 +991,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         </Card>
           </div>
         </div>
-          </>
+          </div>
         )}
 
       {/* Filter Panel */}
@@ -1138,43 +1138,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           onClose={() => setIsTaskDetailModalOpen(false)}
         />
       )}
-          </div>
-        )}
 
-      {/* Onboarding Components */}
-      <WelcomeFlow
-        isOpen={showWelcomeFlow}
-        onClose={() => setShowWelcomeFlow(false)}
-      />
-
-      <OnboardingTutorial
-        isOpen={showTutorial}
-        onClose={() => setShowTutorial(false)}
-        onComplete={completeTutorial}
-      />
-
-      <CharacterGuide
-        character={onboardingState.guideCharacter}
-        message={onboardingState.guidanceMessage}
-        isVisible={onboardingState.showCharacterGuide}
-        onDismiss={hideGuide}
-        position="bottom-right"
-        showActions={true}
-        actions={[
-          {
-            label: "Start Tutorial",
-            action: () => {
-              setShowTutorial(true);
-              hideGuide();
-            }
-          },
-          {
-            label: "Niet nu",
-            action: hideGuide,
-            variant: "outline"
-          }
-        ]}
-      />
     </div>
   );
 }
