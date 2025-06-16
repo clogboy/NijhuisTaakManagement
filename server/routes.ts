@@ -14,7 +14,7 @@ import { azureMigrationService } from "./azure-migration-service";
 import { digiOfficeService } from "./digioffice-service";
 import { smartPrioritizationService } from "./smart-prioritization-service";
 import { z } from "zod";
-import { apiLimiter, authLimiter } from "./middleware/rate-limiter";
+import { apiLimiter, authLimiter, strictLimiter } from "./middleware/rate-limiter";
 import { requireAuth } from "./middleware/auth.middleware";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -47,10 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  // Add rate limiting middleware
-  app.use("/api", apiLimiter.middleware());
-
-  // Development endpoint to clear rate limits
+  // Development endpoint to clear rate limits (before other middleware)
   app.post("/api/dev/clear-rate-limits", async (req, res) => {
     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
       authLimiter.clearAll();
@@ -62,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Authentication routes with stricter rate limiting
+  // Authentication routes with specific rate limiting
   app.post("/api/auth/login", authLimiter.middleware(), async (req, res) => {
     try {
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
