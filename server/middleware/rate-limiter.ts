@@ -94,18 +94,28 @@ export class RateLimiter {
       activeWindows: this.requests.size
     };
   }
+
+  // Clear all rate limit records (useful for development)
+  clearAll(): void {
+    this.requests.clear();
+  }
+
+  // Clear rate limit for specific key
+  clearKey(key: string): void {
+    this.requests.delete(key);
+  }
 }
 
 // Pre-configured rate limiters
 export const authLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5, // 5 login attempts per 15 minutes
+  maxRequests: 50, // 50 login attempts per 15 minutes (increased for development)
   message: 'Too many authentication attempts, please try again later'
 });
 
 export const apiLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100, // 100 requests per 15 minutes
+  maxRequests: 500, // 500 requests per 15 minutes (increased for development)
   skipSuccessfulRequests: true
 });
 

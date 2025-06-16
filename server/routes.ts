@@ -50,6 +50,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add rate limiting middleware
   app.use("/api", apiLimiter.middleware());
 
+  // Development endpoint to clear rate limits
+  app.post("/api/dev/clear-rate-limits", async (req, res) => {
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+      authLimiter.clearAll();
+      apiLimiter.clearAll();
+      strictLimiter.clearAll();
+      res.json({ message: "Rate limits cleared" });
+    } else {
+      res.status(404).json({ message: "Not found" });
+    }
+  });
+
   // Authentication routes with stricter rate limiting
   app.post("/api/auth/login", authLimiter.middleware(), async (req, res) => {
     try {
