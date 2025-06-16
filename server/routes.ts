@@ -904,7 +904,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subtasks/:id/rescue", requireAuth, async (req: any, res) => {
     try {
       const subtaskId = parseInt(req.params.id);
+      const { proposedResolution, newDeadline } = req.body;
       
+      if (!proposedResolution || !newDeadline) {
+        return res.status(400).json({ error: "Proposed resolution and new deadline are required" });
+      }
+
       const subtask = await storage.getSubtask(subtaskId);
       if (!subtask) {
         return res.status(404).json({ error: "Subtask not found" });
@@ -915,22 +920,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to rescue this subtask" });
       }
 
-      // Rescue workflow: Reset to pending, extend deadline, break down if complex
-      const rescueData: any = {
+      // Create a high-priority resolution task in the same activity
+      const rescueTaskData = {
+        title: `Rescue: ${subtask.title}`,
+        description: proposedResolution,
+        type: 'task',
         status: 'pending',
-        priority: 'medium', // Reset priority to avoid overwhelming
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Extend by 1 week
-        rescuedAt: new Date(),
-        rescueCount: (subtask.rescueCount || 0) + 1
+        priority: 'high',
+        dueDate: new Date(newDeadline),
+        participants: subtask.participants,
+        participantTypes: subtask.participantTypes,
+        linkedActivityId: subtask.linkedActivityId,
+        createdBy: req.user.id
       };
 
-      // If this task has been rescued multiple times, break it down
-      if (rescueData.rescueCount > 2) {
-        rescueData.description = `[RESCUED ${rescueData.rescueCount}x] ${subtask.description || subtask.title}`;
-        rescueData.title = `${subtask.title} (Simplified)`;
-      }
+      const rescueTask = await storage.createSubtask(rescueTaskData);
 
-      const updatedSubtask = await storage.updateSubtask(subtaskId, rescueData);
+      // Mark the original roadblock as resolved
+      const updatedSubtask = await storage.updateSubtask(subtaskId, {
+        status: 'resolved',
+        rescuedAt: new Date(),
+        rescueCount: (subtask.rescueCount || 0) + 1
+      });
 
       // Remove from roadblocks if it was there
       try {
@@ -948,7 +959,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         subtask: updatedSubtask,
-        message: "Task rescued successfully - reset with extended deadline"
+        rescueTask: rescueTask,
+        message: "High-priority resolution task created successfully"
       });
     } catch (error) {
       console.error("Error rescuing subtask:", error);
