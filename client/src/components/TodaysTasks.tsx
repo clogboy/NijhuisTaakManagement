@@ -170,18 +170,15 @@ export default function TodaysTasks() {
     });
   };
 
-  // Filter overdue subtasks that will be converted to roadblocks
+  // Filter overdue subtasks that will be converted to roadblocks - align with backend logic
   const overdueSubtasks = subtasks.filter(subtask => {
     // Exclude completed tasks (both status 'completed' and 'resolved' are considered done)
     if (!subtask.dueDate || subtask.completedDate || subtask.status === 'completed' || subtask.status === 'resolved') return false;
     
+    // Use ISO string comparison to match backend logic
+    const now = new Date();
     const dueDate = new Date(subtask.dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    dueDate.setHours(0, 0, 0, 0);
-    const isOverdue = dueDate < today;
-    
-    return isOverdue;
+    return dueDate < now;
   });
 
   const hasOverdueWarning = overdueSubtasks.length > 0;
