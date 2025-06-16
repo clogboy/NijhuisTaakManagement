@@ -402,7 +402,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         </div>
         {/* Low Stimulus Mode - Simplified View */}
         {lowStimulus ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
               <ProductivityHealthCard
@@ -414,135 +414,147 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
             {/* Gentle intro message */}
             <Card className="border-blue-100 bg-blue-50">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-blue-300 rounded-full"></div>
-                  <p className="text-blue-700 text-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-4 h-4 bg-blue-300 rounded-full"></div>
+                  <p className="text-blue-700 text-base">
                     Focus modus actief. Rustige weergave van je belangrijkste taken.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Productivity Reflections Box */}
-            <Card className="border-gray-200 bg-gradient-to-br from-gray-50 to-white">
-              <CardContent className="p-5">
-                <h3 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
-                  <BarChart3 className="mr-2 text-gray-500" size={20} />
-                  Reflectie & Voortgang
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center p-3 bg-white rounded-lg border border-gray-100">
-                    <div className="text-2xl font-bold text-green-600">
-                      {stats?.completedCount || 0}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">Afgerond vandaag</div>
-                  </div>
-                  <div className="text-center p-3 bg-white rounded-lg border border-gray-100">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {stats?.dueThisWeek || 0}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">Deze week</div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-lg border border-gray-100">
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {(stats?.completedCount || 0) > 0 
-                      ? "Je hebt al vooruitgang geboekt vandaag. Elke afgeronde taak draagt bij aan je doelen."
-                      : (stats?.urgentCount || 0) > 0
-                      ? "Urgente zaken vragen focus en aandacht. Neem de tijd die je nodig hebt."
-                      : "Elke stap voorwaarts telt, ook de kleine. Vooruitgang hoeft niet perfect te zijn om waardevol te zijn."
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Today's Tasks - Simplified */}
-            <Card className="border-gray-100">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
-                  <Clock className="mr-2 text-gray-500" size={20} />
-                  Mijn acties
-                </h2>
-                <TodaysTasks />
-              </CardContent>
-            </Card>
-
-            {/* Quick Wins - Only show if there are any */}
-            {allQuickWins && allQuickWins.length > 0 && (
-              <Card className="border-gray-100">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
-                    <Trophy className="mr-2 text-gray-500" size={20} />
-                    Quick wins
-                  </h2>
-                  <div className="space-y-3">
-                    {allQuickWins.slice(0, 5).map((win) => (
-                      <div key={win.id} className="p-3 border border-gray-100 rounded-lg bg-gray-50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-700">{win.title}</h4>
-                            <p className="text-sm text-gray-500 mt-1">{win.description}</p>
-                          </div>
-                          <Badge className={`ml-2 ${win.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                            {win.status === 'completed' ? 'Klaar' : 'Te doen'}
-                          </Badge>
+            {/* 2-Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-8">
+                {/* Productivity Reflections Box */}
+                <Card className="border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-medium text-gray-700 mb-6 flex items-center">
+                      <BarChart3 className="mr-3 text-gray-500" size={24} />
+                      Reflectie & Voortgang
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 gap-6 mb-6">
+                      <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                        <div className="text-3xl font-bold text-green-600 mb-2">
+                          {stats?.completedCount || 0}
                         </div>
+                        <div className="text-sm text-gray-500">Afgerond vandaag</div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Delegatable Tasks - Only show if there are any */}
-            {activities?.filter(activity => 
-              activity.priority === 'urgent' && 
-              activity.status !== 'completed' &&
-              activity.estimatedDuration && activity.estimatedDuration <= 60
-            ).length > 0 && (
-              <Card className="border-gray-100">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-medium text-gray-700 mb-4 flex items-center">
-                    <Users className="mr-2 text-gray-500" size={20} />
-                    Delegeerbare taken
-                  </h2>
-                  <div className="space-y-3">
-                    {activities?.filter(activity => 
-                      activity.priority === 'urgent' && 
-                      activity.status !== 'completed' &&
-                      activity.estimatedDuration && activity.estimatedDuration <= 60
-                    ).slice(0, 5).map((activity) => (
-                      <div key={activity.id} className="p-3 border border-gray-100 rounded-lg bg-gray-50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-700">{activity.title}</h4>
-                            <p className="text-sm text-gray-500 mt-1">{activity.description}</p>
-                            {activity.dueDate && (
-                              <p className="text-xs text-gray-400 mt-1">
-                                Deadline: {format(new Date(activity.dueDate), 'dd MMM yyyy')}
-                              </p>
-                            )}
-                          </div>
-                          <Badge className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
-                            Delegeren
-                          </Badge>
+                      <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                        <div className="text-3xl font-bold text-blue-600 mb-2">
+                          {stats?.dueThisWeek || 0}
                         </div>
+                        <div className="text-sm text-gray-500">Deze week</div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                      <p className="text-base text-gray-600 leading-relaxed">
+                        {(stats?.completedCount || 0) > 0 
+                          ? "Je hebt al vooruitgang geboekt vandaag. Elke afgeronde taak draagt bij aan je doelen."
+                          : (stats?.urgentCount || 0) > 0
+                          ? "Urgente zaken vragen focus en aandacht. Neem de tijd die je nodig hebt."
+                          : "Elke stap voorwaarts telt, ook de kleine. Vooruitgang hoeft niet perfect te zijn om waardevol te zijn."
+                        }
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Quick Wins - Only show non-completed wins */}
+                {allQuickWins && allQuickWins.filter(win => win.status !== 'completed').length > 0 && (
+                  <Card className="border-gray-100">
+                    <CardContent className="p-8">
+                      <h2 className="text-xl font-medium text-gray-700 mb-6 flex items-center">
+                        <Trophy className="mr-3 text-gray-500" size={24} />
+                        Quick wins
+                      </h2>
+                      <div className="space-y-4">
+                        {allQuickWins.filter(win => win.status !== 'completed').slice(0, 3).map((win) => (
+                          <div key={win.id} className="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-700 mb-2">{win.title}</h4>
+                                <p className="text-sm text-gray-500 mb-2">{win.description}</p>
+                                {win.estimatedMinutes && (
+                                  <p className="text-xs text-gray-400">
+                                    ~{win.estimatedMinutes} minuten
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="ml-4 bg-yellow-50 text-yellow-700 border-yellow-200">
+                                Quick win
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-8">
+                {/* Today's Tasks - Simplified */}
+                <Card className="border-gray-100">
+                  <CardContent className="p-8">
+                    <h2 className="text-xl font-medium text-gray-700 mb-6 flex items-center">
+                      <Clock className="mr-3 text-gray-500" size={24} />
+                      Mijn acties
+                    </h2>
+                    <TodaysTasks />
+                  </CardContent>
+                </Card>
+
+                {/* Delegatable Tasks */}
+                {activities && activities.filter((activity: any) => 
+                  activity.status === "pending" && 
+                  activity.estimatedDuration && activity.estimatedDuration <= 60
+                ).length > 0 && (
+                  <Card className="border-gray-100">
+                    <CardContent className="p-8">
+                      <h2 className="text-xl font-medium text-gray-700 mb-6 flex items-center">
+                        <Users className="mr-3 text-gray-500" size={24} />
+                        Mogelijke delegatie
+                      </h2>
+                      <div className="space-y-4">
+                        {activities.filter((activity: any) => 
+                          activity.status === "pending" && 
+                          activity.estimatedDuration && activity.estimatedDuration <= 60
+                        ).slice(0, 3).map((activity: any) => (
+                          <div key={activity.id} className="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-700 mb-2">{activity.title}</h4>
+                                <p className="text-sm text-gray-500 mb-2">{activity.description}</p>
+                                {activity.dueDate && (
+                                  <p className="text-xs text-gray-400">
+                                    Deadline: {format(new Date(activity.dueDate), 'dd MMM yyyy')}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="ml-4 bg-purple-50 text-purple-700 border-purple-200">
+                                Delegeren
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
 
             {/* Simple Exit Message */}
-            <Card className="border-green-100 bg-green-50">
-              <CardContent className="p-4">
+            <Card className="border-green-100 bg-green-50 mt-8">
+              <CardContent className="p-6">
                 <div className="text-center">
-                  <p className="text-green-700 text-sm">
+                  <p className="text-green-700 text-base">
                     Klaar om meer te doen? Schakel terug naar alle functies met de toggle rechtsboven.
                   </p>
                 </div>
