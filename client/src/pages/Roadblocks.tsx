@@ -510,15 +510,15 @@ export default function Roadblocks() {
         <Dialog open={rescueModalOpen} onOpenChange={setRescueModalOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Rescue Task: {rescuingSubtask?.title}</DialogTitle>
+              <DialogTitle>Taak Redden: {rescuingSubtask?.title}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="oorzaak-category">Root Cause Category</Label>
+                  <Label htmlFor="oorzaak-category">Oorzaak Categorie</Label>
                   <Select value={oorzaakCategory} onValueChange={setOorzaakCategory}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Selecteer categorie" />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(OORZAAK_CATEGORIES).map(([key, value]) => (
@@ -528,16 +528,16 @@ export default function Roadblocks() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="severity">Severity</Label>
+                  <Label htmlFor="severity">Ernst Niveau</Label>
                   <Select value={severity} onValueChange={setSeverity}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select severity" />
+                      <SelectValue placeholder="Selecteer ernst" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
+                      <SelectItem value="low">Laag</SelectItem>
+                      <SelectItem value="medium">Gemiddeld</SelectItem>
+                      <SelectItem value="high">Hoog</SelectItem>
+                      <SelectItem value="critical">Kritiek</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -545,10 +545,10 @@ export default function Roadblocks() {
               
               {oorzaakCategory && OORZAAK_FACTORS[oorzaakCategory as keyof typeof OORZAAK_FACTORS] && (
                 <div>
-                  <Label htmlFor="oorzaak-factor">Specific Factor</Label>
+                  <Label htmlFor="oorzaak-factor">Specifieke Factor</Label>
                   <Select value={oorzaakFactor} onValueChange={setOorzaakFactor}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select specific factor" />
+                      <SelectValue placeholder="Selecteer specifieke factor" />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(OORZAAK_FACTORS[oorzaakCategory as keyof typeof OORZAAK_FACTORS] || {}).map(([key, value]) => (
@@ -560,17 +560,17 @@ export default function Roadblocks() {
               )}
 
               <div>
-                <Label htmlFor="proposed-resolution">Proposed Resolution</Label>
+                <Label htmlFor="proposed-resolution">Voorgestelde Oplossing</Label>
                 <Textarea
                   id="proposed-resolution"
-                  placeholder="Describe how you plan to resolve this roadblock..."
+                  placeholder="Beschrijf hoe je van plan bent deze wegversperring op te lossen..."
                   value={proposedResolution}
                   onChange={(e) => setProposedResolution(e.target.value)}
                   rows={4}
                 />
               </div>
               <div>
-                <Label htmlFor="new-deadline">New Deadline</Label>
+                <Label htmlFor="new-deadline">Nieuwe Deadline</Label>
                 <Input
                   id="new-deadline"
                   type="datetime-local"
@@ -591,7 +591,7 @@ export default function Roadblocks() {
                     setSeverity("medium");
                   }}
                 >
-                  Cancel
+                  Annuleren
                 </Button>
                 <Button
                   onClick={() => {
@@ -609,7 +609,7 @@ export default function Roadblocks() {
                   disabled={!proposedResolution || !newDeadline || !oorzaakCategory || rescueSubtaskMutation.isPending}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {rescueSubtaskMutation.isPending ? "Creating Rescue Task..." : "Create Rescue Task"}
+                  {rescueSubtaskMutation.isPending ? "Reddings Taak Aanmaken..." : "Reddings Taak Aanmaken"}
                 </Button>
               </div>
             </div>
