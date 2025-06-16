@@ -118,6 +118,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
   };
 
+  const closeTutorial = () => {
+    setState(prev => ({
+      ...prev,
+      showTutorial: false
+    }));
+  };
+
   const contextValue: OnboardingContextType = {
     state,
     startTutorial,
@@ -126,7 +133,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     showGuide,
     hideGuide,
     updateTutorialStep,
-    resetOnboarding
+    resetOnboarding,
+    closeTutorial
   };
 
   return (

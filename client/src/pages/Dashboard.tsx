@@ -48,6 +48,7 @@ import EmailModal from "@/components/modals/EmailModal";
 import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import ProductivityHealthCard from "@/components/productivity/ProductivityHealthCard";
+import { DashboardLoadingScreen } from "@/components/ui/loading-animation";
 import SmartInsights from "@/components/SmartInsights";
 import OverdueTasksList from "@/components/OverdueTasksList";
 import { format } from "date-fns";
@@ -103,13 +104,20 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     queryKey: ["/api/quickwins"],
   });
 
-  const { data: subtasks } = useQuery<any[]>({
+  const { data: subtasks, isLoading: subtasksLoading } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
   });
 
-  const { data: roadblocks } = useQuery<any[]>({
+  const { data: roadblocks, isLoading: roadblocksLoading } = useQuery<any[]>({
     queryKey: ["/api/roadblocks"],
   });
+
+  // Show loading screen if critical data is still loading
+  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
+
+  if (isInitialLoading) {
+    return <DashboardLoadingScreen />;
+  }
 
   // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
   const taskRoadblocks = subtasks?.filter((subtask: any) => {
