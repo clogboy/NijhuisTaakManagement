@@ -78,6 +78,49 @@ export default function Roadblocks() {
     },
   });
 
+  const rescueSubtaskMutation = useMutation({
+    mutationFn: async (subtaskId: number) => {
+      const response = await fetch(`/api/subtasks/${subtaskId}/rescue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to rescue subtask");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (_, subtaskId) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
+      
+      const subtask = subtasks.find(s => s.id === subtaskId);
+      if (subtask) {
+        setCelebration({
+          isVisible: true,
+          taskType: 'roadblock',
+          taskTitle: `Rescued: ${subtask.title}`
+        });
+      }
+      
+      toast({
+        title: "Rescue Successful",
+        description: "Task has been rescued and restructured for completion",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Rescue Failed",
+        description: "Failed to rescue task. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateSubtaskStatusMutation = useMutation({
     mutationFn: async ({ subtaskId, status }: { subtaskId: number; status: string }) => {
       const response = await fetch(`/api/subtasks/${subtaskId}/status`, {
@@ -394,15 +437,14 @@ export default function Roadblocks() {
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                   <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
-                                    onClick={() => updateSubtaskStatusMutation.mutate({ 
-                                      subtaskId: subtask.id, 
-                                      status: subtask.status === "resolved" ? "pending" : "resolved" 
-                                    })}
-                                    disabled={updateSubtaskStatusMutation.isPending}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={() => rescueSubtaskMutation.mutate(subtask.id)}
+                                    disabled={rescueSubtaskMutation.isPending}
                                   >
-                                    {subtask.status === "resolved" ? "Reopen" : "Resolve"}
+                                    <Shield className="h-4 w-4 mr-1" />
+                                    {rescueSubtaskMutation.isPending ? "Rescuing..." : "Rescue"}
                                   </Button>
                                 </div>
                               </div>

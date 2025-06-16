@@ -901,6 +901,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/subtasks/:id/rescue", requireAuth, async (req: any, res) => {
+    try {
+      const subtaskId = parseInt(req.params.id);
+      
+      const subtask = await storage.getSubtask(subtaskId);
+      if (!subtask) {
+        return res.status(404).json({ error: "Subtask not found" });
+      }
+
+      const userEmail = req.user.email;
+      if (!subtask.participants.includes(userEmail)) {
+        return res.status(403).json({ error: "Not authorized to rescue this subtask" });
+      }
+
+      // Rescue workflow: Reset to pending, extend deadline, break down if complex
+      const rescueData: any = {
+        status: 'pending',
+        priority: 'medium', // Reset priority to avoid overwhelming
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Extend by 1 week
+        rescuedAt: new Date(),
+        rescueCount: (subtask.rescueCount || 0) + 1
+      };
+
+      // If this task has been rescued multiple times, break it down
+      if (rescueData.rescueCount > 2) {
+        rescueData.description = `[RESCUED ${rescueData.rescueCount}x] ${subtask.description || subtask.title}`;
+        rescueData.title = `${subtask.title} (Simplified)`;
+      }
+
+      const updatedSubtask = await storage.updateSubtask(subtaskId, rescueData);
+
+      // Remove from roadblocks if it was there
+      try {
+        const roadblocks = await storage.getRoadblocks();
+        const roadblock = roadblocks.find(r => 
+          r.linkedActivityId === subtask.linkedActivityId && r.linkedSubtaskId === subtaskId
+        );
+        if (roadblock) {
+          await storage.updateRoadblock(roadblock.id, { status: 'resolved' });
+        }
+      } catch (roadblockError) {
+        console.warn("Could not update roadblock status:", roadblockError);
+      }
+
+      res.json({ 
+        success: true, 
+        subtask: updatedSubtask,
+        message: "Task rescued successfully - reset with extended deadline"
+      });
+    } catch (error) {
+      console.error("Error rescuing subtask:", error);
+      res.status(500).json({ error: "Failed to rescue task" });
+    }
+  });
+
   // Task Comments routes
   app.get("/api/activities/:id/comments", requireAuth, async (req: any, res) => {
     try {

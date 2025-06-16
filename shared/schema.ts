@@ -228,6 +228,8 @@ export const subtasks = pgTable("subtasks", {
   participantTypes: json("participant_types").notNull().default({}), // { "email@domain.com": "task", "other@domain.com": "quick_win" }
   linkedActivityId: integer("linked_activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
   completedDate: timestamp("completed_date"),
+  rescueCount: integer("rescue_count").default(0),
+  rescuedAt: timestamp("rescued_at"),
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
