@@ -61,7 +61,12 @@ interface DashboardStats {
   overdueCount: number;
 }
 
-export default function Dashboard() {
+interface DashboardProps {
+  lowStimulusMode?: boolean;
+  setLowStimulusMode?: (value: boolean) => void;
+}
+
+export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLowStimulusMode: setLowStimulus }: DashboardProps = {}) {
   const { t } = useTranslations();
   const { state: onboardingState, completeTutorial, showGuide, hideGuide } = useOnboarding();
   const queryClient = useQueryClient();
@@ -79,7 +84,6 @@ export default function Dashboard() {
   const [showArchived, setShowArchived] = useState(false);
   const [showWelcomeFlow, setShowWelcomeFlow] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [lowStimulusMode, setLowStimulusMode] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
@@ -386,17 +390,17 @@ export default function Dashboard() {
           <div></div>
           <div className="flex items-center space-x-2">
             <Label htmlFor="low-stimulus-mode" className="text-sm text-neutral-medium">
-              {lowStimulusMode ? "🟠 Focus modus" : "🟢 Alle functies"}
+              {lowStimulus ? "🟠 Focus modus" : "🟢 Alle functies"}
             </Label>
             <Switch 
               id="low-stimulus-mode"
-              checked={lowStimulusMode}
-              onCheckedChange={setLowStimulusMode}
+              checked={lowStimulus}
+              onCheckedChange={(checked) => setLowStimulus?.(checked)}
             />
           </div>
         </div>
         {/* Low Stimulus Mode - Simplified View */}
-        {lowStimulusMode ? (
+        {lowStimulus ? (
           <div className="space-y-6">
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
