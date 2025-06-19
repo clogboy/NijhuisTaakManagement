@@ -1449,11 +1449,26 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   </div>
                   
                   {/* Show full subtask card */}
-                  {activeDeepFocus?.selectedSubtaskId && subtasks && (
+                  {activeDeepFocus && subtasks && (
                     <div className="bg-white border border-blue-300 rounded-lg p-3">
                       {(() => {
+                        // Debug: check what ID we have
+                        console.log('Active deep focus:', activeDeepFocus);
+                        console.log('Looking for subtask ID:', activeDeepFocus.selectedSubtaskId);
+                        console.log('Available subtasks:', subtasks);
+                        
                         const currentSubtask = subtasks.find(s => s.id === activeDeepFocus.selectedSubtaskId);
-                        if (!currentSubtask) return null;
+                        console.log('Found subtask:', currentSubtask);
+                        
+                        if (!currentSubtask) {
+                          return (
+                            <div className="text-center text-gray-500">
+                              <p>Geen taak geselecteerd</p>
+                              <p className="text-xs">ID: {activeDeepFocus.selectedSubtaskId}</p>
+                            </div>
+                          );
+                        }
+                        
                         return (
                           <div>
                             <div className="flex items-center gap-2 mb-2">
