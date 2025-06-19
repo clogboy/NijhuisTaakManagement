@@ -438,19 +438,6 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         {/* Low Stimulus Mode - Simplified View */}
         {lowStimulus ? (
           <div className="space-y-8">
-            {/* Enter Deep Focus Button - Always visible */}
-            <Card className="border-gray-100">
-              <CardContent className="p-6">
-                <Button
-                  onClick={() => setIsDeepFocusModalOpen(true)}
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                >
-                  <Focus size={18} />
-                  Enter Deep Focus
-                </Button>
-              </CardContent>
-            </Card>
 
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
@@ -680,23 +667,23 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             <Card 
               className="micro-card micro-fadeIn micro-button-press cursor-pointer"
               style={{ animationDelay: '0.3s' }}
-              onClick={() => window.location.href = "/contacts"}
+              onClick={() => setIsDeepFocusModalOpen(true)}
             >
               <CardContent className="p-2 sm:p-4 lg:p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-ms-blue rounded-lg flex items-center justify-center">
-                        <Users className="text-white" size={10} />
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <Focus className="text-white" size={10} />
                       </div>
                     </div>
                     <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">{t("dashboard.activeContacts")}</p>
-                      <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">{stats?.activeContacts || 0}</p>
+                      <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Deep Focus</p>
+                      <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">Start</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark micro-button-press micro-hover-lift">
-                    Manage →
+                    Enter →
                   </Button>
                 </div>
               </CardContent>
@@ -1301,24 +1288,24 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Focus size={20} />
-              Enter Deep Focus
+              Deep Focus Starten
             </DialogTitle>
             <DialogDescription>
-              Select an activity to focus on. We'll prepare your environment and switch to low stimulus mode.
+              Selecteer een taak om op te focussen. We bereiden je omgeving voor en schakelen over naar focus modus.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Choose an activity:
+                Kies een taak:
               </label>
               <Select value={selectedFocusActivity?.id?.toString() || ""} onValueChange={(value) => {
                 const activity = activities?.find(a => a.id.toString() === value);
                 setSelectedFocusActivity(activity || null);
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an activity to focus on..." />
+                  <SelectValue placeholder="Selecteer een taak om op te focussen..." />
                 </SelectTrigger>
                 <SelectContent>
                   {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
@@ -1335,12 +1322,12 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
             {selectedFocusActivity && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-sm text-blue-900 mb-2">Preparation suggestions:</h4>
+                <h4 className="font-medium text-sm text-blue-900 mb-2">Voorbereiding suggesties:</h4>
                 <ul className="text-xs text-blue-800 space-y-1">
-                  <li>• Close unnecessary browser tabs and applications</li>
-                  <li>• Set phone to silent or do not disturb mode</li>
-                  <li>• Have necessary resources and documents ready</li>
-                  <li>• Take a moment to clarify your specific goals</li>
+                  <li>• Sluit onnodige browsertabs en applicaties</li>
+                  <li>• Zet telefoon op stil of niet storen modus</li>
+                  <li>• Zorg dat benodigde bronnen en documenten klaar staan</li>
+                  <li>• Neem even de tijd om je specifieke doelen helder te krijgen</li>
                 </ul>
               </div>
             )}
@@ -1351,15 +1338,15 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 onClick={() => setIsDeepFocusModalOpen(false)}
                 className="flex-1"
               >
-                Cancel
+                Annuleren
               </Button>
               <Button
                 onClick={() => {
                   if (selectedFocusActivity) {
                     activateLowStimulus();
                     toast({
-                      title: "Deep Focus Activated",
-                      description: `Focusing on: ${selectedFocusActivity.title}`,
+                      title: "Deep Focus Geactiveerd",
+                      description: `Focussen op: ${selectedFocusActivity.title}`,
                     });
                     setIsDeepFocusModalOpen(false);
                     setSelectedFocusActivity(null);
@@ -1368,7 +1355,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 disabled={!selectedFocusActivity}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                Start Focus Session
+                Start Focus Sessie
               </Button>
             </div>
           </div>

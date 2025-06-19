@@ -543,10 +543,10 @@ export default function Agenda() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Focus size={20} />
-              Schedule Deep Focus
+              Deep Focus Plannen
             </DialogTitle>
             <DialogDescription>
-              Plan a focused work session for maximum productivity.
+              Plan gefocuste werktijd voor maximale productiviteit.
             </DialogDescription>
           </DialogHeader>
           
@@ -554,7 +554,7 @@ export default function Agenda() {
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Weekdays:
+                Weekdagen:
               </label>
               <div className="grid grid-cols-7 gap-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
@@ -583,7 +583,7 @@ export default function Agenda() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Start Time:
+                  Starttijd:
                 </label>
                 <Input
                   type="time"
@@ -593,7 +593,7 @@ export default function Agenda() {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  End Time:
+                  Eindtijd:
                 </label>
                 <Input
                   type="time"
@@ -605,14 +605,14 @@ export default function Agenda() {
 
             {selectedWeekdays.length > 0 && focusStartTime && focusEndTime && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-sm text-blue-900 mb-2">Scheduled Session:</h4>
+                <h4 className="font-medium text-sm text-blue-900 mb-2">Geplande Sessie:</h4>
                 <p className="text-xs text-blue-800">
-                  <strong>Deep Focus Time Block</strong><br/>
+                  <strong>Deep Focus Tijdblok</strong><br/>
                   {focusStartTime} - {focusEndTime}<br/>
-                  on {selectedWeekdays.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(', ')}
+                  op {selectedWeekdays.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(', ')}
                 </p>
                 <p className="text-xs text-gray-600 mt-2">
-                  You'll select what to focus on when the session begins.
+                  Je selecteert een taak wanneer de sessie begint.
                 </p>
               </div>
             )}
@@ -623,15 +623,15 @@ export default function Agenda() {
                 onClick={() => setIsDeepFocusModalOpen(false)}
                 className="flex-1"
               >
-                Cancel
+                Annuleren
               </Button>
               <Button
                 onClick={() => {
                   if (selectedWeekdays.length > 0 && focusStartTime && focusEndTime) {
                     // Here you would normally save to database
                     toast({
-                      title: "Deep Focus Scheduled",
-                      description: `Time blocks scheduled from ${focusStartTime} to ${focusEndTime} on ${selectedWeekdays.join(', ')}`,
+                      title: "Deep Focus Gepland",
+                      description: `Tijdblokken gepland van ${focusStartTime} tot ${focusEndTime} op ${selectedWeekdays.join(', ')}`,
                     });
                     setIsDeepFocusModalOpen(false);
                     setFocusStartTime('');
@@ -642,7 +642,7 @@ export default function Agenda() {
                 disabled={selectedWeekdays.length === 0 || !focusStartTime || !focusEndTime}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                Schedule Time Blocks
+                Tijdblokken Plannen
               </Button>
             </div>
           </div>
