@@ -100,11 +100,16 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   }, []);
 
   const getRemainingTime = () => {
-    if (!activeDeepFocus || !activeDeepFocus.scheduledEnd) return null;
+    if (!activeDeepFocus || !activeDeepFocus.scheduledEnd) {
+      console.log('No activeDeepFocus or scheduledEnd:', activeDeepFocus);
+      return null;
+    }
     
     const endTime = new Date(activeDeepFocus.scheduledEnd);
     const now = currentTime;
     const diffMs = endTime.getTime() - now.getTime();
+    
+    console.log('Countdown calc:', { endTime, now, diffMs, activeDeepFocus });
     
     if (diffMs <= 0) return null;
     
@@ -1271,8 +1276,8 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
       </div>
 
-      {/* Low Stimulus Mode Exit Button */}
-      {lowStimulus && (
+      {/* Low Stimulus Mode Exit Button - only show when actually in low stimulus mode */}
+      {lowStimulus && activeDeepFocus && (
         <div className="fixed top-4 right-4 z-50">
           <Button
             onClick={deactivateLowStimulus}
