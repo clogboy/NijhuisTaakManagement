@@ -49,7 +49,7 @@ import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import ProductivityHealthCard from "@/components/productivity/ProductivityHealthCard";
 import { DashboardLoadingScreen } from "@/components/ui/loading-animation";
-import FlowProtection from "@/components/FlowProtection";
+
 import OverdueTasksList from "@/components/OverdueTasksList";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -742,14 +742,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           </Card>
         )}
 
-        {/* Smart Insights Section */}
-        <div className="mb-6">
-          <FlowProtection 
-            onActivitySelect={handleEditActivity} 
-            lowStimulusMode={lowStimulus}
-            onLowStimulusModeChange={setLowStimulus}
-          />
-        </div>
+
 
         {/* Today's Tasks and Activities */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
