@@ -35,8 +35,8 @@ export class FlowProtectionService {
     return [
       {
         personalityType: "early_bird",
-        strategyName: "Morning Peak Performance",
-        description: "Optimized for high energy and focus in early morning hours. Deep work scheduled 7-11 AM with minimal interruptions.",
+        strategyName: "Vroege Vogel",
+        description: "Geoptimaliseerd voor hoge energie en focus in de vroege ochtenduren. Diep werk gepland 7-11 uur met minimale onderbrekingen.",
         workingHours: {
           start: "07:00",
           end: "17:00",
@@ -46,7 +46,7 @@ export class FlowProtectionService {
         maxTaskSwitches: 2,
         focusBlockDuration: 180, // 3 hours
         breakDuration: 15,
-        preferredTaskTypes: ["deep_work", "analysis", "planning"],
+        preferredTaskTypes: ["diep werk", "analyse", "planning"],
         energyPattern: {
           morning: 0.95,
           afternoon: 0.65,
@@ -61,8 +61,8 @@ export class FlowProtectionService {
       
       {
         personalityType: "night_owl",
-        strategyName: "Evening Focus Flow",
-        description: "Peak performance in late afternoon and evening. Morning reserved for lighter tasks and collaboration.",
+        strategyName: "Nachtbraker",
+        description: "Piek prestaties in de late middag en avond. Ochtend gereserveerd voor lichtere taken en samenwerking.",
         workingHours: {
           start: "10:00",
           end: "20:00",
@@ -72,7 +72,7 @@ export class FlowProtectionService {
         maxTaskSwitches: 3,
         focusBlockDuration: 150,
         breakDuration: 20,
-        preferredTaskTypes: ["deep_work", "creative", "problem_solving"],
+        preferredTaskTypes: ["diep werk", "creatief", "probleem oplossen"],
         energyPattern: {
           morning: 0.45,
           afternoon: 0.75,
@@ -87,8 +87,8 @@ export class FlowProtectionService {
       
       {
         personalityType: "steady_pacer",
-        strategyName: "Consistent Energy Distribution",
-        description: "Maintains steady energy throughout the day. Balances deep work with regular collaboration and administrative tasks.",
+        strategyName: "Stabiele Pacer",
+        description: "Houdt stabiele energie gedurende de hele dag. Balanceert diep werk met regelmatige samenwerking en administratieve taken.",
         workingHours: {
           start: "08:00",
           end: "18:00",
@@ -98,7 +98,7 @@ export class FlowProtectionService {
         maxTaskSwitches: 4,
         focusBlockDuration: 90,
         breakDuration: 15,
-        preferredTaskTypes: ["deep_work", "collaboration", "admin"],
+        preferredTaskTypes: ["diep werk", "samenwerking", "administratief"],
         energyPattern: {
           morning: 0.75,
           afternoon: 0.80,
@@ -113,8 +113,8 @@ export class FlowProtectionService {
       
       {
         personalityType: "sprint_recover",
-        strategyName: "High-Intensity Bursts",
-        description: "Alternates between intense focus periods and recovery breaks. Ideal for project-based work with clear deadlines.",
+        strategyName: "Sprint Herstel",
+        description: "Wisselt tussen intense focusperiodes en herstelonderbrekingen. Ideaal voor projectgebaseerd werk met duidelijke deadlines.",
         workingHours: {
           start: "08:00",
           end: "17:00",
@@ -124,7 +124,7 @@ export class FlowProtectionService {
         maxTaskSwitches: 2,
         focusBlockDuration: 120,
         breakDuration: 30,
-        preferredTaskTypes: ["deep_work", "project_work", "problem_solving"],
+        preferredTaskTypes: ["diep werk", "project werk", "probleem oplossen"],
         energyPattern: {
           morning: 0.90,
           afternoon: 0.60,
@@ -139,8 +139,8 @@ export class FlowProtectionService {
       
       {
         personalityType: "collaborative",
-        strategyName: "Team-Centric Flow",
-        description: "Optimized for team coordination and communication. Balances individual work with frequent collaboration.",
+        strategyName: "Team Gerichte Flow",
+        description: "Geoptimaliseerd voor teamcoördinatie en communicatie. Balanceert individueel werk met frequente samenwerking.",
         workingHours: {
           start: "08:30",
           end: "17:30",
@@ -150,7 +150,7 @@ export class FlowProtectionService {
         maxTaskSwitches: 5,
         focusBlockDuration: 60,
         breakDuration: 10,
-        preferredTaskTypes: ["collaboration", "communication", "coordination"],
+        preferredTaskTypes: ["samenwerking", "communicatie", "coördinatie"],
         energyPattern: {
           morning: 0.70,
           afternoon: 0.85,
@@ -165,8 +165,8 @@ export class FlowProtectionService {
       
       {
         personalityType: "adaptive",
-        strategyName: "Context-Aware Flexibility",
-        description: "Adapts flow based on workload and energy levels. Includes low-stimulus mode for challenging days.",
+        strategyName: "Adaptieve Flexibiliteit",
+        description: "Past flow aan op basis van werkdruk en energieniveaus. Bevat lage-stimulus modus voor uitdagende dagen.",
         workingHours: {
           start: "08:00",
           end: "18:00",
@@ -176,7 +176,7 @@ export class FlowProtectionService {
         maxTaskSwitches: 3,
         focusBlockDuration: 90,
         breakDuration: 15,
-        preferredTaskTypes: ["adaptive", "mixed", "responsive"],
+        preferredTaskTypes: ["adaptief", "gemengd", "responsief"],
         energyPattern: {
           morning: 0.75,
           afternoon: 0.70,

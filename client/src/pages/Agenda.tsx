@@ -203,8 +203,8 @@ export default function Agenda() {
         <div className="p-3 sm:p-4">
           <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>
-              <TabsTrigger value="flow" className="text-xs sm:text-sm">Flow Strategy</TabsTrigger>
+              <TabsTrigger value="today" className="text-xs sm:text-sm">Vandaag's Agenda</TabsTrigger>
+              <TabsTrigger value="flow" className="text-xs sm:text-sm">Flow Strategie</TabsTrigger>
             </TabsList>
 
             <TabsContent value="today" className="space-y-4 md:space-y-6">
@@ -376,7 +376,7 @@ export default function Agenda() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
                     <Brain size={20} />
-                    Active Flow Strategy
+                    Actieve Flow Strategie
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -385,7 +385,7 @@ export default function Agenda() {
                       <h3 className="font-semibold text-blue-900 dark:text-blue-100">{currentStrategy.strategyName}</h3>
                       <p className="text-sm text-blue-700 dark:text-blue-300">Type: {currentStrategy.personalityType}</p>
                     </div>
-                    <Badge variant="default" className="bg-blue-600">Active</Badge>
+                    <Badge variant="default" className="bg-blue-600">Actief</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -396,10 +396,10 @@ export default function Agenda() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User size={20} />
-                  Personality-Based Flow Strategies
+                  Persoonlijkheid-Gebaseerde Flow Strategieën
                 </CardTitle>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  Choose a cognitive strategy optimized for your work patterns and energy levels. Each strategy is based on chronobiology research and productivity science.
+                  Kies een cognitieve strategie geoptimaliseerd voor jouw werkpatronen en energieniveaus. Elke strategie is gebaseerd op chronobiologie onderzoek en productiviteitswetenschap.
                 </p>
               </CardHeader>
               <CardContent>
@@ -448,7 +448,7 @@ export default function Agenda() {
                               <span className="text-sm">{preset.strategyName}</span>
                             </div>
                             {isActive && (
-                              <Badge variant="default" className="bg-blue-600 text-xs">Active</Badge>
+                              <Badge variant="default" className="bg-blue-600 text-xs">Actief</Badge>
                             )}
                           </CardTitle>
                         </CardHeader>
@@ -458,26 +458,26 @@ export default function Agenda() {
                             
                             <div className="space-y-2">
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Working Hours:</span>
+                                <span className="text-gray-600 dark:text-gray-400">Werkuren:</span>
                                 <span className="font-medium">{preset.workingHours.start} - {preset.workingHours.end}</span>
                               </div>
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Peak Focus:</span>
+                                <span className="text-gray-600 dark:text-gray-400">Piek Focus:</span>
                                 <span className="font-medium">{preset.workingHours.peakStart} - {preset.workingHours.peakEnd}</span>
                               </div>
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Max Task Switches:</span>
+                                <span className="text-gray-600 dark:text-gray-400">Max Taak Switches:</span>
                                 <span className="font-medium">{preset.maxTaskSwitches}</span>
                               </div>
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Focus Block:</span>
+                                <span className="text-gray-600 dark:text-gray-400">Focus Blok:</span>
                                 <span className="font-medium">{preset.focusBlockDuration}min</span>
                               </div>
                             </div>
 
                             {preset.preferredTaskTypes && preset.preferredTaskTypes.length > 0 && (
                               <div>
-                                <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Optimized For:</h5>
+                                <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Geoptimaliseerd Voor:</h5>
                                 <div className="flex flex-wrap gap-1">
                                   {preset.preferredTaskTypes.slice(0, 3).map((type: string) => (
                                     <Badge key={type} variant="outline" className="text-xs">
@@ -498,7 +498,7 @@ export default function Agenda() {
                                   applyPresetMutation.mutate(preset.personalityType);
                                 }}
                               >
-                                {applyPresetMutation.isPending ? "Applying..." : "Apply Strategy"}
+                                {applyPresetMutation.isPending ? "Toepassen..." : "Strategie Toepassen"}
                               </Button>
                             )}
                           </div>

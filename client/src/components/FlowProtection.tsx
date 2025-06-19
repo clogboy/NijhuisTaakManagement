@@ -176,9 +176,9 @@ export default function FlowProtection({
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center space-x-2">
               <Shield className="h-5 w-5 text-blue-600" />
-              <span>Flow Protection Status</span>
+              <span>Flow Bescherming Status</span>
               <Badge className={ENERGY_COLORS[flowRecommendations.timeSlotType]}>
-                {Math.round(flowRecommendations.energyLevel * 100)}% Energy
+                {Math.round(flowRecommendations.energyLevel * 100)}% Energie
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -197,11 +197,11 @@ export default function FlowProtection({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center space-x-2">
                   <Target className="h-4 w-4 text-blue-500" />
-                  <span>Focus Mode: {flowRecommendations.shouldFocus ? "Active" : "Flexible"}</span>
+                  <span>Focus Modus: {flowRecommendations.shouldFocus ? "Actief" : "Flexibel"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <span>Interruptions: {flowRecommendations.allowInterruptions ? "Allowed" : "Blocked"}</span>
+                  <span>Onderbrekingen: {flowRecommendations.allowInterruptions ? "Toegestaan" : "Geblokkeerd"}</span>
                 </div>
               </div>
             </div>
@@ -211,77 +211,7 @@ export default function FlowProtection({
 
 
 
-      {/* Personality-Based Presets */}
-      <Card className="border-gray-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Brain className="h-5 w-5 text-purple-500" />
-            <span>Flow Strategy Presets</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Select value={selectedPreset} onValueChange={setSelectedPreset}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose your work personality type..." />
-            </SelectTrigger>
-            <SelectContent>
-              {personalityPresets?.map((preset) => {
-                const Icon = PERSONALITY_ICONS[preset.personalityType as keyof typeof PERSONALITY_ICONS];
-                return (
-                  <SelectItem key={preset.personalityType} value={preset.personalityType}>
-                    <div className="flex items-center space-x-2">
-                      <Icon className="h-4 w-4" />
-                      <span>{preset.strategyName}</span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
 
-          {selectedPreset && (
-            <div className="space-y-3">
-              {personalityPresets?.map((preset) => {
-                if (preset.personalityType !== selectedPreset) return null;
-                
-                return (
-                  <div key={preset.personalityType} className="p-3 bg-gray-50 rounded-lg border">
-                    <h4 className="font-medium text-gray-900 mb-2">{preset.strategyName}</h4>
-                    <p className="text-sm text-gray-600 mb-3">{preset.description}</p>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 mb-3">
-                      <div>Work Hours: {preset.workingHours.start} - {preset.workingHours.end}</div>
-                      <div>Peak: {preset.workingHours.peakStart} - {preset.workingHours.peakEnd}</div>
-                      <div>Max Switches: {preset.maxTaskSwitches}</div>
-                      <div>Focus Blocks: {preset.focusBlockDuration}min</div>
-                    </div>
-
-                    <div className="flex space-x-2 mb-3">
-                      <Badge variant="outline" className="text-xs">
-                        Morning: {Math.round(preset.energyPattern.morning * 100)}%
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        Afternoon: {Math.round(preset.energyPattern.afternoon * 100)}%
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        Evening: {Math.round(preset.energyPattern.evening * 100)}%
-                      </Badge>
-                    </div>
-
-                    <Button
-                      onClick={() => applyPresetMutation.mutate(preset.personalityType)}
-                      disabled={applyPresetMutation.isPending}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      {applyPresetMutation.isPending ? "Applying..." : "Apply This Strategy"}
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Optimized Time Slot Activities */}
       {currentActivities.length > 0 && (
