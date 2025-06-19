@@ -167,6 +167,13 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     refetchInterval: 5000, // Check every 5 seconds
   });
 
+  // Auto-deactivate low stimulus mode when no active deep focus
+  useEffect(() => {
+    if (!activeDeepFocus && lowStimulus) {
+      deactivateLowStimulus();
+    }
+  }, [activeDeepFocus, lowStimulus, deactivateLowStimulus]);
+
   const [healthCardDismissed, setHealthCardDismissed] = useState(false);
 
   // Productivity health preferences mutation
@@ -1263,6 +1270,21 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       )}
 
       </div>
+
+      {/* Low Stimulus Mode Exit Button */}
+      {lowStimulus && (
+        <div className="fixed top-4 right-4 z-50">
+          <Button
+            onClick={deactivateLowStimulus}
+            variant="outline"
+            size="sm"
+            className="bg-white/90 backdrop-blur-sm border-2 border-red-500 text-red-600 hover:bg-red-50"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Exit Focus Mode
+          </Button>
+        </div>
+      )}
 
       {/* Modals */}
       <NewActivityModal
