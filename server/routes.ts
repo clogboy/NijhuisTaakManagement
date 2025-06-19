@@ -2175,7 +2175,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const blockData = {
         ...req.body,
-        userId: req.user.id
+        userId: req.user.id,
+        // Convert date strings back to Date objects
+        scheduledStart: req.body.scheduledStart ? new Date(req.body.scheduledStart) : undefined,
+        scheduledEnd: req.body.scheduledEnd ? new Date(req.body.scheduledEnd) : undefined,
       };
       
       const block = await storage.createDeepFocusBlock(blockData);

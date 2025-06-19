@@ -206,8 +206,8 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       // Create the block
       const createResponse = await apiRequest("/api/deep-focus", "POST", {
         title,
-        scheduledStart: now.toISOString(),
-        scheduledEnd: endTime.toISOString(),
+        scheduledStart: now,
+        scheduledEnd: endTime,
         focusType: "deep",
         lowStimulusMode: true,
       });
