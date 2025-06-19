@@ -2192,9 +2192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/deep-focus/:id/start", requireAuth, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { selectedActivityId } = req.body;
+      const { selectedActivityId, selectedSubtaskId } = req.body;
       
-      const block = await storage.startDeepFocusBlock(parseInt(id), selectedActivityId);
+      const block = await storage.startDeepFocusBlock(parseInt(id), selectedActivityId, selectedSubtaskId);
       res.json(block);
     } catch (error) {
       console.error("Start deep focus block error:", error);

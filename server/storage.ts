@@ -1503,7 +1503,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(deepFocusBlocks).where(eq(deepFocusBlocks.id, id));
   }
 
-  async startDeepFocusBlock(id: number, selectedActivityId?: number): Promise<DeepFocusBlock> {
+  async startDeepFocusBlock(id: number, selectedActivityId?: number, selectedSubtaskId?: number): Promise<DeepFocusBlock> {
     const updateData: any = {
       status: 'active',
       actualStart: new Date(),
@@ -1512,6 +1512,10 @@ export class DatabaseStorage implements IStorage {
     
     if (selectedActivityId) {
       updateData.selectedActivityId = selectedActivityId;
+    }
+    
+    if (selectedSubtaskId) {
+      updateData.selectedSubtaskId = selectedSubtaskId;
     }
 
     const [updatedBlock] = await db.update(deepFocusBlocks)
