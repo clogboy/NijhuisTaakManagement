@@ -235,6 +235,25 @@ export const subtasks = pgTable("subtasks", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const deepFocusSessions = pgTable("deep_focus_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  taskId: integer("task_id").notNull().references(() => activities.id),
+  plannedDuration: integer("planned_duration").notNull(), // in minutes
+  actualDuration: integer("actual_duration"), // in minutes when completed
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  status: text("status").notNull().default("active"), // 'active', 'paused', 'completed', 'cancelled'
+  wasInterrupted: boolean("was_interrupted").default(false),
+  interruptionCount: integer("interruption_count").default(0),
+  pausedDuration: integer("paused_duration").default(0), // total paused time in minutes
+  notes: text("notes"),
+  recommendations: text("recommendations").array().default([]),
+  completedSuccessfully: boolean("completed_successfully"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -342,6 +361,12 @@ export const insertDailyAgendaSchema = createInsertSchema(dailyAgendas).omit({
   updatedAt: true,
 });
 
+export const insertDeepFocusSessionSchema = createInsertSchema(deepFocusSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -380,6 +405,9 @@ export type InsertWeeklyEthos = z.infer<typeof insertWeeklyEthosSchema>;
 
 export type DailyAgenda = typeof dailyAgendas.$inferSelect;
 export type InsertDailyAgenda = z.infer<typeof insertDailyAgendaSchema>;
+
+export type DeepFocusSession = typeof deepFocusSessions.$inferSelect;
+export type InsertDeepFocusSession = z.infer<typeof insertDeepFocusSessionSchema>;
 
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
   id: true,

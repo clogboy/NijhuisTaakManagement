@@ -9,6 +9,7 @@ import { User } from "@shared/schema";
 // Pages
 import Login from "@/pages/Login";
 import DashboardPage from "@/pages/DashboardPage";
+import StreamlinedDashboard from "@/pages/StreamlinedDashboard";
 import Activities from "@/pages/Activities";
 import Contacts from "@/pages/Contacts";
 import QuickWins from "@/pages/QuickWins";
@@ -29,7 +30,7 @@ function AuthenticatedApp() {
   return (
     <Switch>
       <Route path="/">
-        <DashboardPage />
+        <StreamlinedDashboard />
       </Route>
       <Route path="/activities">
         <AppLayout
