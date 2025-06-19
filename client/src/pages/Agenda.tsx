@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "@/hooks/useTranslations";
 import { 
@@ -24,19 +23,14 @@ import {
   CheckCircle2,
   ArrowRight,
   Lightbulb,
-  Settings,
-  Play,
   RefreshCw,
-  AlertCircle,
-  Edit2,
-  Trash2,
-  Save,
-  X
+  User,
+  Users,
+  Activity as ActivityIcon
 } from "lucide-react";
-import { Activity, WeeklyEthos } from "@shared/schema";
+import { Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 import AppLayout from "@/components/layout/AppLayout";
 
 interface PriorityMatrix {
@@ -54,34 +48,21 @@ interface AgendaSuggestion {
   scheduledActivities: number[];
 }
 
-const DAYS_OF_WEEK = [
-  { value: 0, label: "Sunday" },
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" }
-];
-
 export default function Agenda() {
   const { t } = useTranslations();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
-  const [editingEthos, setEditingEthos] = useState<WeeklyEthos | null>(null);
-  const [newEthos, setNewEthos] = useState({
-    dayOfWeek: new Date().getDay(),
-    ethos: "",
-    description: "",
-    focusAreas: [] as string[],
-    maxTaskSwitches: 3,
-    preferredWorkBlocks: 2
+  const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
+
+  // Flow strategy queries
+  const { data: personalityPresets } = useQuery<any[]>({
+    queryKey: ["/api/flow/personality-presets"],
   });
 
-  const { data: weeklyEthos } = useQuery<WeeklyEthos[]>({
-    queryKey: ["/api/ethos"],
+  const { data: currentStrategy } = useQuery<any>({
+    queryKey: ["/api/flow/current-strategy"],
   });
 
   const { data: activities } = useQuery<Activity[]>({
@@ -103,10 +84,8 @@ export default function Agenda() {
   });
 
   const generateAgendaMutation = useMutation({
-    mutationFn: async (data: { date: string; maxTaskSwitches: number }) => {
-      const response = await apiRequest("/api/agenda/generate", "POST", data);
-      return response as unknown as AgendaSuggestion;
-    },
+    mutationFn: ({ date, maxTaskSwitches }: { date: string; maxTaskSwitches: number }) =>
+      apiRequest("/api/generate-agenda", "POST", { date, maxTaskSwitches }),
     onSuccess: (data: AgendaSuggestion) => {
       setAgendaSuggestion(data);
       toast({
@@ -123,78 +102,28 @@ export default function Agenda() {
     },
   });
 
-  const createEthosMutation = useMutation({
-    mutationFn: (ethos: typeof newEthos) => apiRequest("/api/ethos", "POST", ethos),
+  // Flow strategy mutation
+  const applyPresetMutation = useMutation({
+    mutationFn: (personalityType: string) => 
+      apiRequest("/api/flow/apply-preset", "POST", { personalityType }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ethos"] });
-      setNewEthos({
-        dayOfWeek: new Date().getDay(),
-        ethos: "",
-        description: "",
-        focusAreas: [],
-        maxTaskSwitches: 3,
-        preferredWorkBlocks: 2
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/flow/current-strategy"] });
       toast({
-        title: "Success",
-        description: "Weekly ethos created successfully",
+        title: "Flow Strategy Applied",
+        description: "Your personality-based flow strategy has been activated",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create ethos",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateEthosMutation = useMutation({
-    mutationFn: ({ id, ...ethos }: { id: number } & Partial<WeeklyEthos>) =>
-      apiRequest(`/api/ethos/${id}`, "PUT", ethos),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ethos"] });
-      setEditingEthos(null);
-      toast({
-        title: "Success",
-        description: "Weekly ethos updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update ethos",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteEthosMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/ethos/${id}`, "DELETE"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ethos"] });
-      toast({
-        title: "Success",
-        description: "Weekly ethos deleted successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete ethos",
+        description: error.message || "Failed to apply flow strategy",
         variant: "destructive",
       });
     },
   });
 
   const [agendaSuggestion, setAgendaSuggestion] = useState<AgendaSuggestion | null>(null);
-  const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
 
-  // Check if scheduler trigger is on cooldown (30 minutes)
-  const isOnCooldown = Boolean(lastTriggerTime && (Date.now() - lastTriggerTime) < 30 * 60 * 1000);
-  const cooldownMinutesLeft = lastTriggerTime ? Math.ceil((30 * 60 * 1000 - (Date.now() - lastTriggerTime)) / (1000 * 60)) : 0;
-
-  // Scheduler trigger mutation with cooldown tracking
   const triggerSchedulerMutation = useMutation({
     mutationFn: () => apiRequest("/api/scheduler/trigger", "POST"),
     onSuccess: () => {
@@ -219,23 +148,6 @@ export default function Agenda() {
       date: selectedDate,
       maxTaskSwitches: maxTaskSwitches
     });
-  };
-
-  const handleCreateEthos = () => {
-    createEthosMutation.mutate(newEthos);
-  };
-
-  const handleEditEthos = (ethos: WeeklyEthos) => {
-    setEditingEthos({ ...ethos });
-  };
-
-  const handleUpdateEthos = () => {
-    if (!editingEthos) return;
-    updateEthosMutation.mutate(editingEthos);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingEthos(null);
   };
 
   const getQuadrantColor = (quadrant: string) => {
@@ -268,10 +180,9 @@ export default function Agenda() {
     }
   };
 
-  const getTodayEthos = () => {
-    const today = new Date(selectedDate).getDay();
-    return weeklyEthos?.find(ethos => ethos.dayOfWeek === today);
-  };
+  // Cooldown logic for scheduler trigger
+  const isOnCooldown = lastTriggerTime && (Date.now() - lastTriggerTime) < 30 * 60 * 1000; // 30 minutes
+  const cooldownMinutesLeft = isOnCooldown ? Math.ceil((30 * 60 * 1000 - (Date.now() - lastTriggerTime!)) / (60 * 1000)) : 0;
 
   // Use effect to refresh cooldown timer
   useEffect(() => {
@@ -293,7 +204,7 @@ export default function Agenda() {
           <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="today" className="text-xs sm:text-sm">Today's Agenda</TabsTrigger>
-              <TabsTrigger value="ethos" className="text-xs sm:text-sm">Weekly Ethos</TabsTrigger>
+              <TabsTrigger value="flow" className="text-xs sm:text-sm">Flow Strategy</TabsTrigger>
             </TabsList>
 
             <TabsContent value="today" className="space-y-4 md:space-y-6">
@@ -378,339 +289,226 @@ export default function Agenda() {
                     </div>
                   )}
                 </div>
-
-                {/* Today's Ethos */}
-                {(() => {
-                  const todayEthos = getTodayEthos();
-                  return todayEthos && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Target size={16} className="text-red-600" />
-                        <span className="font-medium text-red-800">Today's Ethos</span>
-                      </div>
-                      <p className="text-red-700 font-medium">{todayEthos.ethos}</p>
-                      <p className="text-red-600 text-sm mt-1">{todayEthos.description}</p>
-                      {todayEthos.focusAreas && todayEthos.focusAreas.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {todayEthos.focusAreas.map((area: string) => (
-                            <Badge key={area} variant="secondary" className="bg-red-100 text-red-800">
-                              {area}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
               </CardContent>
             </Card>
 
-            {/* API Key Status Warning */}
-            {!agendaSuggestion && (
-              <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium text-amber-800 dark:text-amber-200">
-                        AI Service Currently Unavailable
-                      </h3>
-                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                        The OpenAI API keys have exceeded their quota. Please check your API billing status or provide updated keys to access AI-powered agenda generation and Eisenhower matrix categorization.
-                      </p>
+            {/* AI Suggestions */}
+            {agendaSuggestion && (
+              <Card className="border-2 border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-800">
+                    <Lightbulb size={20} />
+                    AI Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-green-900 mb-2">Daily Focus Strategy</h4>
+                    <p className="text-sm text-green-800">{agendaSuggestion.suggestions}</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-green-900 mb-2">Task Switch Optimization</h4>
+                    <p className="text-sm text-green-800">{agendaSuggestion.taskSwitchOptimization}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="outline" className="text-green-700 border-green-300">
+                        Estimated switches: {agendaSuggestion.estimatedTaskSwitches}
+                      </Badge>
+                      <Badge variant="outline" className="text-green-700 border-green-300">
+                        Scheduled: {agendaSuggestion.scheduledActivities.length} activities
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* AI Suggestions */}
-            {agendaSuggestion && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb size={20} className="text-yellow-500" />
-                      {t("agenda.aiRecommendations")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-sm text-neutral-medium mb-2">{t("agenda.dailyStrategy")}</h4>
-                      <p className="text-sm">{agendaSuggestion?.suggestions || t("agenda.aiServiceUnavailable")}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm text-neutral-medium mb-2">{t("agenda.taskSwitchOptimization")}</h4>
-                      <p className="text-sm">{agendaSuggestion?.taskSwitchOptimization || t("agenda.optimizationUnavailable")}</p>
-                    </div>
-                    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                      <span className="text-sm font-medium">{t("agenda.estimatedTaskSwitches")}</span>
-                      <Badge variant={(agendaSuggestion?.estimatedTaskSwitches || 0) <= maxTaskSwitches ? "default" : "destructive"}>
-                        {agendaSuggestion?.estimatedTaskSwitches || 0} / {maxTaskSwitches}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Play size={20} className="text-green-500" />
-                      Scheduled Activities
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {agendaSuggestion?.scheduledActivities?.map((activityId, index) => {
-                        const activity = activities?.find(a => a.id === activityId);
-                        if (!activity) return null;
-                        
-                        return (
-                          <div key={activityId} className="flex items-center gap-3 p-3 border rounded-lg">
-                            <div className="flex items-center justify-center w-6 h-6 bg-ms-blue text-white rounded-full text-xs font-bold">
-                              {index + 1}
+            {/* Priority Matrix */}
+            {priorityMatrix && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target size={20} />
+                    Eisenhower Priority Matrix
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(priorityMatrix).map(([quadrant, activities]) => (
+                      <Card key={quadrant} className={`border-2 ${getQuadrantColor(quadrant)}`}>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            {getQuadrantIcon(quadrant)}
+                            <span className="text-sm">{getQuadrantTitle(quadrant)}</span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {activities.length === 0 ? (
+                            <p className="text-sm text-gray-500 italic">No activities in this quadrant</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {activities.slice(0, 3).map((activity) => (
+                                <div key={activity.id} className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                                  <span className="text-sm font-medium">{activity.title}</span>
+                                </div>
+                              ))}
+                              {activities.length > 3 && (
+                                <p className="text-xs text-gray-500">
+                                  +{activities.length - 3} more activities
+                                </p>
+                              )}
                             </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">{activity.title}</p>
-                              <p className="text-xs text-neutral-medium">{activity.description}</p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              {activity.priority}
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
+            <TabsContent value="flow" className="space-y-4 md:space-y-6">
+            {/* Current Strategy Display */}
+            {currentStrategy && (
+              <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                    <Brain size={20} />
+                    Active Flow Strategy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-blue-900 dark:text-blue-100">{currentStrategy.strategyName}</h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">Type: {currentStrategy.personalityType}</p>
+                    </div>
+                    <Badge variant="default" className="bg-blue-600">Active</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-
-          <TabsContent value="ethos" className="space-y-4 md:space-y-6">
-            {/* Create New Ethos */}
+            {/* Personality-Based Flow Strategies */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Settings size={20} />
-                  Create Weekly Ethos
+                  <User size={20} />
+                  Personality-Based Flow Strategies
                 </CardTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  Choose a cognitive strategy optimized for your work patterns and energy levels. Each strategy is based on chronobiology research and productivity science.
+                </p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Day of Week</label>
-                    <Select 
-                      value={newEthos.dayOfWeek.toString()} 
-                      onValueChange={(value) => setNewEthos({...newEthos, dayOfWeek: parseInt(value)})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DAYS_OF_WEEK.map((day) => (
-                          <SelectItem key={day.value} value={day.value.toString()}>
-                            {day.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Max Task Switches</label>
-                    <Select 
-                      value={newEthos.maxTaskSwitches.toString()} 
-                      onValueChange={(value) => setNewEthos({...newEthos, maxTaskSwitches: parseInt(value)})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 Switch</SelectItem>
-                        <SelectItem value="2">2 Switches</SelectItem>
-                        <SelectItem value="3">3 Switches</SelectItem>
-                        <SelectItem value="4">4 Switches</SelectItem>
-                        <SelectItem value="5">5 Switches</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {personalityPresets?.map((preset) => {
+                    const isActive = currentStrategy?.personalityType === preset.personalityType;
+                    
+                    const getPersonalityIcon = (type: string) => {
+                      switch (type) {
+                        case "early_bird": return <Clock className="text-yellow-600" size={20} />;
+                        case "night_owl": return <Brain className="text-purple-600" size={20} />;
+                        case "steady_pacer": return <Target className="text-green-600" size={20} />;
+                        case "sprint_recover": return <Zap className="text-orange-600" size={20} />;
+                        case "collaborative": return <Users className="text-blue-600" size={20} />;
+                        case "adaptive": return <ActivityIcon className="text-gray-600" size={20} />;
+                        default: return <User size={20} />;
+                      }
+                    };
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Ethos</label>
-                  <Input
-                    placeholder="e.g., Deep Focus Monday, Communication Day, Creative Exploration"
-                    value={newEthos.ethos}
-                    onChange={(e) => setNewEthos({...newEthos, ethos: e.target.value})}
-                  />
-                </div>
+                    const getPersonalityColor = (type: string) => {
+                      switch (type) {
+                        case "early_bird": return "border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800";
+                        case "night_owl": return "border-purple-200 bg-purple-50 dark:bg-purple-950 dark:border-purple-800";
+                        case "steady_pacer": return "border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800";
+                        case "sprint_recover": return "border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800";
+                        case "collaborative": return "border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800";
+                        case "adaptive": return "border-gray-200 bg-gray-50 dark:bg-gray-950 dark:border-gray-800";
+                        default: return "border-gray-200 bg-gray-50 dark:bg-gray-950 dark:border-gray-800";
+                      }
+                    };
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <Textarea
-                    placeholder="Describe the purpose and mindset for this day..."
-                    value={newEthos.description}
-                    onChange={(e) => setNewEthos({...newEthos, description: e.target.value})}
-                    rows={3}
-                  />
-                </div>
-
-                <Button
-                  onClick={handleCreateEthos}
-                  disabled={createEthosMutation.isPending || !newEthos.ethos}
-                  className="bg-ms-blue hover:bg-ms-blue-dark text-white"
-                >
-                  {createEthosMutation.isPending ? "Creating..." : "Create Ethos"}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Existing Ethos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {weeklyEthos?.map((ethos) => (
-                <Card key={ethos.id} className="border-2 border-ms-blue/20 micro-hover-lift">
-                  {editingEthos?.id === ethos.id ? (
-                    // Edit Mode
-                    <>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center justify-between">
-                          <Select 
-                            value={editingEthos.dayOfWeek.toString()} 
-                            onValueChange={(value) => setEditingEthos({...editingEthos, dayOfWeek: parseInt(value)})}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {DAYS_OF_WEEK.map((day) => (
-                                <SelectItem key={day.value} value={day.value.toString()}>
-                                  {day.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select 
-                            value={editingEthos.maxTaskSwitches.toString()} 
-                            onValueChange={(value) => setEditingEthos({...editingEthos, maxTaskSwitches: parseInt(value)})}
-                          >
-                            <SelectTrigger className="w-24">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1">1</SelectItem>
-                              <SelectItem value="2">2</SelectItem>
-                              <SelectItem value="3">3</SelectItem>
-                              <SelectItem value="4">4</SelectItem>
-                              <SelectItem value="5">5</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <Input
-                            value={editingEthos.ethos}
-                            onChange={(e) => setEditingEthos({...editingEthos, ethos: e.target.value})}
-                            placeholder="Ethos name"
-                            className="font-medium"
-                          />
-                          <Textarea
-                            value={editingEthos.description || ""}
-                            onChange={(e) => setEditingEthos({...editingEthos, description: e.target.value})}
-                            placeholder="Description"
-                            className="mt-2"
-                            rows={2}
-                          />
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={handleUpdateEthos}
-                            disabled={updateEthosMutation.isPending || !editingEthos.ethos}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white micro-button-press flex-1"
-                          >
-                            <Save size={14} className="mr-1" />
-                            {updateEthosMutation.isPending ? "Saving..." : "Save"}
-                          </Button>
-                          <Button
-                            onClick={handleCancelEdit}
-                            size="sm"
-                            variant="outline"
-                            className="micro-button-press"
-                          >
-                            <X size={14} />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </>
-                  ) : (
-                    // View Mode
-                    <>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center justify-between">
-                          {DAYS_OF_WEEK.find(d => d.value === ethos.dayOfWeek)?.label}
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{ethos.maxTaskSwitches} switches</Badge>
-                            <div className="flex gap-1">
-                              <Button
-                                onClick={() => handleEditEthos(ethos)}
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 w-6 p-0 hover:bg-blue-50 micro-button-press"
-                              >
-                                <Edit2 size={12} className="text-blue-600" />
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  if (confirm("Are you sure you want to delete this ethos?")) {
-                                    deleteEthosMutation.mutate(ethos.id);
-                                  }
-                                }}
-                                size="sm"
-                                variant="ghost"
-                                disabled={deleteEthosMutation.isPending}
-                                className="h-6 w-6 p-0 hover:bg-red-50 micro-button-press"
-                              >
-                                <Trash2 size={12} className="text-red-600" />
-                              </Button>
+                    return (
+                      <Card 
+                        key={preset.personalityType} 
+                        className={`cursor-pointer transition-all hover:shadow-md ${
+                          isActive 
+                            ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-950' 
+                            : `border-2 ${getPersonalityColor(preset.personalityType)}`
+                        }`}
+                        onClick={() => !isActive && applyPresetMutation.mutate(preset.personalityType)}
+                      >
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {getPersonalityIcon(preset.personalityType)}
+                              <span className="text-sm">{preset.strategyName}</span>
                             </div>
-                          </div>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div>
-                            <h4 className="font-medium text-ms-blue">{ethos.ethos}</h4>
-                            <p className="text-sm text-neutral-medium mt-1">{ethos.description}</p>
-                          </div>
-                          
-                          {ethos.focusAreas && ethos.focusAreas.length > 0 && (
-                            <div>
-                              <h5 className="text-xs font-medium text-neutral-medium mb-2">Focus Areas</h5>
-                              <div className="flex flex-wrap gap-1">
-                                {ethos.focusAreas.map((area) => (
-                                  <Badge key={area} variant="outline" className="text-xs">
-                                    {area}
-                                  </Badge>
-                                ))}
+                            {isActive && (
+                              <Badge variant="default" className="bg-blue-600 text-xs">Active</Badge>
+                            )}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <p className="text-sm text-gray-700 dark:text-gray-300">{preset.description}</p>
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600 dark:text-gray-400">Working Hours:</span>
+                                <span className="font-medium">{preset.workingHours.start} - {preset.workingHours.end}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600 dark:text-gray-400">Peak Focus:</span>
+                                <span className="font-medium">{preset.workingHours.peakStart} - {preset.workingHours.peakEnd}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600 dark:text-gray-400">Max Task Switches:</span>
+                                <span className="font-medium">{preset.maxTaskSwitches}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600 dark:text-gray-400">Focus Block:</span>
+                                <span className="font-medium">{preset.focusBlockDuration}min</span>
                               </div>
                             </div>
-                          )}
-                          
-                          <div className="flex items-center justify-between text-xs text-neutral-medium">
-                            <span>Work blocks: {ethos.preferredWorkBlocks}</span>
-                            <span>Max switches: {ethos.maxTaskSwitches}</span>
+
+                            {preset.preferredTaskTypes && preset.preferredTaskTypes.length > 0 && (
+                              <div>
+                                <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Optimized For:</h5>
+                                <div className="flex flex-wrap gap-1">
+                                  {preset.preferredTaskTypes.slice(0, 3).map((type: string) => (
+                                    <Badge key={type} variant="outline" className="text-xs">
+                                      {type}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {!isActive && (
+                              <Button 
+                                size="sm" 
+                                className="w-full mt-3"
+                                disabled={applyPresetMutation.isPending}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  applyPresetMutation.mutate(preset.personalityType);
+                                }}
+                              >
+                                {applyPresetMutation.isPending ? "Applying..." : "Apply Strategy"}
+                              </Button>
+                            )}
                           </div>
-                        </div>
-                      </CardContent>
-                    </>
-                  )}
-                </Card>
-              ))}
-            </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
         </div>

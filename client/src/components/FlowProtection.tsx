@@ -209,26 +209,7 @@ export default function FlowProtection({
         </Card>
       )}
 
-      {/* Low Stimulus Mode Toggle */}
-      <Card className="border-gray-200">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="low-stimulus" className="text-sm font-medium">
-                Low Stimulus Mode
-              </Label>
-              <p className="text-xs text-gray-600">
-                Simplified interface and minimal notifications for challenging days
-              </p>
-            </div>
-            <Switch
-              id="low-stimulus"
-              checked={lowStimulusMode}
-              onCheckedChange={(checked) => toggleLowStimulusMutation.mutate(checked)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Personality-Based Presets */}
       <Card className="border-gray-200">
