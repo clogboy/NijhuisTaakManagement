@@ -484,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Smart prioritization endpoint
   app.get("/api/smart-insights", requireAuth, async (req: any, res) => {
     try {
-      const activities = await storage.getActivities(req.user.id, req.user.role === "admin");
+      const activities = await storage.getActivities(req.user.id, req.user.email, req.user.role === "admin");
       const insights = smartPrioritizationService.getPersonalizedRecommendations(activities);
       res.json(insights);
     } catch (error) {
