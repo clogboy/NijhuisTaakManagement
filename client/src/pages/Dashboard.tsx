@@ -81,6 +81,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
   const [selectedFocusActivity, setSelectedFocusActivity] = useState<Activity | null>(null);
+  const [selectedFocusSubtask, setSelectedFocusSubtask] = useState<any | null>(null);
   const [sortBy, setSortBy] = useState<string>("priority");
   const [priorityFilters, setPriorityFilters] = useState<string[]>(["urgent", "normal", "low"]);
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
@@ -1296,33 +1297,75 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           </DialogHeader>
           
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Kies een taak:
-              </label>
-              <Select value={selectedFocusActivity?.id?.toString() || ""} onValueChange={(value) => {
-                const activity = activities?.find(a => a.id.toString() === value);
-                setSelectedFocusActivity(activity || null);
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecteer een taak om op te focussen..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
-                    <SelectItem key={activity.id} value={activity.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 ${getPriorityColor(activity.priority)} rounded-full`}></div>
-                        <span className="truncate">{activity.title}</span>
+            <div className="space-y-4">
+              {/* Urgent Subtasks Section */}
+              {subtasks?.filter(s => s.status === 'pending').length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-orange-700 mb-2 block">🔥 Urgente subtaken</label>
+                  <div className="space-y-2">
+                    {subtasks?.filter(s => s.status === 'pending').map((subtask) => (
+                      <div 
+                        key={`subtask-${subtask.id}`}
+                        onClick={() => {
+                          setSelectedFocusSubtask(subtask);
+                          setSelectedFocusActivity(null);
+                        }}
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedFocusSubtask?.id === subtask.id 
+                            ? 'border-orange-500 bg-orange-50' 
+                            : 'border-gray-200 hover:border-orange-300 hover:bg-orange-25'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                          <span className="text-sm font-medium">{subtask.title}</span>
+                        </div>
+                        {subtask.description && (
+                          <p className="text-xs text-gray-600 mt-1 ml-4">{subtask.description}</p>
+                        )}
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Activities Section */}
+              {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-blue-700 mb-2 block">📋 Hoofdtaken</label>
+                  <div className="space-y-2">
+                    {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
+                      <div 
+                        key={`activity-${activity.id}`}
+                        onClick={() => {
+                          setSelectedFocusActivity(activity);
+                          setSelectedFocusSubtask(null);
+                        }}
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedFocusActivity?.id === activity.id 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${getPriorityColor(activity.priority)}`}></div>
+                          <span className="text-sm font-medium">{activity.title}</span>
+                        </div>
+                        {activity.description && (
+                          <p className="text-xs text-gray-600 mt-1 ml-4">{activity.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {selectedFocusActivity && (
+            {(selectedFocusActivity || selectedFocusSubtask) && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-sm text-blue-900 mb-2">Voorbereiding suggesties:</h4>
+                <h4 className="font-medium text-sm text-blue-900 mb-2">
+                  Voorbereiding voor: {selectedFocusActivity?.title || selectedFocusSubtask?.title}
+                </h4>
                 <ul className="text-xs text-blue-800 space-y-1">
                   <li>• Sluit onnodige browsertabs en applicaties</li>
                   <li>• Zet telefoon op stil of niet storen modus</li>
@@ -1342,17 +1385,19 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
               </Button>
               <Button
                 onClick={() => {
-                  if (selectedFocusActivity) {
+                  const selectedTask = selectedFocusActivity || selectedFocusSubtask;
+                  if (selectedTask) {
                     activateLowStimulus();
                     toast({
                       title: "Deep Focus Geactiveerd",
-                      description: `Focussen op: ${selectedFocusActivity.title}`,
+                      description: `Focussen op: ${selectedTask.title}`,
                     });
                     setIsDeepFocusModalOpen(false);
                     setSelectedFocusActivity(null);
+                    setSelectedFocusSubtask(null);
                   }
                 }}
-                disabled={!selectedFocusActivity}
+                disabled={!selectedFocusActivity && !selectedFocusSubtask}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 Start Focus Sessie

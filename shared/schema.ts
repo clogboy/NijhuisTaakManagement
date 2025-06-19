@@ -301,6 +301,7 @@ export const deepFocusBlocks = pgTable("deep_focus_blocks", {
   actualEnd: timestamp("actual_end"),
   status: text("status").notNull().default("scheduled"), // 'scheduled', 'active', 'completed', 'cancelled'
   selectedActivityId: integer("selected_activity_id").references(() => activities.id),
+  selectedSubtaskId: integer("selected_subtask_id").references(() => subtasks.id),
   focusType: text("focus_type").notNull().default("deep"), // 'deep', 'shallow', 'creative'
   lowStimulusMode: boolean("low_stimulus_mode").notNull().default(true),
   distractionCount: integer("distraction_count").default(0),

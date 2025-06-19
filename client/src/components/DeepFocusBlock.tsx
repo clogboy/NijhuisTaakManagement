@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Brain, Clock, Target, Focus, Star, CheckCircle, XCircle } from "lucide-react";
-import { format, differenceInMinutes } from "date-fns";
-import type { Activity, DeepFocusBlock } from "@shared/schema";
+import { Brain, Clock, Target, Focus, Star, CheckCircle, XCircle, Timer } from "lucide-react";
+import { format, differenceInMinutes, differenceInSeconds } from "date-fns";
+import type { Activity, DeepFocusBlock, Subtask } from "@shared/schema";
 
 interface DeepFocusBlockProps {
   onActivateLowStimulus: () => void;
@@ -22,10 +22,20 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
   const [showTaskSelector, setShowTaskSelector] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<number | undefined>();
+  const [selectedSubtaskId, setSelectedSubtaskId] = useState<number | undefined>();
   const [productivityRating, setProductivityRating] = useState<number>(3);
   const [completionNotes, setCompletionNotes] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Update current time every second for countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Get active deep focus block
   const { data: activeBlock } = useQuery<DeepFocusBlock | null>({
@@ -36,6 +46,11 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
   // Get activities for task selection
   const { data: activities = [] } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
+  });
+
+  // Get subtasks for urgent task selection
+  const { data: subtasks = [] } = useQuery<Subtask[]>({
+    queryKey: ["/api/subtasks"],
   });
 
   // Get today's scheduled focus blocks
@@ -54,8 +69,11 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
 
   // Start deep focus block
   const startFocusMutation = useMutation({
-    mutationFn: async ({ blockId, activityId }: { blockId: number; activityId?: number }) => {
-      return apiRequest(`/api/deep-focus/${blockId}/start`, "POST", { selectedActivityId: activityId });
+    mutationFn: async ({ blockId, activityId, subtaskId }: { blockId: number; activityId?: number; subtaskId?: number }) => {
+      return apiRequest(`/api/deep-focus/${blockId}/start`, "POST", { 
+        selectedActivityId: activityId,
+        selectedSubtaskId: subtaskId 
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deep-focus/active"] });
@@ -127,11 +145,14 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
   });
 
   const handleStartFocus = (block: DeepFocusBlock) => {
-    if (activities.length === 0) {
-      // No activities, start without task selection
+    const urgentSubtasks = subtasks.filter(s => s.status === 'pending');
+    const availableActivities = activities.filter(a => a.status !== 'completed' && a.status !== 'archived');
+    
+    if (urgentSubtasks.length === 0 && availableActivities.length === 0) {
+      // No tasks available, start without task selection
       startFocusMutation.mutate({ blockId: block.id });
     } else {
-      // Show task selector
+      // Show task selector with urgent subtasks and activities
       setShowTaskSelector(true);
     }
   };
@@ -163,6 +184,36 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
   const getActiveDuration = () => {
     if (!activeBlock?.actualStart) return 0;
     return differenceInMinutes(new Date(), new Date(activeBlock.actualStart));
+  };
+
+  const getRemainingTime = () => {
+    if (!activeBlock?.scheduledEnd) return null;
+    const endTime = new Date(activeBlock.scheduledEnd);
+    const now = new Date();
+    const totalSeconds = differenceInSeconds(endTime, now);
+    
+    if (totalSeconds <= 0) return null;
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getSelectedTaskName = () => {
+    if (activeBlock?.selectedActivityId) {
+      const activity = activities.find(a => a.id === activeBlock.selectedActivityId);
+      if (activity) return activity.title;
+    }
+    if ((activeBlock as any)?.selectedSubtaskId) {
+      const subtask = subtasks.find(s => s.id === (activeBlock as any).selectedSubtaskId);
+      if (subtask) return subtask.title;
+    }
+    return "Algemene focus sessie";
   };
 
   const getFocusRecommendations = () => {
@@ -197,29 +248,34 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
             <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
               <Focus className="animate-pulse" size={20} />
               Deep Focus Actief
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {getActiveDuration()} min
-              </Badge>
+              {getRemainingTime() && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
+                  <Timer size={14} />
+                  {getRemainingTime()}
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{activeBlock.title}</p>
-                {activeBlock.selectedActivityId && (
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Gefocust op: {activities.find(a => a.id === activeBlock.selectedActivityId)?.title || "Onbekende taak"}
-                  </p>
-                )}
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Gestart om {format(new Date(activeBlock.actualStart!), "HH:mm")}
+              <div className="flex-1">
+                <p className="font-medium text-blue-900 dark:text-blue-100">{getSelectedTaskName()}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Gestart om {format(new Date(activeBlock.actualStart!), "HH:mm")} • {getActiveDuration()} min actief
                 </p>
+                {getRemainingTime() && (
+                  <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                    <p className="text-xs text-blue-800 dark:text-blue-200">
+                      🎯 Focus tijd resterend: <span className="font-mono font-bold">{getRemainingTime()}</span>
+                    </p>
+                  </div>
+                )}
               </div>
               <Button 
                 onClick={handleEndFocus}
                 variant="outline"
                 size="sm"
-                className="border-blue-300"
+                className="border-blue-300 ml-4"
               >
                 <CheckCircle size={16} className="mr-1" />
                 Beëindigen
@@ -308,45 +364,100 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
 
       {/* Task Selection Dialog */}
       <Dialog open={showTaskSelector} onOpenChange={setShowTaskSelector}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Selecteer Focus Taak</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="activity-select">Op welke taak wil je je focussen?</Label>
-              <Select onValueChange={(value) => setSelectedActivityId(parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Kies een taak..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {activities.map((activity) => (
-                    <SelectItem key={activity.id} value={activity.id.toString()}>
-                      {activity.title}
-                    </SelectItem>
+            {/* Urgent Subtasks Section */}
+            {subtasks.filter(s => s.status === 'pending').length > 0 && (
+              <div>
+                <Label className="text-sm font-medium text-orange-700 mb-2 block">🔥 Urgente subtaken</Label>
+                <div className="space-y-2">
+                  {subtasks.filter(s => s.status === 'pending').map((subtask) => (
+                    <div 
+                      key={`subtask-${subtask.id}`}
+                      onClick={() => {
+                        setSelectedSubtaskId(subtask.id);
+                        setSelectedActivityId(undefined);
+                      }}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedSubtaskId === subtask.id 
+                          ? 'border-orange-500 bg-orange-50' 
+                          : 'border-gray-200 hover:border-orange-300 hover:bg-orange-25'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm font-medium">{subtask.title}</span>
+                      </div>
+                      {subtask.description && (
+                        <p className="text-xs text-gray-600 mt-1 ml-4">{subtask.description}</p>
+                      )}
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
+                </div>
+              </div>
+            )}
+            
+            {/* Activities Section */}
+            {activities.filter(a => a.status !== 'completed' && a.status !== 'archived').length > 0 && (
+              <div>
+                <Label className="text-sm font-medium text-blue-700 mb-2 block">📋 Hoofdtaken</Label>
+                <div className="space-y-2">
+                  {activities.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
+                    <div 
+                      key={`activity-${activity.id}`}
+                      onClick={() => {
+                        setSelectedActivityId(activity.id);
+                        setSelectedSubtaskId(undefined);
+                      }}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedActivityId === activity.id 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          activity.priority === 'urgent' ? 'bg-red-500' :
+                          activity.priority === 'normal' ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}></div>
+                        <span className="text-sm font-medium">{activity.title}</span>
+                      </div>
+                      {activity.description && (
+                        <p className="text-xs text-gray-600 mt-1 ml-4">{activity.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-2 pt-4">
               <Button 
                 onClick={() => {
                   const blockToStart = upcomingBlocks[0] || activeBlock;
                   if (blockToStart) {
                     startFocusMutation.mutate({ 
                       blockId: blockToStart.id, 
-                      activityId: selectedActivityId 
+                      activityId: selectedActivityId,
+                      subtaskId: selectedSubtaskId
                     });
                   }
                 }}
-                disabled={startFocusMutation.isPending}
+                disabled={startFocusMutation.isPending || (!selectedActivityId && !selectedSubtaskId)}
                 className="flex-1"
               >
                 Start Deep Focus
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setShowTaskSelector(false)}
+                onClick={() => {
+                  setShowTaskSelector(false);
+                  setSelectedActivityId(undefined);
+                  setSelectedSubtaskId(undefined);
+                }}
                 className="flex-1"
               >
                 Annuleren
