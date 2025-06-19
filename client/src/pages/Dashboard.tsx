@@ -82,7 +82,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
   const [selectedFocusActivity, setSelectedFocusActivity] = useState<Activity | null>(null);
   const [selectedFocusSubtask, setSelectedFocusSubtask] = useState<any | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<number>(25);
+  const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [sortBy, setSortBy] = useState<string>("priority");
   const [priorityFilters, setPriorityFilters] = useState<string[]>(["urgent", "normal", "low"]);
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
@@ -1442,14 +1442,37 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
               // Active session display
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-center">
+                  <div className="text-center mb-4">
                     <div className="text-3xl font-bold text-blue-900 mb-2">
                       {getRemainingTime() || "Actief"}
                     </div>
-                    <div className="text-sm text-blue-700 font-medium">
-                      Focussen op: {getSelectedTaskName()}
-                    </div>
                   </div>
+                  
+                  {/* Show full subtask card */}
+                  {activeDeepFocus?.selectedSubtaskId && subtasks && (
+                    <div className="bg-white border border-blue-300 rounded-lg p-3">
+                      {(() => {
+                        const currentSubtask = subtasks.find(s => s.id === activeDeepFocus.selectedSubtaskId);
+                        if (!currentSubtask) return null;
+                        return (
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              <span className="font-medium text-gray-900">{currentSubtask.title}</span>
+                              <div className="ml-auto">
+                                <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+                                  Urgent
+                                </span>
+                              </div>
+                            </div>
+                            {currentSubtask.description && (
+                              <p className="text-sm text-gray-600 ml-4">{currentSubtask.description}</p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
@@ -1468,7 +1491,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Sessie duur:</label>
                   <div className="flex gap-2">
-                    {[25, 30, 60, 90, 120].map((duration) => (
+                    {[30, 60, 90, 120].map((duration) => (
                       <button
                         key={duration}
                         onClick={() => setSelectedDuration(duration)}
