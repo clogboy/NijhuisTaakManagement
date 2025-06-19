@@ -438,6 +438,20 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         {/* Low Stimulus Mode - Simplified View */}
         {lowStimulus ? (
           <div className="space-y-8">
+            {/* Enter Deep Focus Button - Always visible */}
+            <Card className="border-gray-100">
+              <CardContent className="p-6">
+                <Button
+                  onClick={() => setIsDeepFocusModalOpen(true)}
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                >
+                  <Focus size={18} />
+                  Enter Deep Focus
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Productivity Health Card - Keep this visible in focus mode */}
             {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
               <ProductivityHealthCard
@@ -1277,7 +1291,12 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       />
 
       {/* Deep Focus Task Selection Modal */}
-      <Dialog open={isDeepFocusModalOpen} onOpenChange={setIsDeepFocusModalOpen}>
+      <Dialog open={isDeepFocusModalOpen} onOpenChange={(open) => {
+        setIsDeepFocusModalOpen(open);
+        if (!open) {
+          setSelectedFocusActivity(null);
+        }
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

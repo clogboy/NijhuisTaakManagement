@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Brain, 
   Calendar, 
@@ -22,11 +23,13 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
+  Focus,
   Lightbulb,
   RefreshCw,
   User,
   Users,
-  Activity as ActivityIcon
+  Activity as ActivityIcon,
+  Plus
 } from "lucide-react";
 import { Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -55,6 +58,10 @@ export default function Agenda() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
+  const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
+  const [selectedFocusActivity, setSelectedFocusActivity] = useState<Activity | null>(null);
+  const [focusScheduleTime, setFocusScheduleTime] = useState('');
+  const [focusDuration, setFocusDuration] = useState(60);
 
   // Flow strategy queries
   const { data: personalityPresets } = useQuery<any[]>({
@@ -241,7 +248,7 @@ export default function Agenda() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-end">
+                  <div className="space-y-2">
                     <Button
                       onClick={handleGenerateAgenda}
                       disabled={generateAgendaMutation.isPending}
@@ -249,6 +256,14 @@ export default function Agenda() {
                     >
                       <Brain size={16} className="mr-2" />
                       {generateAgendaMutation.isPending ? t("common.loading") : t("agenda.generateAgenda")}
+                    </Button>
+                    <Button
+                      onClick={() => setIsDeepFocusModalOpen(true)}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Focus size={16} className="mr-2" />
+                      Schedule Deep Focus
                     </Button>
                   </div>
                 </div>
@@ -513,6 +528,118 @@ export default function Agenda() {
         </Tabs>
         </div>
       </div>
+
+      {/* Deep Focus Scheduling Modal */}
+      <Dialog open={isDeepFocusModalOpen} onOpenChange={(open) => {
+        setIsDeepFocusModalOpen(open);
+        if (!open) {
+          setSelectedFocusActivity(null);
+          setFocusScheduleTime('');
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Focus size={20} />
+              Schedule Deep Focus
+            </DialogTitle>
+            <DialogDescription>
+              Plan a focused work session for maximum productivity.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Activity:
+              </label>
+              <Select value={selectedFocusActivity?.id?.toString() || ""} onValueChange={(value) => {
+                const activity = activities?.find(a => a.id.toString() === value);
+                setSelectedFocusActivity(activity || null);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an activity to focus on..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
+                    <SelectItem key={activity.id} value={activity.id.toString()}>
+                      <span className="truncate">{activity.title}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Start Time:
+              </label>
+              <Input
+                type="time"
+                value={focusScheduleTime}
+                onChange={(e) => setFocusScheduleTime(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Duration (minutes):
+              </label>
+              <Select value={focusDuration.toString()} onValueChange={(value) => setFocusDuration(parseInt(value))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="45">45 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="90">1.5 hours</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedFocusActivity && focusScheduleTime && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-sm text-blue-900 mb-2">Scheduled Session:</h4>
+                <p className="text-xs text-blue-800">
+                  <strong>{selectedFocusActivity.title}</strong><br/>
+                  {focusScheduleTime} for {focusDuration} minutes<br/>
+                  on {selectedDate}
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeepFocusModalOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedFocusActivity && focusScheduleTime) {
+                    // Here you would normally save to database
+                    toast({
+                      title: "Deep Focus Scheduled",
+                      description: `${selectedFocusActivity.title} at ${focusScheduleTime}`,
+                    });
+                    setIsDeepFocusModalOpen(false);
+                    setSelectedFocusActivity(null);
+                    setFocusScheduleTime('');
+                  }
+                }}
+                disabled={!selectedFocusActivity || !focusScheduleTime}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Schedule Session
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
