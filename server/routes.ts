@@ -6,7 +6,7 @@ import { generateDailyAgenda, categorizeActivitiesWithPriority } from "./ai-serv
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
 import { dailyScheduler } from "./scheduler";
-import { supabaseService } from "./supabase-service";
+
 import { emailService } from "./email-service";
 import { analyticsService } from "./analytics-service";
 import { auditService } from "./audit-service";
@@ -167,9 +167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contacts routes
   app.get("/api/contacts", requireAuth, async (req: any, res) => {
     try {
-      console.log(`[API] Loading contacts for user ${req.user.id} from Supabase`);
+      console.log(`[API] Loading contacts for user ${req.user.id}`);
       const contacts = await storage.getContacts(req.user.id);
-      console.log(`[API] Loaded ${contacts.length} contacts from Supabase`);
+      console.log(`[API] Loaded ${contacts.length} contacts`);
       res.json(contacts);
     } catch (error) {
       console.error("[API] Error fetching contacts:", error);
@@ -184,28 +184,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contactData = insertContactSchema.parse(req.body);
       
-      console.log("[API] Creating contact - attempting Supabase first...");
-      
-      // Try Supabase first
-      try {
-        const contact = await supabaseService.createContact({
-          ...contactData,
-          createdBy: req.user.id,
-        });
-        console.log(`[API] Successfully created contact in Supabase: ${contact.id}`);
-        res.status(201).json(contact);
-        return;
-      } catch (supabaseError) {
-        console.warn("[API] Supabase creation failed, falling back to local storage:", supabaseError);
-        
-        // Fallback to local storage
-        const contact = await storage.createContact({
-          ...contactData,
-          createdBy: req.user.id,
-        });
-        console.log(`[API] Created contact in local storage: ${contact.id}`);
-        res.status(201).json(contact);
-      }
+      const contact = await storage.createContact({
+        ...contactData,
+        createdBy: req.user.id,
+      });
+      console.log(`[API] Created contact: ${contact.id}`);
+      res.status(201).json(contact);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid contact data", errors: error.errors });
@@ -224,26 +208,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contactId = parseInt(req.params.id);
       const contactData = insertContactSchema.partial().parse(req.body);
       
-      console.log(`[API] Updating contact ${contactId} - attempting Supabase first...`);
-      
-      // Try Supabase first
-      try {
-        const contact = await supabaseService.updateContact(contactId, contactData);
-        console.log(`[API] Successfully updated contact in Supabase: ${contact.id}`);
-        res.json(contact);
+      const contact = await storage.updateContact(contactId, contactData);
+      if (!contact) {
+        res.status(404).json({ message: "Contact not found" });
         return;
-      } catch (supabaseError) {
-        console.warn("[API] Supabase update failed, falling back to local storage:", supabaseError);
-        
-        // Fallback to local storage
-        const contact = await storage.updateContact(contactId, contactData);
-        if (!contact) {
-          res.status(404).json({ message: "Contact not found" });
-          return;
-        }
-        console.log(`[API] Updated contact in local storage: ${contact.id}`);
-        res.json(contact);
       }
+      console.log(`[API] Updated contact: ${contact.id}`);
+      res.json(contact);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid contact data", errors: error.errors });
@@ -265,8 +236,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid contact ID" });
       }
       
-      console.log(`[API] Deleting contact ${contactId} - attempting Supabase first...`);
-      
       // Check if contact exists and belongs to user
       const existingContact = await storage.getContact(contactId);
       if (!existingContact) {
@@ -277,25 +246,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to delete this contact" });
       }
       
-      // Delete from both Supabase and local storage to maintain sync
-      try {
-        await supabaseService.deleteContact(contactId);
-        console.log(`[API] Successfully deleted contact from Supabase: ${contactId}`);
-        
-        // Also delete from local storage to maintain sync
-        await storage.deleteContact(contactId);
-        console.log(`[API] Successfully deleted contact from local storage: ${contactId}`);
-        
-        res.json({ message: "Contact deleted successfully" });
-        return;
-      } catch (supabaseError) {
-        console.warn("[API] Supabase deletion failed, falling back to local storage only:", supabaseError);
-        
-        // Fallback to local storage only
-        await storage.deleteContact(contactId);
-        console.log(`[API] Deleted contact from local storage: ${contactId}`);
-        res.json({ message: "Contact deleted successfully" });
-      }
+      await storage.deleteContact(contactId);
+      console.log(`[API] Successfully deleted contact: ${contactId}`);
+      
+      res.json({ message: "Contact deleted successfully" });
     } catch (error) {
       console.error("[API] Error deleting contact:", error);
       res.status(500).json({ 
@@ -305,50 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Supabase health check endpoints
-  app.get("/api/supabase/health", async (_req, res) => {
-    try {
-      const healthCheck = await supabaseService.healthCheck();
-      res.json(healthCheck);
-    } catch (error) {
-      console.error("[API] Supabase health check error:", error);
-      res.status(500).json({
-        status: 'unhealthy',
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
 
-  app.get("/api/supabase/status", async (_req, res) => {
-    try {
-      const status = supabaseService.getConnectionStatus();
-      res.json(status);
-    } catch (error) {
-      console.error("[API] Supabase status error:", error);
-      res.status(500).json({
-        connected: false,
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  app.post("/api/supabase/test-connection", async (_req, res) => {
-    try {
-      console.log("[API] Testing Supabase connection...");
-      const connectionTest = await supabaseService.testConnection();
-      res.json({
-        success: connectionTest.connected,
-        ...connectionTest
-      });
-    } catch (error) {
-      console.error("[API] Supabase connection test error:", error);
-      res.status(500).json({
-        success: false,
-        connected: false,
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
 
   // Activities routes
   app.get("/api/activities", requireAuth, async (req: any, res) => {

@@ -229,9 +229,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContacts(createdBy: number): Promise<Contact[]> {
-    console.log(`[STORAGE] Getting contacts for user ${createdBy} from Supabase`);
+    console.log(`[STORAGE] Getting contacts for user ${createdBy}`);
     const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
-    console.log(`[STORAGE] Found ${result.length} contacts in Supabase`);
+    console.log(`[STORAGE] Found ${result.length} contacts`);
     return result;
   }
 
