@@ -108,14 +108,23 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     
     if (diffMs <= 0) return null;
     
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const totalMinutes = Math.floor(diffMs / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
     
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    // Show seconds only in the last 2 minutes
+    if (totalMinutes < 2) {
+      const minutes = Math.floor(totalMinutes);
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Show exact minutes in the last 10 minutes
+    if (totalMinutes < 10) {
+      return `${totalMinutes} min`;
+    }
+    
+    // Round up to nearest 5 minutes for longer sessions
+    const roundedMinutes = Math.ceil(totalMinutes / 5) * 5;
+    return `~${roundedMinutes} min`;
   };
 
   const getSelectedTaskName = () => {
@@ -1417,50 +1426,79 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Focus size={20} />
-              Deep Focus Starten
+              {activeDeepFocus ? "Actieve Deep Focus Sessie" : "Deep Focus Starten"}
             </DialogTitle>
             <DialogDescription>
-              Selecteer een taak om op te focussen. We bereiden je omgeving voor en schakelen over naar focus modus.
+              {activeDeepFocus ? 
+                "Je bent momenteel in een deep focus sessie." :
+                "Selecteer een taak om op te focussen. We bereiden je omgeving voor en schakelen over naar focus modus."
+              }
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="space-y-4">
-              {/* Urgent Subtasks Section */}
-              {subtasks?.filter(s => s.status === 'pending').length > 0 ? (
-                <div>
-                  <label className="text-sm font-medium text-orange-700 mb-2 block">Selecteer een actiepunt om op te focussen:</label>
-                  <div className="space-y-2">
-                    {subtasks?.filter(s => s.status === 'pending').map((subtask) => (
-                      <div 
-                        key={`subtask-${subtask.id}`}
-                        onClick={() => {
-                          setSelectedFocusSubtask(subtask);
-                          setSelectedFocusActivity(null);
-                        }}
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                          selectedFocusSubtask?.id === subtask.id 
-                            ? 'border-orange-500 bg-orange-50' 
-                            : 'border-gray-200 hover:border-orange-300 hover:bg-orange-25'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                          <span className="text-sm font-medium">{subtask.title}</span>
-                        </div>
-                        {subtask.description && (
-                          <p className="text-xs text-gray-600 mt-1 ml-4">{subtask.description}</p>
-                        )}
-                      </div>
-                    ))}
+            {activeDeepFocus ? (
+              // Active session display
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-900 mb-2">
+                      {getRemainingTime() || "Actief"}
+                    </div>
+                    <div className="text-sm text-blue-700 font-medium">
+                      Focussen op: {getSelectedTaskName()}
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center p-6 text-gray-500">
-                  <p>Geen urgente actiepunten beschikbaar voor focus sessie.</p>
+                
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">💡 Focus Tips</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Schakel alle notificaties uit</li>
+                    <li>• Houd water binnen handbereik</li>
+                    <li>• Maak notities van afleidende gedachten</li>
+                    <li>• Neem korte pauzes als je moe wordt</li>
+                  </ul>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Urgent Subtasks Section */}
+                {subtasks?.filter(s => s.status === 'pending').length > 0 ? (
+                  <div>
+                    <label className="text-sm font-medium text-orange-700 mb-2 block">Selecteer een actiepunt om op te focussen:</label>
+                    <div className="space-y-2">
+                      {subtasks?.filter(s => s.status === 'pending').map((subtask) => (
+                        <div 
+                          key={`subtask-${subtask.id}`}
+                          onClick={() => {
+                            setSelectedFocusSubtask(subtask);
+                            setSelectedFocusActivity(null);
+                          }}
+                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                            selectedFocusSubtask?.id === subtask.id 
+                              ? 'border-orange-500 bg-orange-50' 
+                              : 'border-gray-200 hover:border-orange-300 hover:bg-orange-25'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <span className="text-sm font-medium">{subtask.title}</span>
+                          </div>
+                          {subtask.description && (
+                            <p className="text-xs text-gray-600 mt-1 ml-4">{subtask.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-6 text-gray-500">
+                    <p>Geen urgente actiepunten beschikbaar voor focus sessie.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {selectedFocusSubtask && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -1482,19 +1520,53 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 onClick={() => setIsDeepFocusModalOpen(false)}
                 className="flex-1"
               >
-                Annuleren
+                {activeDeepFocus ? "Sluiten" : "Annuleren"}
               </Button>
-              <Button
-                onClick={() => {
-                  if (selectedFocusSubtask) {
-                    createAndStartDeepFocus();
-                  }
-                }}
-                disabled={!selectedFocusSubtask || createFocusMutation.isPending}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                {createFocusMutation.isPending ? "Wordt gestart..." : "Start Focus Sessie"}
-              </Button>
+              {activeDeepFocus ? (
+                <Button
+                  onClick={async () => {
+                    try {
+                      // End the deep focus session via API
+                      await apiRequest(`/api/deep-focus/${activeDeepFocus.id}/end`, "POST", {
+                        productivityRating: 4, // Default good rating
+                        completionNotes: "Session ended by user"
+                      });
+                      
+                      // Update UI state
+                      deactivateLowStimulus();
+                      queryClient.invalidateQueries({ queryKey: ["/api/deep-focus/active"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/deep-focus"] });
+                      setIsDeepFocusModalOpen(false);
+                      
+                      toast({
+                        title: "Deep Focus beëindigd",
+                        description: "Je sessie is gestopt. Welkom terug!",
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Fout bij beëindigen",
+                        description: "Kon sessie niet beëindigen.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  Beëindig Sessie
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (selectedFocusSubtask) {
+                      createAndStartDeepFocus();
+                    }
+                  }}
+                  disabled={!selectedFocusSubtask || createFocusMutation.isPending}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {createFocusMutation.isPending ? "Wordt gestart..." : "Start Focus Sessie"}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
