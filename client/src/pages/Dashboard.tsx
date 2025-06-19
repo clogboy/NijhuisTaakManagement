@@ -100,16 +100,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   }, []);
 
   const getRemainingTime = () => {
-    if (!activeDeepFocus || !activeDeepFocus.scheduledEnd) {
-      console.log('No activeDeepFocus or scheduledEnd:', activeDeepFocus);
-      return null;
-    }
+    if (!activeDeepFocus || !activeDeepFocus.scheduledEnd) return null;
     
     const endTime = new Date(activeDeepFocus.scheduledEnd);
     const now = currentTime;
     const diffMs = endTime.getTime() - now.getTime();
-    
-    console.log('Countdown calc:', { endTime, now, diffMs, activeDeepFocus });
     
     if (diffMs <= 0) return null;
     
@@ -201,6 +196,61 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       });
     },
   });
+
+  // Create and start deep focus session
+  const createFocusMutation = useMutation({
+    mutationFn: async ({ title, duration, subtaskId }: { title: string; duration: number; subtaskId?: number }) => {
+      const now = new Date();
+      const endTime = new Date(now.getTime() + duration * 60000);
+      
+      // Create the block
+      const createResponse = await apiRequest("POST", "/api/deep-focus", {
+        title,
+        scheduledStart: now.toISOString(),
+        scheduledEnd: endTime.toISOString(),
+        focusType: "deep",
+        lowStimulusMode: true,
+      });
+      
+      const block = await createResponse.json();
+      
+      // Start the block with selected subtask
+      const startResponse = await apiRequest("POST", `/api/deep-focus/${block.id}/start`, {
+        selectedSubtaskId: subtaskId
+      });
+      
+      return await startResponse.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deep-focus/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deep-focus"] });
+      activateLowStimulus();
+      setIsDeepFocusModalOpen(false);
+      setSelectedFocusActivity(null);
+      setSelectedFocusSubtask(null);
+      toast({
+        title: "Deep Focus gestart",
+        description: "Je bent nu in deep focus modus met countdown timer.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Fout bij starten",
+        description: "Kon deep focus sessie niet starten.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createAndStartDeepFocus = () => {
+    if (selectedFocusSubtask) {
+      createFocusMutation.mutate({
+        title: `Deep Focus: ${selectedFocusSubtask.title}`,
+        duration: 25, // 25 minutes default
+        subtaskId: selectedFocusSubtask.id
+      });
+    }
+  };
 
   // Archive/Unarchive mutations
   const archiveMutation = useMutation({
@@ -1437,20 +1487,13 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
               <Button
                 onClick={() => {
                   if (selectedFocusSubtask) {
-                    activateLowStimulus();
-                    toast({
-                      title: "Deep Focus Geactiveerd",
-                      description: `Focussen op: ${selectedFocusSubtask.title}`,
-                    });
-                    setIsDeepFocusModalOpen(false);
-                    setSelectedFocusActivity(null);
-                    setSelectedFocusSubtask(null);
+                    createAndStartDeepFocus();
                   }
                 }}
-                disabled={!selectedFocusSubtask}
+                disabled={!selectedFocusSubtask || createFocusMutation.isPending}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                Start Focus Sessie
+                {createFocusMutation.isPending ? "Wordt gestart..." : "Start Focus Sessie"}
               </Button>
             </div>
           </div>
