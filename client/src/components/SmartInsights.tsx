@@ -148,45 +148,7 @@ export default function SmartInsights({ onActivitySelect }: SmartInsightsProps) 
         </Card>
       )}
 
-      {/* Top Priority Tasks */}
-      {insights.topPriority.length > 0 && (
-        <Card className="border-orange-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-orange-500" />
-              <span>Hoogste prioriteit</span>
-              <Badge variant="secondary" className="ml-auto">
-                {insights.topPriority.length} taken
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {insights.topPriority.slice(0, 3).map((activity) => (
-              <div 
-                key={activity.id} 
-                className="p-3 bg-orange-50 rounded-lg border border-orange-200 hover:shadow-sm transition-shadow cursor-pointer"
-                onClick={() => onActivitySelect?.(activity)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-1">{activity.title}</h4>
-                    <p className="text-sm text-gray-600 mb-2">{activity.smartPriority.reasoning}</p>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getPriorityColor(activity.smartPriority.score)}>
-                        {Math.round(activity.smartPriority.score * 100)}% prioriteit
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {getTimeSlotIcon(activity.smartPriority.suggestedTimeSlot)}
-                        <span className="ml-1">{getTimeSlotLabel(activity.smartPriority.suggestedTimeSlot)}</span>
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Quick Wins */}
       {insights.quickWins.length > 0 && (

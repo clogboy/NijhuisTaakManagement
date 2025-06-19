@@ -49,7 +49,7 @@ import { TaskDetailModal } from "@/components/modals/TaskDetailModal";
 import TodaysTasks from "@/components/TodaysTasks";
 import ProductivityHealthCard from "@/components/productivity/ProductivityHealthCard";
 import { DashboardLoadingScreen } from "@/components/ui/loading-animation";
-import SmartInsights from "@/components/SmartInsights";
+import FlowProtection from "@/components/FlowProtection";
 import OverdueTasksList from "@/components/OverdueTasksList";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -114,6 +114,10 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
   const { data: userPreferences } = useQuery<any>({
     queryKey: ["/api/user/preferences"],
+  });
+
+  const { data: smartInsights } = useQuery<any>({
+    queryKey: ["/api/smart-insights"],
   });
 
   const [healthCardDismissed, setHealthCardDismissed] = useState(false);
@@ -305,6 +309,27 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     return true;
   }).sort((a, b) => {
     if (sortBy === "priority") {
+      // Use smart prioritization if available, fall back to basic priority
+      if (smartInsights) {
+        const allPrioritizedActivities = [
+          ...smartInsights.topPriority,
+          ...smartInsights.quickWins,
+          ...Object.values(smartInsights.timeSlotSuggestions).flat()
+        ];
+        
+        const aSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === a.id);
+        const bSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === b.id);
+        
+        if (aSmartActivity && bSmartActivity) {
+          return bSmartActivity.smartPriority.score - aSmartActivity.smartPriority.score;
+        } else if (aSmartActivity) {
+          return -1;
+        } else if (bSmartActivity) {
+          return 1;
+        }
+      }
+      
+      // Fallback to basic priority
       const priorityOrder = { urgent: 3, normal: 2, low: 1 };
       return priorityOrder[b.priority as keyof typeof priorityOrder] - priorityOrder[a.priority as keyof typeof priorityOrder];
     } else if (sortBy === "dueDate") {
@@ -719,7 +744,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
         {/* Smart Insights Section */}
         <div className="mb-6">
-          <SmartInsights onActivitySelect={handleEditActivity} />
+          <FlowProtection 
+            onActivitySelect={handleEditActivity} 
+            lowStimulusMode={lowStimulus}
+            onLowStimulusModeChange={setLowStimulus}
+          />
         </div>
 
         {/* Today's Tasks and Activities */}

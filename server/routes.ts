@@ -493,6 +493,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Flow protection endpoints
+  app.get("/api/flow/personality-presets", requireAuth, async (req: any, res) => {
+    try {
+      const { flowProtectionService } = await import('./flow-protection-service');
+      const presets = flowProtectionService.getPersonalityPresets();
+      res.json(presets);
+    } catch (error) {
+      console.error("Get personality presets error:", error);
+      res.status(500).json({ message: "Failed to fetch personality presets" });
+    }
+  });
+
+  app.get("/api/flow/current-strategy", requireAuth, async (req: any, res) => {
+    try {
+      // For now, return a default strategy - will be enhanced when DB is ready
+      res.json({
+        personalityType: "adaptive",
+        strategyName: "Context-Aware Flexibility",
+        isActive: true
+      });
+    } catch (error) {
+      console.error("Get current strategy error:", error);
+      res.status(500).json({ message: "Failed to fetch current strategy" });
+    }
+  });
+
+  app.get("/api/flow/recommendations", requireAuth, async (req: any, res) => {
+    try {
+      const { flowProtectionService } = await import('./flow-protection-service');
+      const defaultStrategy = {
+        personalityType: "adaptive",
+        workingHours: { start: "08:00", end: "18:00", peakStart: "09:00", peakEnd: "15:00" },
+        energyPattern: { morning: 0.75, afternoon: 0.70, evening: 0.60 },
+        notificationSettings: { allowInterruptions: true, urgentOnly: false, quietHours: { start: "09:00", end: "11:00" } }
+      };
+      
+      const recommendations = flowProtectionService.getFlowRecommendations(defaultStrategy as any);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Get flow recommendations error:", error);
+      res.status(500).json({ message: "Failed to fetch flow recommendations" });
+    }
+  });
+
+  app.post("/api/flow/apply-preset", requireAuth, async (req: any, res) => {
+    try {
+      const { personalityType } = req.body;
+      // For now, just return success - will implement when DB is ready
+      res.json({ success: true, personalityType });
+    } catch (error) {
+      console.error("Apply preset error:", error);
+      res.status(500).json({ message: "Failed to apply preset" });
+    }
+  });
+
+  app.post("/api/flow/low-stimulus", requireAuth, async (req: any, res) => {
+    try {
+      const { enabled } = req.body;
+      // For now, just return success - will implement when DB is ready
+      res.json({ success: true, enabled });
+    } catch (error) {
+      console.error("Toggle low stimulus error:", error);
+      res.status(500).json({ message: "Failed to toggle low stimulus mode" });
+    }
+  });
+
   // Users route for ownership transfer
   app.get("/api/users", requireAuth, async (req: any, res) => {
     try {

@@ -495,6 +495,29 @@ export const insertIntegrationSettingsSchema = createInsertSchema(integrationSet
 export type InsertIntegrationSettings = z.infer<typeof insertIntegrationSettingsSchema>;
 export type IntegrationSettings = typeof integrationSettings.$inferSelect;
 
+// Flow Protection Strategies
+export const flowStrategies = pgTable("flow_strategies", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  personalityType: text("personality_type").notNull(), // "early_bird", "night_owl", "steady_pacer", "sprint_recover"
+  strategyName: text("strategy_name").notNull(),
+  description: text("description"),
+  workingHours: json("working_hours"), // { start: "07:00", end: "19:00", peakStart: "09:00", peakEnd: "11:00" }
+  maxTaskSwitches: integer("max_task_switches").default(3),
+  focusBlockDuration: integer("focus_block_duration").default(120), // minutes
+  breakDuration: integer("break_duration").default(15), // minutes
+  preferredTaskTypes: text("preferred_task_types").array(), // ["deep_work", "collaboration", "admin"]
+  energyPattern: json("energy_pattern"), // { morning: 0.9, afternoon: 0.7, evening: 0.4 }
+  notificationSettings: json("notification_settings"), // { allowInterruptions: false, urgentOnly: true }
+  isActive: boolean("is_active").default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const insertFlowStrategySchema = createInsertSchema(flowStrategies);
+export type InsertFlowStrategy = z.infer<typeof insertFlowStrategySchema>;
+export type FlowStrategy = typeof flowStrategies.$inferSelect;
+
 export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvitations).omit({
   id: true,
   inviterId: true,
