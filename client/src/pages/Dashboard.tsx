@@ -970,21 +970,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                             <span>{format(new Date(activity.dueDate), "MMM dd")}</span>
                           </div>
                         )}
-                        {activity.participants && activity.participants.length > 0 && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-1 cursor-help">
-                                  <Users size={12} />
-                                  <span>{activity.participants.length}</span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-sm">{getParticipantNames(activity.participants)}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
+
                       </div>
                       <Badge className={getStatusBadgeColor(activity.status)}>
                         {activity.status.replace("_", " ")}
@@ -1042,9 +1028,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">
                     Due Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">
-                    Participants
-                  </th>
+
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-medium uppercase tracking-wider">
                     Status
                   </th>
@@ -1084,27 +1068,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-dark">
                       {activity.dueDate ? format(new Date(activity.dueDate), "MMM dd, yyyy") : "No due date"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full mr-2"></div>
-                        {activity.participants && activity.participants.length > 0 ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="text-sm text-neutral-dark cursor-help">
-                                  {activity.participants.length} participant{activity.participants.length > 1 ? 's' : ''}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-sm">{getParticipantNames(activity.participants)}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <span className="text-sm text-neutral-dark">No participants</span>
-                        )}
-                      </div>
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge className={getStatusBadgeColor(activity.status)}>
                         {activity.status.replace("_", " ")}
