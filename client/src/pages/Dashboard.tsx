@@ -399,6 +399,16 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     if (activity.status === "archived" && !showArchived) return false;
     if (activity.status !== "archived" && showArchived) return false;
     
+    // Hide activities that have no open subtasks
+    if (subtasks && subtasks.length > 0) {
+      const hasOpenSubtasks = subtasks.some(subtask => 
+        subtask.linkedActivityId === activity.id && 
+        subtask.status !== "completed" && 
+        subtask.status !== "resolved"
+      );
+      if (!hasOpenSubtasks) return false;
+    }
+    
     // Priority filter
     if (!priorityFilters.includes(activity.priority)) return false;
     
