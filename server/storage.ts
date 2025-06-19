@@ -1,12 +1,74 @@
 import { 
-  users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions, deepFocusBlocks,
-  teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences, calendarIntegrations, calendarEvents, deadlineReminders,
-  type User, type InsertUser, type UpsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder, type DeepFocusBlock, type InsertDeepFocusBlock,
-  type TeamsBoard, type InsertTeamsBoard, type TeamsCard, type InsertTeamsCard,
-  type BimcollabProject, type InsertBimcollabProject, type BimcollabIssue, type InsertBimcollabIssue,
-  type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference,
-  type CalendarIntegration, type InsertCalendarIntegration, type CalendarEvent, type InsertCalendarEvent,
-  type DeadlineReminder, type InsertDeadlineReminder
+  tenants,
+  users, 
+  contacts, 
+  activities, 
+  activityLogs, 
+  quickWins, 
+  roadblocks, 
+  subtasks,
+  taskComments,
+  weeklyEthos,
+  dailyAgendas,
+  timeBlocks,
+  dailyTaskCompletions,
+  calendarIntegrations,
+  calendarEvents,
+  deadlineReminders,
+  deepFocusBlocks,
+  documentReferences,
+  userPreferences,
+  moodEntries,
+  moodReminders,
+  workspaceInvitations,
+  workspaceAccess,
+  type Tenant,
+  type InsertTenant,
+  type User,
+  type InsertUser,
+  type UpsertUser,
+  type Contact,
+  type InsertContact,
+  type Activity,
+  type InsertActivity,
+  type ActivityLog,
+  type InsertActivityLog,
+  type QuickWin,
+  type InsertQuickWin,
+  type Roadblock,
+  type InsertRoadblock,
+  type Subtask,
+  type InsertSubtask,
+  type TaskComment,
+  type InsertTaskComment,
+  type WeeklyEthos,
+  type InsertWeeklyEthos,
+  type DailyAgenda,
+  type InsertDailyAgenda,
+  type TimeBlock,
+  type InsertTimeBlock,
+  type DailyTaskCompletion,
+  type InsertDailyTaskCompletion,
+  type UserPreferences,
+  type InsertUserPreferences,
+  type CalendarIntegration,
+  type InsertCalendarIntegration,
+  type CalendarEvent,
+  type InsertCalendarEvent,
+  type DeadlineReminder,
+  type InsertDeadlineReminder,
+  type DeepFocusBlock,
+  type InsertDeepFocusBlock,
+  type DocumentReference,
+  type InsertDocumentReference,
+  type MoodEntry,
+  type InsertMoodEntry,
+  type MoodReminder,
+  type InsertMoodReminder,
+  type WorkspaceInvitation,
+  type InsertWorkspaceInvitation,
+  type WorkspaceAccess,
+  type InsertWorkspaceAccess
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, sql, or, not, ne, gte, lte } from "drizzle-orm";
@@ -160,41 +222,71 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+  // Tenant management
+  async createTenant(tenantData: InsertTenant): Promise<Tenant> {
+    const [tenant] = await db.insert(tenants).values(tenantData).returning();
+    return tenant;
+  }
+
+  async getTenant(id: number): Promise<Tenant | null> {
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, id));
+    return tenant || null;
+  }
+
+  async getTenantBySlug(slug: string): Promise<Tenant | null> {
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.slug, slug));
+    return tenant || null;
+  }
+
+  async getTenantByDomain(domain: string): Promise<Tenant | null> {
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.domain, domain));
+    return tenant || null;
+  }
+
+  async getAllTenants(): Promise<Tenant[]> {
+    return db.select().from(tenants).where(eq(tenants.isActive, true));
+  }
+
+  // Tenant-aware user operations
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+
+  async getUser(id: number): Promise<User | null> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return user || null;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string, tenantId?: number): Promise<User | null> {
+    if (tenantId) {
+      const [user] = await db.select().from(users)
+        .where(and(eq(users.email, email), eq(users.tenantId, tenantId)));
+      return user || null;
+    }
     const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    return user || null;
   }
 
-  async getUserByMicrosoftId(microsoftId: string): Promise<User | undefined> {
+  async getUserByMicrosoftId(microsoftId: string): Promise<User | null> {
     const [user] = await db.select().from(users).where(eq(users.microsoftId, microsoftId));
-    return user || undefined;
+    return user || null;
   }
 
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async getAllUsers(tenantId?: number): Promise<User[]> {
+    if (tenantId) {
+      return db.select().from(users).where(eq(users.tenantId, tenantId));
+    }
+    return db.select().from(users);
+  }
   async getUserByReplitId(replitId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.replitId, replitId));
     return user || undefined;
-  }
-
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(users.createdAt);
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
-  }
-
-  async updateUser(id: number, userUpdate: Partial<InsertUser>): Promise<User> {
-    const [user] = await db.update(users)
-      .set(userUpdate)
-      .where(eq(users.id, id))
-      .returning();
-    return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -243,7 +335,6 @@ export class DatabaseStorage implements IStorage {
     console.log(`[STORAGE] Found ${result.length} contacts`);
     return result;
   }
-
   async getContact(id: number): Promise<Contact | undefined> {
     const [contact] = await db.select().from(contacts).where(eq(contacts.id, id));
     return contact || undefined;
@@ -293,13 +384,13 @@ export class DatabaseStorage implements IStorage {
   async getActivity(id: number, userId?: number, userEmail?: string): Promise<Activity | undefined> {
     const [activity] = await db.select().from(activities).where(eq(activities.id, id));
     if (!activity) return undefined;
-    
+
     // If user info provided, check access permissions
     if (userId && userEmail) {
       const access = await this.canUserAccessActivity(id, userId, userEmail);
       if (!access.canView) return undefined;
     }
-    
+
     return activity;
   }
 
@@ -307,7 +398,7 @@ export class DatabaseStorage implements IStorage {
     // Get the creator's email for participant list
     const creator = await this.getUser(activity.createdBy);
     const participants = activity.participants || [];
-    
+
     // Ensure the author's email is always included as a participant
     if (creator && !participants.includes(creator.email)) {
       participants.unshift(creator.email);
@@ -329,7 +420,7 @@ export class DatabaseStorage implements IStorage {
         throw new Error("Insufficient permissions to edit this activity");
       }
     }
-    
+
     const [updatedActivity] = await db.update(activities)
       .set({ ...activity, updatedAt: new Date() })
       .where(eq(activities.id, id))
@@ -345,7 +436,7 @@ export class DatabaseStorage implements IStorage {
         throw new Error("Insufficient permissions to delete this activity");
       }
     }
-    
+
     await db.delete(activities).where(eq(activities.id, id));
   }
 
@@ -360,10 +451,10 @@ export class DatabaseStorage implements IStorage {
 
     // Check if user is a participant
     const isParticipant = activity.participants?.includes(userEmail) || false;
-    
+
     // Check if user is a collaborator
     const isCollaborator = activity.collaborators?.includes(userEmail) || false;
-    
+
     // Check if activity is public
     const isPublic = activity.isPublic;
 
@@ -380,7 +471,7 @@ export class DatabaseStorage implements IStorage {
     if (!activity) {
       throw new Error("Activity not found");
     }
-    
+
     if (activity.createdBy !== currentUserId) {
       throw new Error("Only the activity owner can transfer ownership");
     }
@@ -490,9 +581,9 @@ export class DatabaseStorage implements IStorage {
       linkedActivityId: quickWin.linkedActivityId,
       createdBy: quickWin.createdBy,
     };
-    
+
     const [newSubtask] = await db.insert(subtasks).values(subtaskData).returning();
-    
+
     // Return in QuickWin format for compatibility
     return {
       id: newSubtask.id,
@@ -631,7 +722,7 @@ export class DatabaseStorage implements IStorage {
 
     // Get completed count for this week only (activities and subtasks)
     const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday start
-    
+
     const completedActivitiesThisWeek = await db.select().from(activities).where(
       and(
         eq(activities.status, 'completed'),
@@ -718,7 +809,7 @@ export class DatabaseStorage implements IStorage {
         sql`${dailyAgendas.date} <= ${endDate}`
       )).orderBy(desc(dailyAgendas.date));
     }
-    
+
     return await db.select().from(dailyAgendas)
       .where(eq(dailyAgendas.createdBy, userId))
       .orderBy(desc(dailyAgendas.date));
@@ -761,7 +852,7 @@ export class DatabaseStorage implements IStorage {
       ));
       return blocks.sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     }
-    
+
     return await db.select().from(timeBlocks)
       .where(eq(timeBlocks.createdBy, userId))
       .orderBy(timeBlocks.startTime);
@@ -817,7 +908,7 @@ export class DatabaseStorage implements IStorage {
     // Get existing preferences first
     const existing = await this.getUserPreferences(userId);
     const mergedPrefs = { ...existing, ...preferencesUpdate };
-    
+
     if (existing) {
       // Update existing record
       const [updatedPrefs] = await db.update(userPreferences)
@@ -935,12 +1026,12 @@ export class DatabaseStorage implements IStorage {
     // Get subtasks for activities the user created or is a participant in
     const user = await this.getUser(userId);
     if (!user) return [];
-    
+
     const userActivities = await this.getActivities(userId, user.email, false);
     const activityIds = userActivities.map(a => a.id);
-    
+
     if (activityIds.length === 0) return [];
-    
+
     return await db.select().from(subtasks)
       .where(inArray(subtasks.linkedActivityId, activityIds))
       .orderBy(desc(subtasks.createdAt));
@@ -967,7 +1058,7 @@ export class DatabaseStorage implements IStorage {
     // Ensure the author is always included as a participant
     const authorUser = await this.getUser(subtask.createdBy);
     const authorEmail = authorUser?.email || '';
-    
+
     const participants = subtask.participants || [];
     if (authorEmail && !participants.includes(authorEmail)) {
       participants.unshift(authorEmail); // Add author at the beginning
@@ -995,7 +1086,7 @@ export class DatabaseStorage implements IStorage {
     if (processedUpdate.dueDate && typeof processedUpdate.dueDate === 'string') {
       processedUpdate.dueDate = new Date(processedUpdate.dueDate);
     }
-    
+
     const [updatedSubtask] = await db.update(subtasks)
       .set({ ...processedUpdate, updatedAt: new Date() })
       .where(eq(subtasks.id, id))
@@ -1025,7 +1116,7 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(subtasks.id, subtaskId))
       .returning();
-    
+
     return updatedSubtask;
   }
 
@@ -1051,7 +1142,7 @@ export class DatabaseStorage implements IStorage {
   async createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any> {
     // Verify the activity exists before creating completion
     const activity = await this.getActivity(activityId);
-    
+
     if (!activity) {
       // Check if it's a subtask - if so, update the subtask status instead
       const subtask = await this.getSubtask(activityId);
@@ -1061,7 +1152,7 @@ export class DatabaseStorage implements IStorage {
           status: completed ? 'completed' : 'active',
           completedDate: completed ? new Date() : null 
         });
-        
+
         // Return a mock completion object for consistency
         return {
           id: activityId,
@@ -1072,7 +1163,7 @@ export class DatabaseStorage implements IStorage {
           completedAt: completed ? new Date() : null
         };
       }
-      
+
       console.warn(`Skipping task completion for non-existent activity/subtask: ${activityId}`);
       return null;
     }
@@ -1124,7 +1215,7 @@ export class DatabaseStorage implements IStorage {
     // Find the project first to get the internal ID
     const [project] = await db.select().from(bimcollabProjects).where(eq(bimcollabProjects.projectId, projectId));
     if (!project) return [];
-    
+
     return await db.select().from(bimcollabIssues).where(eq(bimcollabIssues.projectId, project.id));
   }
 
@@ -1172,7 +1263,7 @@ export class DatabaseStorage implements IStorage {
     // Find the board first to get the internal ID
     const [board] = await db.select().from(teamsBoards).where(eq(teamsBoards.boardId, boardId));
     if (!board) return [];
-    
+
     return await db.select().from(teamsCards).where(eq(teamsCards.boardId, board.id));
   }
 
@@ -1212,7 +1303,7 @@ export class DatabaseStorage implements IStorage {
   // Document References
   async getDocumentReferences(filter: { activityId?: number; subtaskId?: number; quickWinId?: number; roadblockId?: number }): Promise<DocumentReference[]> {
     let whereConditions: any[] = [];
-    
+
     if (filter.activityId) {
       whereConditions.push(eq(documentReferences.activityId, filter.activityId));
     }
@@ -1248,7 +1339,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .returning();
-    
+
     return created;
   }
 
@@ -1307,7 +1398,7 @@ export class DatabaseStorage implements IStorage {
   // Calendar Events Methods
   async getCalendarEvents(integrationId: number, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]> {
     let whereConditions = [eq(calendarEvents.integrationId, integrationId)];
-    
+
     if (startDate) {
       whereConditions.push(sql`${calendarEvents.startTime} >= ${startDate.toISOString()}`);
     }
@@ -1327,7 +1418,7 @@ export class DatabaseStorage implements IStorage {
 
     const integrationIds = userIntegrations.map(i => i.id);
     let whereConditions = [sql`${calendarEvents.integrationId} = ANY(${integrationIds})`];
-    
+
     if (startDate) {
       whereConditions.push(sql`${calendarEvents.startTime} >= ${startDate.toISOString()}`);
     }
@@ -1417,7 +1508,7 @@ export class DatabaseStorage implements IStorage {
     for (const reminder of reminders) {
       const reminderTime = new Date(dueDate);
       reminderTime.setDate(reminderTime.getDate() - reminder.days);
-      
+
       if (reminderTime > new Date()) {
         await this.createDeadlineReminder({
           userId,
@@ -1443,7 +1534,7 @@ export class DatabaseStorage implements IStorage {
     for (const reminder of reminders) {
       const reminderTime = new Date(dueDate);
       reminderTime.setDate(reminderTime.getDate() - reminder.days);
-      
+
       if (reminderTime > new Date()) {
         await this.createDeadlineReminder({
           userId,
@@ -1459,12 +1550,12 @@ export class DatabaseStorage implements IStorage {
   // Deep Focus Blocks
   async getDeepFocusBlocks(userId: number, startDate?: Date, endDate?: Date): Promise<DeepFocusBlock[]> {
     let query = db.select().from(deepFocusBlocks).where(eq(deepFocusBlocks.userId, userId));
-    
+
     if (startDate && endDate) {
       // Convert dates to ISO strings for proper database comparison
       const startIso = startDate.toISOString();
       const endIso = endDate.toISOString();
-      
+
       query = query.where(
         and(
           eq(deepFocusBlocks.userId, userId),
@@ -1473,7 +1564,7 @@ export class DatabaseStorage implements IStorage {
         )
       );
     }
-    
+
     return await query.orderBy(deepFocusBlocks.scheduledStart);
   }
 
@@ -1509,11 +1600,11 @@ export class DatabaseStorage implements IStorage {
       actualStart: new Date(),
       updatedAt: new Date()
     };
-    
+
     if (selectedActivityId) {
       updateData.selectedActivityId = selectedActivityId;
     }
-    
+
     if (selectedSubtaskId) {
       updateData.selectedSubtaskId = selectedSubtaskId;
     }
@@ -1531,11 +1622,11 @@ export class DatabaseStorage implements IStorage {
       actualEnd: new Date(),
       updatedAt: new Date()
     };
-    
+
     if (productivityRating !== undefined) {
       updateData.productivityRating = productivityRating;
     }
-    
+
     if (completionNotes) {
       updateData.completionNotes = completionNotes;
     }

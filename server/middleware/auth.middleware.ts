@@ -4,11 +4,19 @@ import { storage } from "../storage";
 export interface AuthenticatedRequest extends Request {
   user: {
     id: number;
+    tenantId: number;
     email: string;
     name: string;
     role: string;
     microsoftId: string | null;
     createdAt: Date;
+  };
+  tenant?: {
+    id: number;
+    name: string;
+    slug: string;
+    domain: string | null;
+    settings: any;
   };
 }
 
@@ -28,7 +36,15 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
+    // Load tenant information
+    const tenant = await storage.getTenant(user.tenantId);
+    if (!tenant || !tenant.isActive) {
+      res.status(403).json({ message: "Tenant not found or inactive" });
+      return;
+    }
+
     (req as any).user = user;
+    (req as any).tenant = tenant;
     next();
   } catch (error) {
     console.error("Authentication middleware error:", error);

@@ -64,12 +64,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
       
+      // Determine tenant from email domain or create default tenant
+      const emailDomain = email.split('@')[1];
+      let tenant = await storage.getTenantByDomain(emailDomain);
+      
+      if (!tenant) {
+        // Create tenant based on email domain
+        const tenantName = emailDomain === 'nijhuis.nl' ? 'Nijhuis' : emailDomain.split('.')[0];
+        tenant = await storage.createTenant({
+          name: tenantName,
+          slug: tenantName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          domain: emailDomain,
+          settings: {},
+        });
+      }
+      
       // First try to find by Microsoft ID
       let user = await storage.getUserByMicrosoftId(microsoftId);
       
-      // If not found, try to find by email and update with Microsoft ID
+      // If not found, try to find by email within the tenant
       if (!user) {
-        user = await storage.getUserByEmail(email);
+        user = await storage.getUserByEmail(email, tenant.id);
         if (user && !user.microsoftId) {
           // Update existing user with Microsoft ID and correct name
           user = await storage.updateUser(user.id, { microsoftId, name });
@@ -77,9 +92,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!user) {
-        // Create new user
+        // Create new user within the tenant
         const role = email === "b.weinreder@nijhuis.nl" ? "admin" : "user";
         user = await storage.createUser({
+          tenantId: tenant.id,
           email,
           name,
           microsoftId,
@@ -90,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set user session
       (req as any).session.userId = user.id;
       
-      res.json({ user: { ...user } });
+      res.json({ user: { ...user, tenant } });
     } catch (error) {
       console.error("Login error:", error);
       res.status(400).json({ message: "Invalid login data" });
@@ -104,11 +120,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For now, accept any password for the admin user
       if (email === "b.weinreder@nijhuis.nl" && password === "admin123") {
-        let user = await storage.getUserByEmail(email);
+        // Get or create tenant
+        const emailDomain = email.split('@')[1];
+        let tenant = await storage.getTenantByDomain(emailDomain);
+        
+        if (!tenant) {
+          tenant = await storage.createTenant({
+            name: 'Nijhuis',
+            slug: 'nijhuis',
+            domain: emailDomain,
+            settings: {},
+          });
+        }
+        
+        let user = await storage.getUserByEmail(email, tenant.id);
         
         if (!user) {
           // Create admin user if doesn't exist
           user = await storage.createUser({
+            tenantId: tenant.id,
             email,
             name: "Bram Weinreder",
             role: "admin",
@@ -119,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Set user session
         (req as any).session.userId = user.id;
         
-        res.json({ user: { ...user } });
+        res.json({ user: { ...user, tenant } });
       } else {
         res.status(401).json({ message: "Invalid credentials" });
       }
@@ -145,7 +175,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "User not found" });
     }
 
-    res.json({ user });
+    const tenant = await storage.getTenant(user.tenantId);
+    if (!tenant) {
+      return res.status(401).json({ message: "Tenant not found" });
+    }
+
+    res.json({ user: { ...user, tenant } });
   });
 
   // Middleware to check authentication
@@ -1933,6 +1968,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Document reference deletion error:", error);
       res.status(500).json({ message: "Failed to delete document reference" });
+    }
+  });
+
+  // Tenant management routes (admin only)
+  app.get("/api/tenants", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const tenants = await storage.getAllTenants();
+      res.json(tenants);
+    } catch (error) {
+      console.error("Get tenants error:", error);
+      res.status(500).json({ message: "Failed to fetch tenants" });
+    }
+  });
+
+  app.post("/api/tenants", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const tenant = await storage.createTenant(req.body);
+      res.status(201).json(tenant);
+    } catch (error) {
+      console.error("Create tenant error:", error);
+      res.status(500).json({ message: "Failed to create tenant" });
+    }
+  });
+
+  app.get("/api/current-tenant", requireAuth, async (req: any, res) => {
+    try {
+      res.json(req.tenant);
+    } catch (error) {
+      console.error("Get current tenant error:", error);
+      res.status(500).json({ message: "Failed to get current tenant" });
     }
   });
 

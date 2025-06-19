@@ -72,15 +72,27 @@ export const OORZAAK_FACTORS = {
   ]
 } as const;
 
+export const tenants = pgTable("tenants", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(), // URL-friendly identifier
+  domain: text("domain"), // Optional: company domain for automatic tenant detection
+  settings: json("settings").default({}), // Tenant-specific configuration
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id), // Multi-tenant isolation
+  email: text("email").notNull(),
   name: text("name").notNull(),
   role: text("role").notNull().default("user"), // 'admin' | 'manager' | 'user'
   department: text("department"), // e.g., 'Engineering', 'Sales', 'Operations'
   managerId: integer("manager_id").references((): any => users.id), // Self-referencing for hierarchy
-  microsoftId: text("microsoft_id").unique(), // Keep for future Microsoft migration
-  replitId: text("replit_id").unique(), // Add Replit ID field for auth
+  microsoftId: text("microsoft_id"), // Keep for future Microsoft migration
+  replitId: text("replit_id"), // Add Replit ID field for auth
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -235,7 +247,21 @@ export const subtasks = pgTable("subtasks", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Add unique constraint on email+tenantId instead of just email
+export const userEmailTenantConstraint = pgTable("users", {
+  email: text("email").notNull(),
+  tenantId: integer("tenant_id").notNull(),
+}, (table) => ({
+  emailTenantUnique: unique().on(table.email, table.tenantId),
+}));
+
 // Insert schemas
+export const insertTenantSchema = createInsertSchema(tenants).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -371,10 +397,14 @@ export const insertDailyAgendaSchema = createInsertSchema(dailyAgendas).omit({
 });
 
 // Types
+export type Tenant = typeof tenants.$inferSelect;
+export type InsertTenant = z.infer<typeof insertTenantSchema>;
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = {
   id?: string;
+  tenantId: number;
   email: string;
   name: string;
   role?: string;
