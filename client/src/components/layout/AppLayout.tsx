@@ -145,7 +145,6 @@ export default function AppLayout({
     },
     { path: "/contacts", icon: Users, label: t("nav.contacts") },
     { path: "/agenda", icon: Calendar, label: t("nav.agenda") },
-    { path: "/timeblocking", icon: Focus, label: "Time Blocking" },
     { path: "/calendar", icon: Clock, label: "Calendar Integration" }
   ];
 

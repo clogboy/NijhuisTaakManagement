@@ -16,20 +16,15 @@ import {
 import { useTranslations } from "@/hooks/useTranslations";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useLowStimulus } from "@/contexts/LowStimulusContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Focus } from "lucide-react";
 import WelcomeFlow from "@/components/onboarding/WelcomeFlow";
 import OnboardingTutorial from "@/components/onboarding/OnboardingTutorial";
 import CharacterGuide from "@/components/onboarding/CharacterGuide";
 import DeepFocusBlock from "@/components/DeepFocusBlock";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   AlertTriangle,
-  Clock,
   CheckCircle,
   Users,
   Edit,
@@ -41,7 +36,8 @@ import {
   Archive,
   ArchiveRestore,
   Shield,
-  BarChart3
+  BarChart3,
+  Clock
 } from "lucide-react";
 import { Activity, Contact, QuickWin } from "@shared/schema";
 import NewActivityModal from "@/components/modals/NewActivityModal";
@@ -83,6 +79,8 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
+  const [selectedFocusActivity, setSelectedFocusActivity] = useState<Activity | null>(null);
   const [sortBy, setSortBy] = useState<string>("priority");
   const [priorityFilters, setPriorityFilters] = useState<string[]>(["urgent", "normal", "low"]);
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
@@ -536,6 +534,20 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
               {/* Right Column */}
               <div className="space-y-8">
+                {/* Deep Focus Button - Minimal and unobtrusive */}
+                <Card className="border-gray-100">
+                  <CardContent className="p-6">
+                    <Button
+                      onClick={() => setIsDeepFocusModalOpen(true)}
+                      variant="outline"
+                      className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                    >
+                      <Focus size={18} />
+                      Enter Deep Focus
+                    </Button>
+                  </CardContent>
+                </Card>
+
                 {/* Today's Tasks - Simplified */}
                 <Card className="border-gray-100">
                   <CardContent className="p-8">
@@ -678,13 +690,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           </div>
         )}
 
-        {/* Deep Focus Block */}
-        <div className="mb-6">
-          <DeepFocusBlock 
-            onActivateLowStimulus={activateLowStimulus}
-            onDeactivateLowStimulus={deactivateLowStimulus}
-          />
-        </div>
+
 
         {/* Productivity Health Card */}
         {userPreferences?.productivityHealthEnabled !== false && !healthCardDismissed && stats && (
@@ -1269,6 +1275,86 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           }
         ]}
       />
+
+      {/* Deep Focus Task Selection Modal */}
+      <Dialog open={isDeepFocusModalOpen} onOpenChange={setIsDeepFocusModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Focus size={20} />
+              Enter Deep Focus
+            </DialogTitle>
+            <DialogDescription>
+              Select an activity to focus on. We'll prepare your environment and switch to low stimulus mode.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Choose an activity:
+              </label>
+              <Select value={selectedFocusActivity?.id?.toString() || ""} onValueChange={(value) => {
+                const activity = activities?.find(a => a.id.toString() === value);
+                setSelectedFocusActivity(activity || null);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an activity to focus on..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
+                    <SelectItem key={activity.id} value={activity.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 ${getPriorityColor(activity.priority)} rounded-full`}></div>
+                        <span className="truncate">{activity.title}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedFocusActivity && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-sm text-blue-900 mb-2">Preparation suggestions:</h4>
+                <ul className="text-xs text-blue-800 space-y-1">
+                  <li>• Close unnecessary browser tabs and applications</li>
+                  <li>• Set phone to silent or do not disturb mode</li>
+                  <li>• Have necessary resources and documents ready</li>
+                  <li>• Take a moment to clarify your specific goals</li>
+                </ul>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeepFocusModalOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedFocusActivity) {
+                    activateLowStimulus();
+                    toast({
+                      title: "Deep Focus Activated",
+                      description: `Focusing on: ${selectedFocusActivity.title}`,
+                    });
+                    setIsDeepFocusModalOpen(false);
+                    setSelectedFocusActivity(null);
+                  }
+                }}
+                disabled={!selectedFocusActivity}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Start Focus Session
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
