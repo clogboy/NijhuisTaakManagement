@@ -1,7 +1,7 @@
 import { 
-  users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions, deepFocusSessions,
+  users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions,
   teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences, calendarIntegrations, calendarEvents, deadlineReminders,
-  type User, type InsertUser, type UpsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder, type DeepFocusSession, type InsertDeepFocusSession,
+  type User, type InsertUser, type UpsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder,
   type TeamsBoard, type InsertTeamsBoard, type TeamsCard, type InsertTeamsCard,
   type BimcollabProject, type InsertBimcollabProject, type BimcollabIssue, type InsertBimcollabIssue,
   type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference,
@@ -148,13 +148,6 @@ export interface IStorage {
   getDocumentReferences(filter: { activityId?: number; subtaskId?: number; quickWinId?: number; roadblockId?: number }): Promise<DocumentReference[]>;
   createDocumentReference(reference: InsertDocumentReference): Promise<DocumentReference>;
   deleteDocumentReference(id: number, userId: number): Promise<boolean>;
-
-  // Deep Focus Sessions
-  getDeepFocusSessions(userId: number): Promise<DeepFocusSession[]>;
-  getActiveDeepFocusSession(userId: number): Promise<DeepFocusSession | undefined>;
-  createDeepFocusSession(session: InsertDeepFocusSession): Promise<DeepFocusSession>;
-  updateDeepFocusSession(id: number, session: Partial<InsertDeepFocusSession>): Promise<DeepFocusSession>;
-  endDeepFocusSession(id: number, completedSuccessfully: boolean, actualDuration?: number): Promise<DeepFocusSession>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1452,52 +1445,6 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
-  }
-
-  // Deep Focus Sessions Implementation
-  async getDeepFocusSessions(userId: number): Promise<DeepFocusSession[]> {
-    return await db.select()
-      .from(deepFocusSessions)
-      .where(eq(deepFocusSessions.userId, userId))
-      .orderBy(desc(deepFocusSessions.createdAt));
-  }
-
-  async getActiveDeepFocusSession(userId: number): Promise<DeepFocusSession | undefined> {
-    const [session] = await db.select()
-      .from(deepFocusSessions)
-      .where(and(
-        eq(deepFocusSessions.userId, userId),
-        eq(deepFocusSessions.status, 'active')
-      ));
-    return session || undefined;
-  }
-
-  async createDeepFocusSession(session: InsertDeepFocusSession): Promise<DeepFocusSession> {
-    const [newSession] = await db.insert(deepFocusSessions)
-      .values(session)
-      .returning();
-    return newSession;
-  }
-
-  async updateDeepFocusSession(id: number, session: Partial<InsertDeepFocusSession>): Promise<DeepFocusSession> {
-    const [updatedSession] = await db.update(deepFocusSessions)
-      .set(session)
-      .where(eq(deepFocusSessions.id, id))
-      .returning();
-    return updatedSession;
-  }
-
-  async endDeepFocusSession(id: number, completedSuccessfully: boolean, actualDuration?: number): Promise<DeepFocusSession> {
-    const [session] = await db.update(deepFocusSessions)
-      .set({
-        status: 'completed',
-        endTime: new Date(),
-        completedSuccessfully,
-        actualDuration
-      })
-      .where(eq(deepFocusSessions.id, id))
-      .returning();
-    return session;
   }
 }
 
