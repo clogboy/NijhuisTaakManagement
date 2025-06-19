@@ -9,7 +9,7 @@ import {
   type DeadlineReminder, type InsertDeadlineReminder
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, inArray, desc, sql, or, not, ne } from "drizzle-orm";
+import { eq, and, inArray, desc, sql, or, not, ne, gte, lte } from "drizzle-orm";
 import { startOfWeek } from "date-fns";
 
 export interface IStorage {
@@ -1461,11 +1461,15 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(deepFocusBlocks).where(eq(deepFocusBlocks.userId, userId));
     
     if (startDate && endDate) {
+      // Convert dates to ISO strings for proper database comparison
+      const startIso = startDate.toISOString();
+      const endIso = endDate.toISOString();
+      
       query = query.where(
         and(
           eq(deepFocusBlocks.userId, userId),
-          sql`${deepFocusBlocks.scheduledStart} >= ${startDate}`,
-          sql`${deepFocusBlocks.scheduledEnd} <= ${endDate}`
+          sql`${deepFocusBlocks.scheduledStart} >= ${startIso}::timestamp`,
+          sql`${deepFocusBlocks.scheduledStart} <= ${endIso}::timestamp`
         )
       );
     }

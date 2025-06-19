@@ -37,7 +37,7 @@ export default function TimeBlocking() {
     queryKey: ["/api/deep-focus", weekStart.toISOString()],
     queryFn: async () => {
       const weekEnd = addDays(weekStart, 7);
-      const response = await apiRequest("GET", `/api/deep-focus?startDate=${weekStart.toISOString()}&endDate=${weekEnd.toISOString()}`);
+      const response = await apiRequest(`/api/deep-focus?startDate=${weekStart.toISOString()}&endDate=${weekEnd.toISOString()}`, "GET");
       return await response.json();
     },
   });

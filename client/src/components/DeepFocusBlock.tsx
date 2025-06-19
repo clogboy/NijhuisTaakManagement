@@ -47,7 +47,7 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
       
-      const response = await apiRequest("GET", `/api/deep-focus?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`);
+      const response = await apiRequest(`/api/deep-focus?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, "GET");
       return await response.json();
     },
   });
@@ -55,7 +55,7 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
   // Start deep focus block
   const startFocusMutation = useMutation({
     mutationFn: async ({ blockId, activityId }: { blockId: number; activityId?: number }) => {
-      return apiRequest("POST", `/api/deep-focus/${blockId}/start`, { selectedActivityId: activityId });
+      return apiRequest(`/api/deep-focus/${blockId}/start`, "POST", { selectedActivityId: activityId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deep-focus/active"] });
