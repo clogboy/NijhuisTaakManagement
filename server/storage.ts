@@ -1,7 +1,7 @@
 import { 
-  users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions,
+  users, contacts, activities, activityLogs, taskComments, quickWins, roadblocks, subtasks, weeklyEthos, dailyAgendas, timeBlocks, userPreferences, moodEntries, moodReminders, dailyTaskCompletions, deepFocusBlocks,
   teamsBoards, teamsCards, bimcollabProjects, bimcollabIssues, integrationSettings, documentReferences, calendarIntegrations, calendarEvents, deadlineReminders,
-  type User, type InsertUser, type UpsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder,
+  type User, type InsertUser, type UpsertUser, type Contact, type InsertContact, type Activity, type InsertActivity, type ActivityLog, type InsertActivityLog, type TaskComment, type InsertTaskComment, type QuickWin, type InsertQuickWin, type Roadblock, type InsertRoadblock, type Subtask, type InsertSubtask, type WeeklyEthos, type InsertWeeklyEthos, type DailyAgenda, type InsertDailyAgenda, type TimeBlock, type InsertTimeBlock, type UserPreferences, type InsertUserPreferences, type MoodEntry, type InsertMoodEntry, type MoodReminder, type InsertMoodReminder, type DeepFocusBlock, type InsertDeepFocusBlock,
   type TeamsBoard, type InsertTeamsBoard, type TeamsCard, type InsertTeamsCard,
   type BimcollabProject, type InsertBimcollabProject, type BimcollabIssue, type InsertBimcollabIssue,
   type IntegrationSettings, type InsertIntegrationSettings, type DocumentReference, type InsertDocumentReference,
@@ -148,6 +148,15 @@ export interface IStorage {
   getDocumentReferences(filter: { activityId?: number; subtaskId?: number; quickWinId?: number; roadblockId?: number }): Promise<DocumentReference[]>;
   createDocumentReference(reference: InsertDocumentReference): Promise<DocumentReference>;
   deleteDocumentReference(id: number, userId: number): Promise<boolean>;
+
+  // Deep Focus Blocks
+  getDeepFocusBlocks(userId: number, startDate?: Date, endDate?: Date): Promise<DeepFocusBlock[]>;
+  getActiveDeepFocusBlock(userId: number): Promise<DeepFocusBlock | undefined>;
+  createDeepFocusBlock(block: InsertDeepFocusBlock & { userId: number }): Promise<DeepFocusBlock>;
+  updateDeepFocusBlock(id: number, block: Partial<InsertDeepFocusBlock>): Promise<DeepFocusBlock>;
+  deleteDeepFocusBlock(id: number): Promise<void>;
+  startDeepFocusBlock(id: number, selectedActivityId?: number): Promise<DeepFocusBlock>;
+  endDeepFocusBlock(id: number, productivityRating?: number, completionNotes?: string): Promise<DeepFocusBlock>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1445,6 +1454,89 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
+  }
+
+  // Deep Focus Blocks
+  async getDeepFocusBlocks(userId: number, startDate?: Date, endDate?: Date): Promise<DeepFocusBlock[]> {
+    let query = db.select().from(deepFocusBlocks).where(eq(deepFocusBlocks.userId, userId));
+    
+    if (startDate && endDate) {
+      query = query.where(
+        and(
+          eq(deepFocusBlocks.userId, userId),
+          sql`${deepFocusBlocks.scheduledStart} >= ${startDate}`,
+          sql`${deepFocusBlocks.scheduledEnd} <= ${endDate}`
+        )
+      );
+    }
+    
+    return await query.orderBy(deepFocusBlocks.scheduledStart);
+  }
+
+  async getActiveDeepFocusBlock(userId: number): Promise<DeepFocusBlock | undefined> {
+    const [block] = await db.select().from(deepFocusBlocks)
+      .where(and(
+        eq(deepFocusBlocks.userId, userId),
+        eq(deepFocusBlocks.status, 'active')
+      ));
+    return block || undefined;
+  }
+
+  async createDeepFocusBlock(block: InsertDeepFocusBlock & { userId: number }): Promise<DeepFocusBlock> {
+    const [newBlock] = await db.insert(deepFocusBlocks).values(block).returning();
+    return newBlock;
+  }
+
+  async updateDeepFocusBlock(id: number, block: Partial<InsertDeepFocusBlock>): Promise<DeepFocusBlock> {
+    const [updatedBlock] = await db.update(deepFocusBlocks)
+      .set({ ...block, updatedAt: new Date() })
+      .where(eq(deepFocusBlocks.id, id))
+      .returning();
+    return updatedBlock;
+  }
+
+  async deleteDeepFocusBlock(id: number): Promise<void> {
+    await db.delete(deepFocusBlocks).where(eq(deepFocusBlocks.id, id));
+  }
+
+  async startDeepFocusBlock(id: number, selectedActivityId?: number): Promise<DeepFocusBlock> {
+    const updateData: any = {
+      status: 'active',
+      actualStart: new Date(),
+      updatedAt: new Date()
+    };
+    
+    if (selectedActivityId) {
+      updateData.selectedActivityId = selectedActivityId;
+    }
+
+    const [updatedBlock] = await db.update(deepFocusBlocks)
+      .set(updateData)
+      .where(eq(deepFocusBlocks.id, id))
+      .returning();
+    return updatedBlock;
+  }
+
+  async endDeepFocusBlock(id: number, productivityRating?: number, completionNotes?: string): Promise<DeepFocusBlock> {
+    const updateData: any = {
+      status: 'completed',
+      actualEnd: new Date(),
+      updatedAt: new Date()
+    };
+    
+    if (productivityRating !== undefined) {
+      updateData.productivityRating = productivityRating;
+    }
+    
+    if (completionNotes) {
+      updateData.completionNotes = completionNotes;
+    }
+
+    const [updatedBlock] = await db.update(deepFocusBlocks)
+      .set(updateData)
+      .where(eq(deepFocusBlocks.id, id))
+      .returning();
+    return updatedBlock;
   }
 }
 

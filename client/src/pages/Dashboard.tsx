@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/tooltip";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useLowStimulus } from "@/contexts/LowStimulusContext";
 import WelcomeFlow from "@/components/onboarding/WelcomeFlow";
 import OnboardingTutorial from "@/components/onboarding/OnboardingTutorial";
 import CharacterGuide from "@/components/onboarding/CharacterGuide";
+import DeepFocusBlock from "@/components/DeepFocusBlock";
 import { 
   Select,
   SelectContent,
@@ -72,6 +74,7 @@ interface DashboardProps {
 export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLowStimulusMode: setLowStimulus }: DashboardProps = {}) {
   const { t } = useTranslations();
   const { state: onboardingState, completeTutorial, showGuide, hideGuide } = useOnboarding();
+  const { activateLowStimulus, deactivateLowStimulus } = useLowStimulus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
@@ -674,6 +677,14 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             </Card>
           </div>
         )}
+
+        {/* Deep Focus Block */}
+        <div className="mb-6">
+          <DeepFocusBlock 
+            onActivateLowStimulus={activateLowStimulus}
+            onDeactivateLowStimulus={deactivateLowStimulus}
+          />
+        </div>
 
         {/* Productivity Health Card */}
         {userPreferences?.productivityHealthEnabled !== false && !healthCardDismissed && stats && (

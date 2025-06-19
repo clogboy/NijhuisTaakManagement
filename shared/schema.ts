@@ -291,6 +291,26 @@ export const insertRoadblockSchema = createInsertSchema(roadblocks).omit({
   ]).default(OORZAAK_CATEGORIES.UNCLEAR),
 });
 
+// Deep Focus Blocks
+export const deepFocusBlocks = pgTable("deep_focus_blocks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  scheduledStart: timestamp("scheduled_start").notNull(),
+  scheduledEnd: timestamp("scheduled_end").notNull(),
+  actualStart: timestamp("actual_start"),
+  actualEnd: timestamp("actual_end"),
+  status: text("status").notNull().default("scheduled"), // 'scheduled', 'active', 'completed', 'cancelled'
+  selectedActivityId: integer("selected_activity_id").references(() => activities.id),
+  focusType: text("focus_type").notNull().default("deep"), // 'deep', 'shallow', 'creative'
+  lowStimulusMode: boolean("low_stimulus_mode").notNull().default(true),
+  distractionCount: integer("distraction_count").default(0),
+  completionNotes: text("completion_notes"),
+  productivityRating: integer("productivity_rating"), // 1-5 scale
+  userId: integer("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertSubtaskSchema = createInsertSchema(subtasks).omit({
   id: true,
   createdBy: true,
@@ -331,6 +351,13 @@ export const dailyAgendas = pgTable("daily_agendas", {
 export const insertWeeklyEthosSchema = createInsertSchema(weeklyEthos).omit({
   id: true,
   createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDeepFocusBlockSchema = createInsertSchema(deepFocusBlocks).omit({
+  id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -380,6 +407,9 @@ export type InsertWeeklyEthos = z.infer<typeof insertWeeklyEthosSchema>;
 
 export type DailyAgenda = typeof dailyAgendas.$inferSelect;
 export type InsertDailyAgenda = z.infer<typeof insertDailyAgendaSchema>;
+
+export type DeepFocusBlock = typeof deepFocusBlocks.$inferSelect;
+export type InsertDeepFocusBlock = z.infer<typeof insertDeepFocusBlockSchema>;
 
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
   id: true,

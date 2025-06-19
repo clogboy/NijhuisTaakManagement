@@ -4,6 +4,7 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
+import { LowStimulusProvider } from "@/contexts/LowStimulusContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,8 +18,10 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <OnboardingProvider>
-      <App />
-      <Toaster />
+      <LowStimulusProvider>
+        <App />
+        <Toaster />
+      </LowStimulusProvider>
     </OnboardingProvider>
   </QueryClientProvider>
 );

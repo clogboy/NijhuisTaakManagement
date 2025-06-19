@@ -25,7 +25,8 @@ import {
   Pin,
   PinOff,
   Clock,
-  ListChecks
+  ListChecks,
+  Focus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -144,8 +145,8 @@ export default function AppLayout({
     },
     { path: "/contacts", icon: Users, label: t("nav.contacts") },
     { path: "/agenda", icon: Calendar, label: t("nav.agenda") },
-    { path: "/calendar", icon: Clock, label: "Calendar Integration" },
-    // { path: "/timeblocking", icon: Clock, label: t("nav.timeBlocking") }, // Temporarily disabled
+    { path: "/timeblocking", icon: Focus, label: "Time Blocking" },
+    { path: "/calendar", icon: Clock, label: "Calendar Integration" }
   ];
 
   if (isLoading) {

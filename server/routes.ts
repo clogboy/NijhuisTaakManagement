@@ -2146,5 +2146,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Deep Focus Blocks API routes
+  app.get("/api/deep-focus", requireAuth, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      const start = startDate ? new Date(startDate) : undefined;
+      const end = endDate ? new Date(endDate) : undefined;
+      
+      const blocks = await storage.getDeepFocusBlocks(req.user.id, start, end);
+      res.json(blocks);
+    } catch (error) {
+      console.error("Get deep focus blocks error:", error);
+      res.status(500).json({ message: "Failed to get deep focus blocks" });
+    }
+  });
+
+  app.get("/api/deep-focus/active", requireAuth, async (req: any, res) => {
+    try {
+      const activeBlock = await storage.getActiveDeepFocusBlock(req.user.id);
+      res.json(activeBlock || null);
+    } catch (error) {
+      console.error("Get active deep focus block error:", error);
+      res.status(500).json({ message: "Failed to get active deep focus block" });
+    }
+  });
+
+  app.post("/api/deep-focus", requireAuth, async (req: any, res) => {
+    try {
+      const blockData = {
+        ...req.body,
+        userId: req.user.id
+      };
+      
+      const block = await storage.createDeepFocusBlock(blockData);
+      res.status(201).json(block);
+    } catch (error) {
+      console.error("Create deep focus block error:", error);
+      res.status(500).json({ message: "Failed to create deep focus block" });
+    }
+  });
+
+  app.post("/api/deep-focus/:id/start", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { selectedActivityId } = req.body;
+      
+      const block = await storage.startDeepFocusBlock(parseInt(id), selectedActivityId);
+      res.json(block);
+    } catch (error) {
+      console.error("Start deep focus block error:", error);
+      res.status(500).json({ message: "Failed to start deep focus block" });
+    }
+  });
+
+  app.post("/api/deep-focus/:id/end", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { productivityRating, completionNotes } = req.body;
+      
+      const block = await storage.endDeepFocusBlock(parseInt(id), productivityRating, completionNotes);
+      res.json(block);
+    } catch (error) {
+      console.error("End deep focus block error:", error);
+      res.status(500).json({ message: "Failed to end deep focus block" });
+    }
+  });
+
+  app.put("/api/deep-focus/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const block = await storage.updateDeepFocusBlock(parseInt(id), req.body);
+      res.json(block);
+    } catch (error) {
+      console.error("Update deep focus block error:", error);
+      res.status(500).json({ message: "Failed to update deep focus block" });
+    }
+  });
+
+  app.delete("/api/deep-focus/:id", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteDeepFocusBlock(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete deep focus block error:", error);
+      res.status(500).json({ message: "Failed to delete deep focus block" });
+    }
+  });
+
   return httpServer;
 }

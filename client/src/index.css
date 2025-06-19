@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Low Stimulus Mode Styles */
+.low-stimulus-mode {
+  filter: grayscale(0.3) contrast(0.8) brightness(0.9);
+}
+
+.low-stimulus-mode * {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.1s !important;
+}
+
+.low-stimulus-mode .animate-pulse,
+.low-stimulus-mode .animate-spin,
+.low-stimulus-mode .animate-bounce {
+  animation: none !important;
+}
+
+.low-stimulus-mode [data-radix-popper-content-wrapper] {
+  filter: none;
+}
+
+.low-stimulus-mode .card-hover-effect {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 @keyframes shimmer {
   0% {
     transform: translateX(-100%) skewX(-12deg);
