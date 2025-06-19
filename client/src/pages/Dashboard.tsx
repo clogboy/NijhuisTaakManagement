@@ -1418,12 +1418,16 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
       {/* Deep Focus Task Selection Modal */}
       <Dialog open={isDeepFocusModalOpen} onOpenChange={(open) => {
+        // Prevent closing modal if there's an active deep focus session
+        if (activeDeepFocus && !open) {
+          return;
+        }
         setIsDeepFocusModalOpen(open);
         if (!open) {
           setSelectedFocusActivity(null);
         }
       }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className={`max-w-md ${activeDeepFocus ? 'border-2 border-blue-500' : ''}`}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Focus size={20} />
@@ -1575,13 +1579,15 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             )}
 
             <div className="flex gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsDeepFocusModalOpen(false)}
-                className="flex-1"
-              >
-                {activeDeepFocus ? "Sluiten" : "Annuleren"}
-              </Button>
+              {!activeDeepFocus && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeepFocusModalOpen(false)}
+                  className="flex-1"
+                >
+                  Annuleren
+                </Button>
+              )}
               {activeDeepFocus ? (
                 <Button
                   onClick={async () => {
@@ -1610,7 +1616,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                       });
                     }
                   }}
-                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  className="w-full bg-red-600 hover:bg-red-700"
                 >
                   Beëindig Sessie
                 </Button>
