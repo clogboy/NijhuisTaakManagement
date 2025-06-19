@@ -203,7 +203,7 @@ export default function Agenda() {
         <div className="p-3 sm:p-4">
           <Tabs defaultValue="today" className="space-y-4 md:space-y-6">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="today" className="text-xs sm:text-sm">Vandaag's Agenda</TabsTrigger>
+              <TabsTrigger value="today" className="text-xs sm:text-sm">Mijn Agenda</TabsTrigger>
               <TabsTrigger value="flow" className="text-xs sm:text-sm">Flow Strategie</TabsTrigger>
             </TabsList>
 
