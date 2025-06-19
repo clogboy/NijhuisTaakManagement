@@ -89,6 +89,46 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const [showArchived, setShowArchived] = useState(false);
   const [showWelcomeFlow, setShowWelcomeFlow] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second for countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getRemainingTime = () => {
+    if (!activeDeepFocus || !activeDeepFocus.scheduledEnd) return null;
+    
+    const endTime = new Date(activeDeepFocus.scheduledEnd);
+    const now = currentTime;
+    const diffMs = endTime.getTime() - now.getTime();
+    
+    if (diffMs <= 0) return null;
+    
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getSelectedTaskName = () => {
+    if (activeDeepFocus?.selectedActivityId && activities) {
+      const activity = activities.find(a => a.id === activeDeepFocus.selectedActivityId);
+      if (activity) return activity.title;
+    }
+    if (activeDeepFocus?.selectedSubtaskId && subtasks) {
+      const subtask = subtasks.find(s => s.id === activeDeepFocus.selectedSubtaskId);
+      if (subtask) return subtask.title;
+    }
+    return "Algemene focus sessie";
+  };
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
@@ -120,6 +160,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
   const { data: smartInsights } = useQuery<any>({
     queryKey: ["/api/smart-insights"],
+  });
+
+  const { data: activeDeepFocus } = useQuery<any>({
+    queryKey: ["/api/deep-focus/active"],
+    refetchInterval: 5000, // Check every 5 seconds
   });
 
   const [healthCardDismissed, setHealthCardDismissed] = useState(false);
@@ -666,26 +711,32 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
             </Card>
 
             <Card 
-              className="micro-card micro-fadeIn micro-button-press cursor-pointer"
+              className={`micro-card micro-fadeIn ${activeDeepFocus ? 'border-2 border-blue-500 bg-blue-50' : 'micro-button-press cursor-pointer'}`}
               style={{ animationDelay: '0.3s' }}
-              onClick={() => setIsDeepFocusModalOpen(true)}
+              onClick={activeDeepFocus ? undefined : () => setIsDeepFocusModalOpen(true)}
             >
               <CardContent className="p-2 sm:p-4 lg:p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                      <div className={`w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 ${activeDeepFocus ? 'bg-blue-500 animate-pulse' : 'bg-purple-500'} rounded-lg flex items-center justify-center`}>
                         <Focus className="text-white" size={10} />
                       </div>
                     </div>
                     <div className="ml-1.5 sm:ml-3 lg:ml-4 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">Deep Focus</p>
-                      <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">Start</p>
+                      <p className="text-xs sm:text-sm font-medium text-neutral-medium truncate">
+                        {activeDeepFocus ? getSelectedTaskName() : 'Deep Focus'}
+                      </p>
+                      <p className="text-sm sm:text-lg lg:text-2xl font-semibold text-neutral-dark">
+                        {activeDeepFocus ? getRemainingTime() || 'Actief' : 'Start'}
+                      </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark micro-button-press micro-hover-lift">
-                    Enter →
-                  </Button>
+                  {!activeDeepFocus && (
+                    <Button variant="ghost" size="sm" className="hidden sm:flex text-neutral-medium hover:text-neutral-dark micro-button-press micro-hover-lift">
+                      Enter →
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1299,9 +1350,9 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           <div className="space-y-4">
             <div className="space-y-4">
               {/* Urgent Subtasks Section */}
-              {subtasks?.filter(s => s.status === 'pending').length > 0 && (
+              {subtasks?.filter(s => s.status === 'pending').length > 0 ? (
                 <div>
-                  <label className="text-sm font-medium text-orange-700 mb-2 block">🔥 Urgente subtaken</label>
+                  <label className="text-sm font-medium text-orange-700 mb-2 block">Selecteer een actiepunt om op te focussen:</label>
                   <div className="space-y-2">
                     {subtasks?.filter(s => s.status === 'pending').map((subtask) => (
                       <div 
@@ -1327,44 +1378,17 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                     ))}
                   </div>
                 </div>
-              )}
-              
-              {/* Activities Section */}
-              {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').length > 0 && (
-                <div>
-                  <label className="text-sm font-medium text-blue-700 mb-2 block">📋 Hoofdtaken</label>
-                  <div className="space-y-2">
-                    {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
-                      <div 
-                        key={`activity-${activity.id}`}
-                        onClick={() => {
-                          setSelectedFocusActivity(activity);
-                          setSelectedFocusSubtask(null);
-                        }}
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                          selectedFocusActivity?.id === activity.id 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${getPriorityColor(activity.priority)}`}></div>
-                          <span className="text-sm font-medium">{activity.title}</span>
-                        </div>
-                        {activity.description && (
-                          <p className="text-xs text-gray-600 mt-1 ml-4">{activity.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+              ) : (
+                <div className="text-center p-6 text-gray-500">
+                  <p>Geen urgente actiepunten beschikbaar voor focus sessie.</p>
                 </div>
               )}
             </div>
 
-            {(selectedFocusActivity || selectedFocusSubtask) && (
+            {selectedFocusSubtask && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <h4 className="font-medium text-sm text-blue-900 mb-2">
-                  Voorbereiding voor: {selectedFocusActivity?.title || selectedFocusSubtask?.title}
+                  Voorbereiding voor: {selectedFocusSubtask.title}
                 </h4>
                 <ul className="text-xs text-blue-800 space-y-1">
                   <li>• Sluit onnodige browsertabs en applicaties</li>
@@ -1385,19 +1409,18 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
               </Button>
               <Button
                 onClick={() => {
-                  const selectedTask = selectedFocusActivity || selectedFocusSubtask;
-                  if (selectedTask) {
+                  if (selectedFocusSubtask) {
                     activateLowStimulus();
                     toast({
                       title: "Deep Focus Geactiveerd",
-                      description: `Focussen op: ${selectedTask.title}`,
+                      description: `Focussen op: ${selectedFocusSubtask.title}`,
                     });
                     setIsDeepFocusModalOpen(false);
                     setSelectedFocusActivity(null);
                     setSelectedFocusSubtask(null);
                   }
                 }}
-                disabled={!selectedFocusActivity && !selectedFocusSubtask}
+                disabled={!selectedFocusSubtask}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 Start Focus Sessie

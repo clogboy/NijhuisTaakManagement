@@ -146,13 +146,12 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
 
   const handleStartFocus = (block: DeepFocusBlock) => {
     const urgentSubtasks = subtasks.filter(s => s.status === 'pending');
-    const availableActivities = activities.filter(a => a.status !== 'completed' && a.status !== 'archived');
     
-    if (urgentSubtasks.length === 0 && availableActivities.length === 0) {
-      // No tasks available, start without task selection
+    if (urgentSubtasks.length === 0) {
+      // No urgent subtasks available, start without task selection
       startFocusMutation.mutate({ blockId: block.id });
     } else {
-      // Show task selector with urgent subtasks and activities
+      // Show task selector with urgent subtasks only
       setShowTaskSelector(true);
     }
   };
@@ -370,9 +369,9 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
           </DialogHeader>
           <div className="space-y-4">
             {/* Urgent Subtasks Section */}
-            {subtasks.filter(s => s.status === 'pending').length > 0 && (
+            {subtasks.filter(s => s.status === 'pending').length > 0 ? (
               <div>
-                <Label className="text-sm font-medium text-orange-700 mb-2 block">🔥 Urgente subtaken</Label>
+                <Label className="text-sm font-medium text-orange-700 mb-2 block">Selecteer een actiepunt om op te focussen:</Label>
                 <div className="space-y-2">
                   {subtasks.filter(s => s.status === 'pending').map((subtask) => (
                     <div 
@@ -398,39 +397,9 @@ export default function DeepFocusBlock({ onActivateLowStimulus, onDeactivateLowS
                   ))}
                 </div>
               </div>
-            )}
-            
-            {/* Activities Section */}
-            {activities.filter(a => a.status !== 'completed' && a.status !== 'archived').length > 0 && (
-              <div>
-                <Label className="text-sm font-medium text-blue-700 mb-2 block">📋 Hoofdtaken</Label>
-                <div className="space-y-2">
-                  {activities.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
-                    <div 
-                      key={`activity-${activity.id}`}
-                      onClick={() => {
-                        setSelectedActivityId(activity.id);
-                        setSelectedSubtaskId(undefined);
-                      }}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedActivityId === activity.id 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          activity.priority === 'urgent' ? 'bg-red-500' :
-                          activity.priority === 'normal' ? 'bg-yellow-500' : 'bg-green-500'
-                        }`}></div>
-                        <span className="text-sm font-medium">{activity.title}</span>
-                      </div>
-                      {activity.description && (
-                        <p className="text-xs text-gray-600 mt-1 ml-4">{activity.description}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+            ) : (
+              <div className="text-center p-6 text-gray-500">
+                <p>Geen urgente actiepunten beschikbaar voor focus sessie.</p>
               </div>
             )}
             
