@@ -394,20 +394,20 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     return "";
   };
 
+  // Helper function to check if activity has open subtasks
+  const hasOpenSubtasks = (activityId: number) => {
+    if (!subtasks || subtasks.length === 0) return true; // Show activity if no subtasks data
+    return subtasks.some(subtask => 
+      subtask.linkedActivityId === activityId && 
+      subtask.status !== "completed" && 
+      subtask.status !== "resolved"
+    );
+  };
+
   const filteredActivities = activities?.filter(activity => {
     // Archive filter - show archived only if toggle is on
     if (activity.status === "archived" && !showArchived) return false;
     if (activity.status !== "archived" && showArchived) return false;
-    
-    // Hide activities that have no open subtasks
-    if (subtasks && subtasks.length > 0) {
-      const hasOpenSubtasks = subtasks.some(subtask => 
-        subtask.linkedActivityId === activity.id && 
-        subtask.status !== "completed" && 
-        subtask.status !== "resolved"
-      );
-      if (!hasOpenSubtasks) return false;
-    }
     
     // Priority filter
     if (!priorityFilters.includes(activity.priority)) return false;
@@ -930,18 +930,22 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
           {/* Mobile Card Layout */}
           <div className="block md:hidden space-y-3">
-            {filteredActivities?.map((activity) => (
-              <Card 
-                key={activity.id}
-                className="cursor-pointer micro-card micro-button-press micro-slideIn"
-                onClick={() => {
-                  setSelectedActivity(activity);
-                  setIsTaskDetailModalOpen(true);
-                }}
-              >
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {/* Title and Priority */}
+            {filteredActivities?.map((activity) => {
+              const activityHasOpenSubtasks = hasOpenSubtasks(activity.id);
+              return (
+                <Card 
+                  key={activity.id}
+                  className={`cursor-pointer micro-card micro-button-press micro-slideIn ${
+                    !activityHasOpenSubtasks ? 'opacity-50 bg-gray-50 dark:bg-gray-800/50' : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedActivity(activity);
+                    setIsTaskDetailModalOpen(true);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Title and Priority */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
@@ -1015,7 +1019,8 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
             {!filteredActivities?.length && (
               <div className="text-center py-8 text-neutral-medium">
                 No activities found matching your filters
@@ -1049,16 +1054,20 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredActivities?.map((activity) => (
-                  <tr 
-                    key={activity.id} 
-                    className={`hover:bg-gray-50 cursor-pointer ${getDeadlineWarningColor(activity.dueDate ? activity.dueDate.toString() : null)}`}
-                    onClick={() => {
-                      setSelectedActivity(activity);
-                      setIsTaskDetailModalOpen(true);
-                    }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                {filteredActivities?.map((activity) => {
+                  const activityHasOpenSubtasks = hasOpenSubtasks(activity.id);
+                  return (
+                    <tr 
+                      key={activity.id} 
+                      className={`hover:bg-gray-50 cursor-pointer ${getDeadlineWarningColor(activity.dueDate ? activity.dueDate.toString() : null)} ${
+                        !activityHasOpenSubtasks ? 'opacity-50 bg-gray-50 dark:bg-gray-800/50' : ''
+                      }`}
+                      onClick={() => {
+                        setSelectedActivity(activity);
+                        setIsTaskDetailModalOpen(true);
+                      }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-2 h-2 ${getPriorityColor(activity.priority)} rounded-full mr-3`}></div>
                         <div>
@@ -1157,7 +1166,8 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
                 {!filteredActivities?.length && (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-neutral-medium">
