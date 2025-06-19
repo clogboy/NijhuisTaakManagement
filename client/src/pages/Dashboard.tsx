@@ -82,6 +82,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
   const [selectedFocusActivity, setSelectedFocusActivity] = useState<Activity | null>(null);
   const [selectedFocusSubtask, setSelectedFocusSubtask] = useState<any | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState<number>(25);
   const [sortBy, setSortBy] = useState<string>("priority");
   const [priorityFilters, setPriorityFilters] = useState<string[]>(["urgent", "normal", "low"]);
   const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
@@ -234,7 +235,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       queryClient.invalidateQueries({ queryKey: ["/api/deep-focus/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/deep-focus"] });
       activateLowStimulus();
-      setIsDeepFocusModalOpen(false);
+      // Don't close the modal - keep it open to show the active session
       setSelectedFocusActivity(null);
       setSelectedFocusSubtask(null);
       toast({
@@ -255,7 +256,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     if (selectedFocusSubtask) {
       createFocusMutation.mutate({
         title: `Deep Focus: ${selectedFocusSubtask.title}`,
-        duration: 25, // 25 minutes default
+        duration: selectedDuration,
         subtaskId: selectedFocusSubtask.id
       });
     }
@@ -1463,6 +1464,26 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Duration Selection */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Sessie duur:</label>
+                  <div className="flex gap-2">
+                    {[25, 30, 60, 90, 120].map((duration) => (
+                      <button
+                        key={duration}
+                        onClick={() => setSelectedDuration(duration)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          selectedDuration === duration
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {duration < 60 ? `${duration}m` : `${duration / 60}u`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Urgent Subtasks Section */}
                 {subtasks?.filter(s => s.status === 'pending').length > 0 ? (
                   <div>
