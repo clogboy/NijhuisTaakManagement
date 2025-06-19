@@ -59,9 +59,10 @@ export default function Agenda() {
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
   const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
-  const [selectedFocusActivity, setSelectedFocusActivity] = useState<Activity | null>(null);
-  const [focusScheduleTime, setFocusScheduleTime] = useState('');
-  const [focusDuration, setFocusDuration] = useState(60);
+
+  const [focusStartTime, setFocusStartTime] = useState('');
+  const [focusEndTime, setFocusEndTime] = useState('');
+  const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([]);
 
   // Flow strategy queries
   const { data: personalityPresets } = useQuery<any[]>({
@@ -533,8 +534,9 @@ export default function Agenda() {
       <Dialog open={isDeepFocusModalOpen} onOpenChange={(open) => {
         setIsDeepFocusModalOpen(open);
         if (!open) {
-          setSelectedFocusActivity(null);
-          setFocusScheduleTime('');
+          setFocusStartTime('');
+          setFocusEndTime('');
+          setSelectedWeekdays([]);
         }
       }}>
         <DialogContent className="max-w-md">
@@ -549,63 +551,68 @@ export default function Agenda() {
           </DialogHeader>
           
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Activity:
-              </label>
-              <Select value={selectedFocusActivity?.id?.toString() || ""} onValueChange={(value) => {
-                const activity = activities?.find(a => a.id.toString() === value);
-                setSelectedFocusActivity(activity || null);
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an activity to focus on..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {activities?.filter(a => a.status !== 'completed' && a.status !== 'archived').map((activity) => (
-                    <SelectItem key={activity.id} value={activity.id.toString()}>
-                      <span className="truncate">{activity.title}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Start Time:
+                Weekdays:
               </label>
-              <Input
-                type="time"
-                value={focusScheduleTime}
-                onChange={(e) => setFocusScheduleTime(e.target.value)}
-              />
+              <div className="grid grid-cols-7 gap-2">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
+                  const dayValue = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][index];
+                  return (
+                    <div key={day} className="flex flex-col items-center">
+                      <label className="text-xs text-gray-600 mb-1">{day}</label>
+                      <input
+                        type="checkbox"
+                        checked={selectedWeekdays.includes(dayValue)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedWeekdays([...selectedWeekdays, dayValue]);
+                          } else {
+                            setSelectedWeekdays(selectedWeekdays.filter(d => d !== dayValue));
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Duration (minutes):
-              </label>
-              <Select value={focusDuration.toString()} onValueChange={(value) => setFocusDuration(parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="45">45 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="90">1.5 hours</SelectItem>
-                  <SelectItem value="120">2 hours</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Start Time:
+                </label>
+                <Input
+                  type="time"
+                  value={focusStartTime}
+                  onChange={(e) => setFocusStartTime(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  End Time:
+                </label>
+                <Input
+                  type="time"
+                  value={focusEndTime}
+                  onChange={(e) => setFocusEndTime(e.target.value)}
+                />
+              </div>
             </div>
 
-            {selectedFocusActivity && focusScheduleTime && (
+            {selectedWeekdays.length > 0 && focusStartTime && focusEndTime && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <h4 className="font-medium text-sm text-blue-900 mb-2">Scheduled Session:</h4>
                 <p className="text-xs text-blue-800">
-                  <strong>{selectedFocusActivity.title}</strong><br/>
-                  {focusScheduleTime} for {focusDuration} minutes<br/>
-                  on {selectedDate}
+                  <strong>Deep Focus Time Block</strong><br/>
+                  {focusStartTime} - {focusEndTime}<br/>
+                  on {selectedWeekdays.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(', ')}
+                </p>
+                <p className="text-xs text-gray-600 mt-2">
+                  You'll select what to focus on when the session begins.
                 </p>
               </div>
             )}
@@ -620,21 +627,22 @@ export default function Agenda() {
               </Button>
               <Button
                 onClick={() => {
-                  if (selectedFocusActivity && focusScheduleTime) {
+                  if (selectedWeekdays.length > 0 && focusStartTime && focusEndTime) {
                     // Here you would normally save to database
                     toast({
                       title: "Deep Focus Scheduled",
-                      description: `${selectedFocusActivity.title} at ${focusScheduleTime}`,
+                      description: `Time blocks scheduled from ${focusStartTime} to ${focusEndTime} on ${selectedWeekdays.join(', ')}`,
                     });
                     setIsDeepFocusModalOpen(false);
-                    setSelectedFocusActivity(null);
-                    setFocusScheduleTime('');
+                    setFocusStartTime('');
+                    setFocusEndTime('');
+                    setSelectedWeekdays([]);
                   }
                 }}
-                disabled={!selectedFocusActivity || !focusScheduleTime}
+                disabled={selectedWeekdays.length === 0 || !focusStartTime || !focusEndTime}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                Schedule Session
+                Schedule Time Blocks
               </Button>
             </div>
           </div>
