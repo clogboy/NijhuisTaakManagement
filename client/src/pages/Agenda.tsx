@@ -304,18 +304,18 @@ export default function Agenda() {
                 <CardContent className="space-y-3">
                   <div>
                     <h4 className="font-medium text-green-900 mb-2">Daily Focus Strategy</h4>
-                    <p className="text-sm text-green-800">{agendaSuggestion.suggestions}</p>
+                    <p className="text-sm text-green-800">{agendaSuggestion.suggestions || "No suggestions available"}</p>
                   </div>
                   
                   <div>
                     <h4 className="font-medium text-green-900 mb-2">Task Switch Optimization</h4>
-                    <p className="text-sm text-green-800">{agendaSuggestion.taskSwitchOptimization}</p>
+                    <p className="text-sm text-green-800">{agendaSuggestion.taskSwitchOptimization || "No optimization suggestions available"}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge variant="outline" className="text-green-700 border-green-300">
-                        Estimated switches: {agendaSuggestion.estimatedTaskSwitches}
+                        Estimated switches: {agendaSuggestion.estimatedTaskSwitches || 0}
                       </Badge>
                       <Badge variant="outline" className="text-green-700 border-green-300">
-                        Scheduled: {agendaSuggestion.scheduledActivities.length} activities
+                        Scheduled: {agendaSuggestion.scheduledActivities?.length || 0} activities
                       </Badge>
                     </div>
                   </div>
@@ -343,14 +343,14 @@ export default function Agenda() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          {activities.length === 0 ? (
+                          {!activities || activities.length === 0 ? (
                             <p className="text-sm text-gray-500 italic">No activities in this quadrant</p>
                           ) : (
                             <div className="space-y-2">
                               {activities.slice(0, 3).map((activity) => (
-                                <div key={activity.id} className="flex items-center gap-2">
+                                <div key={activity?.id || Math.random()} className="flex items-center gap-2">
                                   <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
-                                  <span className="text-sm font-medium">{activity.title}</span>
+                                  <span className="text-sm font-medium">{activity?.title || "Untitled activity"}</span>
                                 </div>
                               ))}
                               {activities.length > 3 && (
