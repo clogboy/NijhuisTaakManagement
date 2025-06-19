@@ -204,7 +204,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       const endTime = new Date(now.getTime() + duration * 60000);
       
       // Create the block
-      const createResponse = await apiRequest("POST", "/api/deep-focus", {
+      const createResponse = await apiRequest("/api/deep-focus", "POST", {
         title,
         scheduledStart: now.toISOString(),
         scheduledEnd: endTime.toISOString(),
@@ -215,7 +215,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       const block = await createResponse.json();
       
       // Start the block with selected subtask
-      const startResponse = await apiRequest("POST", `/api/deep-focus/${block.id}/start`, {
+      const startResponse = await apiRequest(`/api/deep-focus/${block.id}/start`, "POST", {
         selectedSubtaskId: subtaskId
       });
       
