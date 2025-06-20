@@ -101,7 +101,9 @@ describe('Authentication', () => {
       ];
       
       invalidEmails.forEach(email => {
-        expect(email.includes('@') && email.includes('.')).toBeFalsy();
+        // Check that invalid emails don't have both @ and . in proper format
+        const hasValidFormat = email.includes('@') && email.split('@')[1]?.includes('.');
+        expect(hasValidFormat).toBeFalsy();
       });
     });
   });

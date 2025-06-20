@@ -32,7 +32,7 @@ export default function QuickWins() {
     taskTitle: ''
   });
 
-  const { data: quickWins = [], isLoading: quickWinsLoading, error: quickWinsError } = useQuery<QuickWin[]>({
+  const { data: quickWinsData, isLoading: quickWinsLoading, error: quickWinsError } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
     queryFn: async () => {
       const response = await fetch("/api/quickwins", { credentials: "include" });
@@ -42,6 +42,9 @@ export default function QuickWins() {
       return response.json();
     },
   });
+
+  // Ensure quickWins is always an array
+  const quickWins = Array.isArray(quickWinsData) ? quickWinsData : [];
 
   // Also fetch subtasks that are classified as quick wins
   const { data: subtasks = [], error: subtasksError } = useQuery<any[]>({
@@ -61,11 +64,11 @@ export default function QuickWins() {
         method: "DELETE",
         credentials: "include",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to delete subtask");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -94,18 +97,18 @@ export default function QuickWins() {
         credentials: "include",
         body: JSON.stringify({ status }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to update subtask status");
       }
-      
+
       return response.json();
     },
     onSuccess: (_, { subtaskId, status }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      
+
       // Show celebration for completed quick wins
       if (status === 'completed') {
         const subtask = subtasks.find(s => s.id === subtaskId);
@@ -117,7 +120,7 @@ export default function QuickWins() {
           });
         }
       }
-      
+
       toast({
         title: t('common.success'),
         description: "Quick Win status updated successfully",
@@ -286,14 +289,14 @@ export default function QuickWins() {
                                   Effort: {quickWin.effort}
                                 </Badge>
                               </div>
-                              
+
                               {linkedActivity && (
                                 <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
                                   <ActivityIcon className="h-4 w-4" />
                                   <span>Task: {linkedActivity.title}</span>
                                 </div>
                               )}
-                              
+
                               <div className="text-xs text-neutral-medium dark:text-gray-500">
                                 Created: {format(new Date(quickWin.createdAt), "MMM dd, yyyy")}
                               </div>
@@ -302,7 +305,7 @@ export default function QuickWins() {
                         </Card>
                       );
                     })}
-                    
+
                     {quickWinsByStatus.pending.length === 0 && (
                       <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
                         Geen openstaande quick wins
@@ -348,14 +351,14 @@ export default function QuickWins() {
                                   ✓ Completed
                                 </Badge>
                               </div>
-                              
+
                               {linkedActivity && (
                                 <div className="flex items-center gap-2 text-sm text-neutral-medium dark:text-gray-400">
                                   <ActivityIcon className="h-4 w-4" />
                                   <span>Task: {linkedActivity.title}</span>
                                 </div>
                               )}
-                              
+
                               <div className="text-xs text-neutral-medium dark:text-gray-500">
                                 Created: {format(new Date(quickWin.createdAt), "MMM dd, yyyy")}
                               </div>
@@ -364,7 +367,7 @@ export default function QuickWins() {
                         </Card>
                       );
                     })}
-                    
+
                     {quickWinsByStatus.completed.length === 0 && (
                       <div className="text-center py-8 text-neutral-medium dark:text-gray-400">
                         Nog geen voltooide quick wins
@@ -421,13 +424,13 @@ export default function QuickWins() {
                               {subtask.description}
                             </p>
                           )}
-                          
+
                           <div className="space-y-2 text-xs text-gray-500">
                             <div className="flex items-center gap-2">
                               <ActivityIcon className="h-3 w-3" />
                               <span>Gekoppeld aan: {linkedActivity?.title || "Onbekende activiteit"}</span>
                             </div>
-                            
+
                             {subtask.dueDate && (
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-3 w-3" />
@@ -437,7 +440,7 @@ export default function QuickWins() {
                                 {isOverdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
                               </div>
                             )}
-                            
+
                             {subtask.participants && subtask.participants.length > 0 && (
                               <div className="flex items-center gap-2">
                                 <Users className="h-3 w-3" />
@@ -445,7 +448,7 @@ export default function QuickWins() {
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Status and Actions */}
                           <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                             {subtask.status !== 'completed' && (
@@ -462,7 +465,7 @@ export default function QuickWins() {
                                 Mark Complete
                               </Button>
                             )}
-                            
+
                             <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"

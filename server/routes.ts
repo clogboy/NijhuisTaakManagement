@@ -2449,7 +2449,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activeBlock = await storage.getActiveDeepFocusBlock(req.user.id);
       res.json(activeBlock || null);
-    } catch (error) {
+    }```text
+     catch (error) {
       console.error("Get active deep focus block error:", error);
       res.status(500).json({ message: "Failed to get active deep focus block" });
     }
@@ -2520,6 +2521,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete deep focus block" });
     }
   });
+
+  // Quick wins endpoints
+app.get('/api/quickwins', requireAuth, async (req, res) => {
+  try {
+    const quickWins = await storage.getQuickWins(req.user.id);
+    // Ensure we always return an array
+    res.json(Array.isArray(quickWins) ? quickWins : []);
+  } catch (error) {
+    console.error('Error fetching quick wins:', error);
+    res.status(500).json({ message: 'Failed to fetch quick wins' });
+  }
+});
+
+// Subtasks endpoints
+app.get('/api/subtasks', requireAuth, async (req, res) => {
+  try {
+    const subtasks = await storage.getSubtasks(req.user.id);
+    // Ensure we always return an array
+    res.json(Array.isArray(subtasks) ? subtasks : []);
+  } catch (error) {
+    console.error('Error fetching subtasks:', error);
+    res.status(500).json({ message: 'Failed to fetch subtasks' });
+  }
+});
 
   return httpServer;
 }
