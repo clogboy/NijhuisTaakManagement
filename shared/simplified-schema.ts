@@ -8,6 +8,7 @@ export const tenants = pgTable("tenants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  domain: text("domain"),
   settings: json("settings").default({}),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -20,6 +21,9 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   role: text("role").notNull().default("user"),
   microsoftId: text("microsoft_id"),
+  department: text("department"),
+  managerId: integer("manager_id"),
+  replitId: text("replit_id"),
   settings: json("settings").default({}), // All user preferences in JSON
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

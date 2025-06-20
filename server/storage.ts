@@ -223,8 +223,8 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByMicrosoftId(microsoftId: string): Promise<User | undefined> {
     try {
-      const result = await db.execute(sql`SELECT * FROM users WHERE microsoft_id = ${microsoftId} LIMIT 1`);
-      return result[0] || undefined;
+      const [user] = await db.select().from(users).where(eq(users.microsoftId, microsoftId));
+      return user || undefined;
     } catch (error) {
       console.error('Error in getUserByMicrosoftId:', error);
       return undefined;
@@ -232,8 +232,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByReplitId(replitId: string): Promise<User | undefined> {
-    // Replit ID field doesn't exist in simplified schema  
-    return undefined;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.replitId, replitId));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error in getUserByReplitId:', error);
+      return undefined;
+    }
   }
 
   async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
