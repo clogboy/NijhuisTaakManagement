@@ -74,9 +74,10 @@ export function registerRoutes(app: Express): Server {
         timestamp: new Date().toISOString() 
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         status: "unhealthy", 
-        error: error.message,
+        error: errorMessage,
         timestamp: new Date().toISOString() 
       });
     }

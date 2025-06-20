@@ -6,6 +6,17 @@ import { dailyScheduler } from "./scheduler";
 import { errorReportingService } from "./error-reporting-service";
 import { User } from "@shared/schema";
 
+// Add global error handlers to prevent server restarts
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, just log the error
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Don't exit the process, just log the error
+});
+
 // Extend Express Request type to include user
 declare global {
   namespace Express {
