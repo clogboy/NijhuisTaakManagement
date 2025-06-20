@@ -1,7 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertActivitySchema, insertActivityLogSchema, insertQuickWinSchema, insertRoadblockSchema, insertSubtaskSchema, insertWeeklyEthosSchema, insertDailyAgendaSchema, insertTimeBlockSchema, insertTaskCommentSchema, insertWorkspaceInvitationSchema } from "@shared/schema";
+import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
+
+// Create temporary schemas for backwards compatibility
+import { createInsertSchema } from "drizzle-zod";
+import { contacts, users } from "@shared/simplified-schema";
+
+const insertContactSchema = createInsertSchema(contacts).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+});
 import { generateDailyAgenda, categorizeActivitiesWithPriority } from "./ai-service";
 import { timeBlockingService } from "./time-blocking-service";
 import { microsoftCalendarService } from "./microsoft-calendar-service";
