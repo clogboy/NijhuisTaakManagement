@@ -74,12 +74,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
       
-      // Determine tenant from email domain or create default tenant
+      // Determine tenant from email domain or find existing user's tenant
       const emailDomain = email.split('@')[1];
       let tenant = await storage.getTenantByDomain(emailDomain);
       
+      // If no tenant found by domain, check if user exists in any tenant
       if (!tenant) {
-        // Create tenant based on email domain
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser) {
+          // User exists, get their tenant
+          tenant = await storage.getTenant(existingUser.tenantId);
+          console.log(`[AUTH] Found existing user ${email} in tenant ${tenant?.id} (${tenant?.name})`);
+        }
+      }
+      
+      // Only create new tenant if no existing user or tenant found
+      if (!tenant) {
         const tenantName = emailDomain === 'nijhuis.nl' ? 'Nijhuis' : emailDomain.split('.')[0];
         tenant = await storage.createTenant({
           name: tenantName,
@@ -87,6 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           domain: emailDomain,
           settings: {},
         });
+        console.log(`[AUTH] Created new tenant ${tenant.id} (${tenant.name}) for domain ${emailDomain}`);
       }
       
       // First try to find by Microsoft ID
