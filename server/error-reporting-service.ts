@@ -2,6 +2,179 @@
 import { emailService } from './email-service';
 import { logger } from './utils/logger';
 
+interface ErrorEntry {
+  timestamp: Date;
+  message: string;
+  stack?: string;
+  userAgent?: string;
+  url?: string;
+  level: string;
+  userId?: number;
+}
+
+class ErrorReportingService {
+  private errors: ErrorEntry[] = [];
+  private lastReportDate: Date | null = null;
+  private dailyReportTimer: NodeJS.Timeout | null = null;
+
+  constructor() {
+    this.startDailyReporting();
+  }
+
+  logError(error: Omit<ErrorEntry, 'timestamp'>) {
+    this.errors.push({
+      ...error,
+      timestamp: new Date()
+    });
+
+    // Keep only last 1000 errors to prevent memory issues
+    if (this.errors.length > 1000) {
+      this.errors = this.errors.slice(-1000);
+    }
+
+    logger.error('Error logged', { error });
+  }
+
+  private startDailyReporting() {
+    // Send report at 9 AM every day
+    const scheduleNextReport = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(9, 0, 0, 0);
+      
+      const msUntilReport = tomorrow.getTime() - now.getTime();
+      
+      this.dailyReportTimer = setTimeout(async () => {
+        await this.sendDailyReport();
+        scheduleNextReport(); // Schedule next day's report
+      }, msUntilReport);
+    };
+
+    scheduleNextReport();
+  }
+
+  async sendDailyReport() {
+    try {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      
+      const todayStart = new Date(today);
+      todayStart.setHours(0, 0, 0, 0);
+
+      const recentErrors = this.errors.filter(error => 
+        error.timestamp >= yesterday && error.timestamp < todayStart
+      );
+
+      if (recentErrors.length === 0 && !this.shouldSendEmptyReport()) {
+        logger.info('No errors to report for daily digest');
+        return;
+      }
+
+      const errorSummary = this.generateErrorSummary(recentErrors);
+      
+      await emailService.sendEmail({
+        to: 'b.weinreder@nijhuis.nl',
+        subject: `Daily Error Report - ${yesterday.toDateString()} (${recentErrors.length} errors)`,
+        html: `
+          <h2>Daily Error Report</h2>
+          <p><strong>Date:</strong> ${yesterday.toDateString()}</p>
+          <p><strong>Total Errors:</strong> ${recentErrors.length}</p>
+          
+          ${recentErrors.length > 0 ? `
+            <h3>Error Summary:</h3>
+            ${errorSummary}
+            
+            <h3>Recent Errors:</h3>
+            <ul>
+              ${recentErrors.slice(0, 10).map(error => `
+                <li>
+                  <strong>${error.level.toUpperCase()}:</strong> ${error.message}<br>
+                  <small>Time: ${error.timestamp.toLocaleString()}</small><br>
+                  ${error.url ? `<small>URL: ${error.url}</small><br>` : ''}
+                  ${error.stack ? `<details><summary>Stack Trace</summary><pre>${error.stack}</pre></details>` : ''}
+                </li>
+              `).join('')}
+            </ul>
+            ${recentErrors.length > 10 ? `<p><em>... and ${recentErrors.length - 10} more errors</em></p>` : ''}
+          ` : '<p>No errors reported in the last 24 hours. System is running smoothly!</p>'}
+          
+          <hr>
+          <p><small>This is an automated report from your application monitoring system.</small></p>
+        `
+      });
+
+      this.lastReportDate = today;
+      logger.info(`Daily error report sent successfully. ${recentErrors.length} errors reported.`);
+    } catch (error) {
+      logger.error('Failed to send daily error report', { error });
+    }
+  }
+
+  private generateErrorSummary(errors: ErrorEntry[]) {
+    const errorCounts = errors.reduce((acc, error) => {
+      const key = error.message.substring(0, 100); // First 100 chars as key
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topErrors = Object.entries(errorCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+
+    return `
+      <table border="1" style="border-collapse: collapse; width: 100%;">
+        <tr>
+          <th style="padding: 8px;">Error Message</th>
+          <th style="padding: 8px;">Count</th>
+        </tr>
+        ${topErrors.map(([message, count]) => `
+          <tr>
+            <td style="padding: 8px;">${message}</td>
+            <td style="padding: 8px;">${count}</td>
+          </tr>
+        `).join('')}
+      </table>
+    `;
+  }
+
+  private shouldSendEmptyReport(): boolean {
+    // Send empty report once per week to confirm system is working
+    if (!this.lastReportDate) return true;
+    
+    const daysSinceLastReport = Math.floor(
+      (Date.now() - this.lastReportDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    return daysSinceLastReport >= 7;
+  }
+
+  async triggerReport() {
+    await this.sendDailyReport();
+  }
+
+  getStatus() {
+    return {
+      totalErrors: this.errors.length,
+      lastReportDate: this.lastReportDate,
+      recentErrorCount: this.errors.filter(e => 
+        Date.now() - e.timestamp.getTime() < 24 * 60 * 60 * 1000
+      ).length
+    };
+  }
+
+  destroy() {
+    if (this.dailyReportTimer) {
+      clearTimeout(this.dailyReportTimer);
+      this.dailyReportTimer = null;
+    }
+  }
+}
+
+export const errorReportingService = new ErrorReportingService();
+
 interface ErrorReport {
   timestamp: string;
   message: string;
