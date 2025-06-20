@@ -180,12 +180,10 @@ export default function QuickWins() {
   // Ensure quickWins is always an array before filtering
   const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
 
-  const filteredQuickWins = Array.isArray(quickWins) ? quickWins.filter(qw => {
-    const matchesSearch = qw.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         qw.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || qw.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }) : [];
+  const filteredQuickWins = (Array.isArray(quickWins) ? quickWins : []).filter(qw =>
+    qw.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    qw.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Group quick wins by status
   const quickWinsByStatus = {

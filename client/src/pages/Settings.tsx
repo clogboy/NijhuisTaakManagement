@@ -32,7 +32,11 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { User as UserIcon,
-  Activity
+  Activity,
+  Palette,
+  RefreshCw,
+  Download,
+  Shield
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 
@@ -662,7 +666,7 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              
+
             </CardContent>
           </Card> */}
 
