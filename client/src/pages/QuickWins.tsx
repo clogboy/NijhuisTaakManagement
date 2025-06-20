@@ -183,20 +183,25 @@ export default function QuickWins() {
   const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
 
   const filteredQuickWins = React.useMemo(() => {
-    // Ensure quickWins is always an array and handle undefined/null cases
-    if (!quickWins || !Array.isArray(quickWins)) {
+    try {
+      // Ensure quickWins is always an array and handle undefined/null cases
+      if (!quickWins || !Array.isArray(quickWins)) {
+        return [];
+      }
+
+      return quickWins.filter((quickWin) => {
+        if (!quickWin) return false;
+
+        const matchesSearch = searchTerm === "" || 
+          quickWin.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          quickWin.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || quickWin.status === filterStatus;
+        return matchesSearch && matchesStatus;
+      });
+    } catch (error) {
+      console.error('Error filtering quickWins:', error);
       return [];
     }
-
-    return quickWins.filter((quickWin) => {
-      if (!quickWin) return false;
-
-      const matchesSearch = searchTerm === "" || 
-        quickWin.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quickWin.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || quickWin.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
   }, [quickWins, searchTerm, filterStatus]);
 
   // Group quick wins by status
