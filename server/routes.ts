@@ -130,7 +130,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to create or find user after all attempts");
         return res.status(500).json({ message: "Failed to create user account" });
       }
-      }
 
       // Set user session
       (req as any).session.userId = user.id;
