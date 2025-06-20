@@ -181,7 +181,11 @@ Note: This is a testing environment. You'll need to create an account or log in 
     });
   }
 
-  private async sendEmail(params: EmailParams): Promise<boolean> {
+  async sendEmail(params: EmailParams): Promise<boolean> {
+    return this.sendEmailInternal(params);
+  }
+
+  private async sendEmailInternal(params: EmailParams): Promise<boolean> {
     if (!this.isConfigured) {
       console.log('[EMAIL] Would send email:', {
         to: params.to,

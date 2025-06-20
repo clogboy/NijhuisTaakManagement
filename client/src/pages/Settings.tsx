@@ -15,21 +15,23 @@ import { useTranslations } from "@/hooks/useTranslations";
 import { downloadXMLFile } from "@/utils/xmlExport";
 import TestHealthCheck from "@/components/TestHealthCheck";
 
-import {
-  User as UserIcon,
-  Clock,
-  Bell,
-  Calendar,
-  Palette,
-  Shield,
-  Download,
-  Globe,
-  Moon,
+import { 
+  Save, 
+  Clock, 
+  Globe, 
+  Bell, 
+  Mail, 
+  Smartphone, 
+  Monitor, 
+  Moon, 
   Sun,
-  Settings2,
-  Play,
-  Pause,
-  RefreshCw,
+  Calendar,
+  Brain,
+  Sidebar,
+  TestTube,
+  AlertTriangle
+} from "lucide-react";
+import { User as UserIcon,
   Activity
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
@@ -66,6 +68,14 @@ export default function Settings() {
     queryKey: ["/api/scheduler/status"],
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+    // Error Reporting status query (dummy data for now)
+    const errorReportingStatus = {
+      isEnabled: true,
+      errorCount: 42,
+      reportEmail: user?.user.email || "example@example.com",
+      nextReport: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    };
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -642,6 +652,19 @@ export default function Settings() {
               <TestHealthCheck />
             </CardContent>
           </Card>
+
+                    {/* Scheduler Status */}
+          {/* <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                {t('settings.schedulerStatus')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              
+            </CardContent>
+          </Card> */}
 
           <Separator />
 

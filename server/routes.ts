@@ -798,8 +798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert string dates to Date objects for validation
       if (data.dueDate && typeof data.dueDate === 'string') {
         const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
-        data.dueDate = new Date(dateValue);
-      }
+        data.dueDate = new Date(dateValue);        }
 
       const subtaskData = insertSubtaskSchema.parse(data);
       const subtask = await storage.createSubtask({
@@ -1593,6 +1592,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Error reporting endpoints
+  app.post("/api/errors/report", async (req, res) => {
+    try {
+      const { message, stack, userAgent, url, level = 'error' } = req.body;
+
+      errorReportingService.logError({
+        message,
+        stack,
+        userAgent,
+        url,
+        level,
+        userId: req.user?.id
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reporting failed:", error);
+      res.status(500).json({ message: "Failed to log error" });
+    }
+  });
+
+  app.get("/api/errors/status", requireAuth, async (req, res) => {
+    try {
+      const status = errorReportingService.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Get error reporting status error:", error);
+      res.status(500).json({ message: "Failed to get error reporting status" });
+    }
+  });
+
+  app.post("/api/errors/trigger-report", requireAuth, async (req, res) => {
+    try {
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      await errorReportingService.triggerReport();
+      res.json({ success: true, message: "Error report sent" });
+    } catch (error) {
+      console.error("Trigger error report failed:", error);
+      res.status(500).json({ message: "Failed to trigger error report" });
+    }```tool_code
+    }
+  });
+
   app.post("/api/scheduler/trigger", requireAuth, async (req: any, res) => {
     try {
       const { dailyScheduler } = await import("./scheduler");
@@ -2164,7 +2209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Parse individual test file results from the output
             const testFilePattern = /Tests?\s+(\d+)\s+passed.*?(\d+)\s+failed.*?(\d+)\s+skipped.*?(\d+)\s+todo/g;
             const fileNamePattern = /Test Files\s+\d+\s+passed.*?(\S+\.test\.ts)/g;
-            
+
             // Extract test file names
             const fileNames: string[] = [];
             let fileMatch;
@@ -2221,7 +2266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Look for summary line like "Tests  36 passed (37)"
           const summaryPattern = /Tests\s+(\d+)\s+passed\s*\((\d+)\)/;
           const summaryMatch = stdout.match(summaryPattern);
-          
+
           if (summaryMatch) {
             actualPassedTests = parseInt(summaryMatch[1]);
             actualTotalTests = parseInt(summaryMatch[2]);
@@ -2259,7 +2304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const fileFailures = finalFailedCount > 0 && index === 0 ? finalFailedCount : 0; // Put failures in first file
               const filePassed = finalFailedCount > 0 && index === 0 ? Math.max(0, avgTestsPerFile - fileFailures) : avgTestsPerFile;
               const totalTests = filePassed + fileFailures;
-              
+
               return {
                 name: file.name || file.file || 'unknown',
                 status: fileFailures > 0 ? 'failed' : 'passed',

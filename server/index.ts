@@ -3,6 +3,7 @@ import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { dailyScheduler } from "./scheduler";
+import { errorReportingService } from "./error-reporting-service";
 import { User } from "@shared/schema";
 
 // Extend Express Request type to include user
@@ -89,7 +90,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-    
+
     // Start the daily scheduler
     dailyScheduler.start();
     log(`daily scheduler initialized - next sync at midnight`);
