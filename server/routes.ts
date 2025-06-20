@@ -2,11 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
+import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema, insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema } from "@shared/simplified-schema";
 
 // Create temporary schemas for backwards compatibility
 import { createInsertSchema } from "drizzle-zod";
-import { contacts, users, activities, activity_entries } from "@shared/simplified-schema";
+import { contacts, users, activities, activity_entries, subtasks } from "@shared/simplified-schema";
 import { eq, and, sql, desc, ne } from "drizzle-orm";
 
 const insertContactSchema = createInsertSchema(contacts).omit({
@@ -21,6 +21,7 @@ import { dailyScheduler } from "./scheduler";
 
 import { emailService } from "./email-service";
 import { analyticsService } from "./analytics-service";
+import { errorReportingService } from "./error-reporting-service";
 import { auditService } from "./audit-service";
 import { azureMigrationService } from "./azure-migration-service";
 import { digiOfficeService } from "./digioffice-service";
@@ -2672,34 +2673,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete deep focus block" });
     }
   });
-
-  // Quick wins endpoints
-app.get('/api/quickwins', requireAuth, async (req, res) => {
-  try {
-    const quickWins = await storage.getQuickWins(req.user.id);
-    // Ensure we always return an array, even if storage returns undefined/null
-    const result = Array.isArray(quickWins) ? quickWins : [];
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching quick wins:', error);
-    // Return empty array instead of error message to prevent frontend crashes
-    res.json([]);
-  }
-});
-
-// Subtasks endpoints  
-app.get('/api/subtasks', requireAuth, async (req, res) => {
-  try {
-    const subtasks = await storage.getSubtasks(req.user.id);
-    // Ensure we always return an array, even if storage returns undefined/null
-    const result = Array.isArray(subtasks) ? subtasks : [];
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching subtasks:', error);
-    // Return empty array instead of error message to prevent frontend crashes
-    res.json([]);
-  }
-});
 
   return httpServer;
 }
