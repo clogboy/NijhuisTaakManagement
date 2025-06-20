@@ -312,7 +312,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert string dates to Date objects for validation
       const data = { ...req.body };
       if (data.dueDate && typeof data.dueDate === 'string') {
-        data.dueDate = new Date(data.dueDate);
+        // Handle both date strings and ISO strings
+        const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
+        data.dueDate = new Date(dateValue);
       }
       
       const activityData = insertActivitySchema.parse(data);
@@ -375,7 +377,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/activities/:id", requireAuth, async (req: any, res) => {
     try {
       const activityId = parseInt(req.params.id);
-      const activityData = insertActivitySchema.partial().parse(req.body);
+      const data = { ...req.body };
+      
+      // Convert string dates to Date objects for validation
+      if (data.dueDate && typeof data.dueDate === 'string') {
+        const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
+        data.dueDate = new Date(dateValue);
+      }
+      
+      const activityData = insertActivitySchema.partial().parse(data);
       const activity = await storage.updateActivity(activityId, activityData);
       res.json(activity);
     } catch (error) {
@@ -721,7 +731,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/subtasks", requireAuth, async (req: any, res) => {
     try {
-      const subtaskData = insertSubtaskSchema.parse(req.body);
+      const data = { ...req.body };
+      
+      // Convert string dates to Date objects for validation
+      if (data.dueDate && typeof data.dueDate === 'string') {
+        const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
+        data.dueDate = new Date(dateValue);
+      }
+      
+      const subtaskData = insertSubtaskSchema.parse(data);
       const subtask = await storage.createSubtask({
         ...subtaskData,
         createdBy: req.user.id,

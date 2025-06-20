@@ -243,7 +243,15 @@ export default function EditSubtaskModal({ open, onOpenChange, subtask }: EditSu
                   <FormItem>
                     <FormLabel>{t('subtasks.formDueDate')}</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        {...field}
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value ? new Date(value).toISOString() : null);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

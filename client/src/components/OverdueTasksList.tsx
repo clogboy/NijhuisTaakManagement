@@ -33,6 +33,8 @@ export default function OverdueTasksList({ autoShowRescue = false }: OverdueTask
     
     const dueDate = new Date(subtask.dueDate);
     const today = new Date();
+    
+    // Set both to start of day for accurate comparison
     today.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
     
@@ -50,6 +52,11 @@ export default function OverdueTasksList({ autoShowRescue = false }: OverdueTask
   const getDaysOverdue = (dueDate: string) => {
     const due = new Date(dueDate);
     const today = new Date();
+    
+    // Set both dates to start of day for accurate comparison
+    due.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
     const diffTime = today.getTime() - due.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;

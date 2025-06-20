@@ -254,7 +254,15 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                   <FormItem>
                     <FormLabel>Due Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        {...field}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value ? new Date(value).toISOString().split('T')[0] : '');
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

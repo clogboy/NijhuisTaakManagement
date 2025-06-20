@@ -378,6 +378,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     
     const today = new Date();
     const deadline = new Date(dueDate);
+    
+    // Set both to start of day for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    deadline.setHours(0, 0, 0, 0);
+    
     const diffInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffInDays < 0) {
