@@ -88,6 +88,68 @@ export function registerRoutes(app: Express): Server {
     res.json(req.user);
   });
 
+  app.post("/api/auth/login", async (req: any, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // For development, accept any email/password combination
+      if (process.env.NODE_ENV === 'development') {
+        const user = {
+          id: 1,
+          email: email || 'user@example.com',
+          name: 'Test User',
+          role: 'user',
+          isAdmin: false
+        };
+        
+        req.session.user = user;
+        req.user = user;
+        
+        res.json({ 
+          success: true, 
+          user,
+          message: "Login successful" 
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Authentication not configured for production" 
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Login failed" 
+      });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: any, res) => {
+    try {
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Logout error:", err);
+          res.status(500).json({ 
+            success: false, 
+            message: "Logout failed" 
+          });
+        } else {
+          res.json({ 
+            success: true, 
+            message: "Logout successful" 
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Logout failed" 
+      });
+    }
+  });
+
   // User preferences routes
   app.get("/api/user/preferences", requireAuth, async (req: any, res) => {
     console.log("User preferences route hit for user:", req.user?.id);
