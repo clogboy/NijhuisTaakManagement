@@ -1,0 +1,31 @@
+[vite] connecting...
+DOMException {}
+
+UserIcon is not defined
+UserIcon is not defined
+The above error occurred in the <Settings> component:
+
+    at Settings (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/pages/Settings.tsx:48:37)
+    at div
+    at div
+    at main
+    at div
+    at div
+    at AppLayout (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/components/layout/AppLayout.tsx:57:3)
+    at Route (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=09eb49ff:323:16)
+    at Switch (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=09eb49ff:379:17)
+    at AuthenticatedApp
+    at Route (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=09eb49ff:323:16)
+    at Switch (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=09eb49ff:379:17)
+    at Router (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/App.tsx?v=HgjVIu-UH3dd79Zv6ZoYF:320:44)
+    at Provider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=09eb49ff:38:15)
+    at TooltipProvider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=09eb49ff:64:5)
+    at ThemeProvider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/contexts/ThemeContext.tsx:29:33)
+    at QueryClientProvider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=09eb49ff:2805:3)
+    at App
+    at LowStimulusProvider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/contexts/LowStimulusContext.tsx:20:39)
+    at OnboardingProvider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/contexts/OnboardingContext.tsx:30:38)
+    at QueryClientProvider (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=09eb49ff:2805:3)
+    at ErrorBoundary (https://ae015bd8-43b3-4801-a7a8-d43e9a46dea5-00-3j522r8z83hrg.riker.replit.dev/src/main.tsx?v=HgjVIu-UH3dd79Zv6ZoYF:15:5)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
