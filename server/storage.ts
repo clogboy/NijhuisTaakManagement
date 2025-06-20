@@ -212,13 +212,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string, tenantId?: number): Promise<User | undefined> {
-    if (tenantId) {
-      const [user] = await db.select().from(users)
-        .where(and(eq(users.email, email), eq(users.tenantId, tenantId)));
-      return user || undefined;
+    try {
+      if (tenantId !== undefined) {
+        // Tenant-specific lookup
+        const [user] = await db.select().from(users)
+          .where(and(eq(users.email, email), eq(users.tenantId, tenantId)));
+        return user || undefined;
+      } else {
+        // Global lookup across all tenants
+        const [user] = await db.select().from(users).where(eq(users.email, email));
+        return user || undefined;
+      }
+    } catch (error) {
+      console.error('Error in getUserByEmail:', error);
+      return undefined;
     }
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
   }
 
   async getUserByMicrosoftId(microsoftId: string): Promise<User | undefined> {

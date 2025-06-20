@@ -113,18 +113,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
             role,
           });
         } catch (createError: any) {
-          // If user creation fails due to duplicate email, try to find the existing user
+          // If user creation fails due to duplicate email, handle cross-tenant scenarios
           if (createError.code === '23505') {
-            console.log(`[AUTH] User with email ${email} already exists, attempting to find and update`);
+            console.log(`[AUTH] User with email ${email} already exists, attempting to find and resolve`);
+            
+            // First try to find user in current tenant
             user = await storage.getUserByEmail(email, tenant.id);
+            
             if (user) {
-              // Update the existing user with Microsoft ID and latest name
+              // User exists in current tenant, update with Microsoft ID
               user = await storage.updateUser(user.id, { microsoftId, name });
-              console.log(`[AUTH] Updated existing user ${user.id} with Microsoft ID`);
+              console.log(`[AUTH] Updated existing user ${user.id} in tenant ${tenant.id} with Microsoft ID`);
             } else {
-              // If we can't find the user by email in this tenant, there might be a cross-tenant issue
-              console.error(`[AUTH] Could not find user with email ${email} in tenant ${tenant.id} after duplicate constraint error`);
-              return res.status(500).json({ message: "User exists but cannot be accessed in this tenant" });
+              // User might exist in a different tenant, check globally
+              const globalUser = await storage.getUserByEmail(email);
+              
+              if (globalUser) {
+                console.log(`[AUTH] User ${email} exists in tenant ${globalUser.tenantId}, but trying to access tenant ${tenant.id}`);
+                
+                // If user is trying to access the correct tenant based on their email domain
+                if (globalUser.tenantId === tenant.id) {
+                  // This shouldn't happen, but handle it gracefully
+                  user = await storage.updateUser(globalUser.id, { microsoftId, name });
+                  console.log(`[AUTH] Updated user ${globalUser.id} with Microsoft ID after cross-tenant resolution`);
+                } else {
+                  // User belongs to different tenant - this is a business logic issue
+                  console.error(`[AUTH] User ${email} belongs to tenant ${globalUser.tenantId}, not ${tenant.id}`);
+                  return res.status(403).json({ 
+                    message: "User account exists in different organization. Please contact your administrator." 
+                  });
+                }
+              } else {
+                // This is unexpected - constraint failed but no user found anywhere
+                console.error(`[AUTH] Duplicate constraint error but no user found globally for ${email}`);
+                return res.status(500).json({ message: "Account creation failed due to data inconsistency" });
+              }
             }
           } else {
             console.error(`[AUTH] User creation failed with error:`, createError);
