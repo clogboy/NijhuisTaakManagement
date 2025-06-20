@@ -103,6 +103,23 @@ app.use((req, res, next) => {
   // Use PORT environment variable for deployment flexibility
   // Default to 5000 for development, 8080 for production
   const port = parseInt(process.env.PORT || (process.env.NODE_ENV === "production" ? "8080" : "5000"));
+  
+  // Graceful shutdown handling
+  const gracefulShutdown = (signal: string) => {
+    console.log(`\nReceived ${signal}. Graceful shutdown starting...`);
+    server.close((err) => {
+      if (err) {
+        console.error('Error during server shutdown:', err);
+        process.exit(1);
+      }
+      console.log('Server closed successfully');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  
   server.listen({
     port,
     host: "0.0.0.0",
