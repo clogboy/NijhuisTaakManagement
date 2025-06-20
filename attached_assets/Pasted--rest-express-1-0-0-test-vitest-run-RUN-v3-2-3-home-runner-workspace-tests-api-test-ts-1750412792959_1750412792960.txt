@@ -1,0 +1,120 @@
+
+> rest-express@1.0.0 test
+> vitest run
+
+
+ RUN  v3.2.3 /home/runner/workspace
+
+
+ ❯ tests/api.test.ts 0/5
+ ❯ tests/auth.test.ts [queued]
+ ❯ tests/comprehensive.test.ts [queued]
+ ✓ tests/api.test.ts (5 tests) 13ms
+
+ ❯ tests/api.test.ts 5/5
+ ❯ tests/auth.test.ts [queued]
+ ❯ tests/comprehensive.test.ts [queued]
+
+ ❯ tests/api.test.ts 5/5
+ ❯ tests/auth.test.ts [queued]
+ ❯ tests/comprehensive.test.ts [queued]
+ ✓ tests/performance.test.ts (5 tests) 317ms
+
+ ❯ tests/api.test.ts 5/5
+ ❯ tests/auth.test.ts [queued]
+
+ ❯ tests/api.test.ts 5/5
+ ❯ tests/auth.test.ts 0/4
+
+
+ ❯ tests/auth.test.ts 1/4
+ ❯ tests/auth.test.ts (4 tests | 1 failed) 70ms
+   ✓ Authentication > Microsoft Authentication > should authenticate existing user with Microsoft ID 5ms
+   ✓ Authentication > Microsoft Authentication > should create new user for unknown Microsoft ID 1ms
+   ✓ Authentication > Input Validation > should validate Microsoft auth data structure 1ms
+   × Authentication > Input Validation > should reject invalid email formats 61ms
+     → expected true to be falsy
+
+ ❯ tests/comprehensive.test.ts [queued]
+
+ ❯ tests/comprehensive.test.ts [queued]
+ ✓ tests/database.test.ts (6 tests) 8ms
+
+ ❯ tests/comprehensive.test.ts [queued]
+
+ ❯ tests/comprehensive.test.ts [queued]
+
+ ❯ tests/comprehensive.test.ts [queued]
+ ✓ tests/database-connection.test.ts (2 tests) 4ms
+
+
+
+
+ ❯ tests/comprehensive.test.ts (11 tests | 4 failed) 235ms
+   × Comprehensive API Health Check > Storage Layer Tests > should create and retrieve users 45ms
+     → connect ECONNREFUSED 127.0.0.1:5432
+   × Comprehensive API Health Check > Storage Layer Tests > should handle tenant operations 6ms
+     → connect ECONNREFUSED 127.0.0.1:5432
+   × Comprehensive API Health Check > Storage Layer Tests > should create and manage activities 2ms
+     → connect ECONNREFUSED 127.0.0.1:5432
+   ✓ Comprehensive API Health Check > Storage Layer Tests > should handle missing methods gracefully 1ms
+   ✓ Comprehensive API Health Check > API Endpoint Tests > should respond to health check 40ms
+   ✓ Comprehensive API Health Check > API Endpoint Tests > should handle authentication check 14ms
+   ✓ Comprehensive API Health Check > API Endpoint Tests > should return empty arrays for unauthenticated API calls requiring auth 28ms
+   ✓ Comprehensive API Health Check > Database Connection Tests > should connect to database successfully 9ms
+   ✓ Comprehensive API Health Check > Error Handling Tests > should handle invalid routes gracefully 13ms
+   ✓ Comprehensive API Health Check > Error Handling Tests > should validate input data 42ms
+   × Comprehensive API Health Check > Frontend Data Format Tests > should return arrays for list endpoints 20ms
+     → connect ECONNREFUSED 127.0.0.1:5432
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/storage.test.ts [ tests/storage.test.ts ]
+Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+ ❯ server/storage.ts:1:1
+      1| import { 
+       | ^
+      2|   tenants,
+      3|   users, 
+
+Caused by: ReferenceError: Cannot access 'mockUsers' before initialization
+ ❯ tests/storage.test.ts:53:10
+ ❯ server/storage.ts:1:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/auth.test.ts > Authentication > Input Validation > should reject invalid email formats
+AssertionError: expected true to be falsy
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/auth.test.ts:104:60
+    102|       
+    103|       invalidEmails.forEach(email => {
+    104|         expect(email.includes('@') && email.includes('.')).to…
+       |                                                            ^
+    105|       });
+    106|     });
+ ❯ tests/auth.test.ts:103:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/comprehensive.test.ts > Comprehensive API Health Check > Storage Layer Tests > should create and retrieve users
+ FAIL  tests/comprehensive.test.ts > Comprehensive API Health Check > Storage Layer Tests > should handle tenant operations
+ FAIL  tests/comprehensive.test.ts > Comprehensive API Health Check > Storage Layer Tests > should create and manage activities
+ FAIL  tests/comprehensive.test.ts > Comprehensive API Health Check > Frontend Data Format Tests > should return arrays for list endpoints
+Error: connect ECONNREFUSED 127.0.0.1:5432
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  3 failed | 4 passed (7)
+      Tests  5 failed | 28 passed (33)
+   Start at  09:45:42
+   Duration  6.71s (transform 1.70s, setup 595ms, collect 6.76s, tests 647ms, environment 2ms, prepare 7.87s)
