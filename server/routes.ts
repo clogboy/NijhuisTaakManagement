@@ -75,11 +75,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", authLimiter.middleware(), async (req, res) => {
     try {
       const { email, name, microsoftId } = loginUserSchema.parse(req.body);
-      
+
       // First check if user already exists in any tenant
       const emailDomain = email.split('@')[1];
       let tenant: any = null;
-      
+
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         // User exists, use their existing tenant
@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tenant = await storage.getTenantByDomain(emailDomain);
         console.log(`[AUTH] New user, found tenant by domain: ${tenant ? `${tenant.id} (${tenant.name})` : 'none'}`);
       }
-      
+
       // Only create new tenant if no existing user or tenant found
       if (!tenant) {
         const tenantName = emailDomain === 'nijhuis.nl' ? 'Nijhuis' : emailDomain.split('.')[0];
@@ -102,10 +102,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         console.log(`[AUTH] Created new tenant ${tenant.id} (${tenant.name}) for domain ${emailDomain}`);
       }
-      
+
       // First try to find by Microsoft ID
       let user = await storage.getUserByMicrosoftId(microsoftId);
-      
+
       // If not found, try to find by email within the tenant
       if (!user) {
         user = await storage.getUserByEmail(email, tenant.id);
@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           user = await storage.updateUser(user.id, { microsoftId, name });
         }
       }
-      
+
       if (!user) {
         // Create new user within the tenant
         const role = email === "b.weinreder@nijhuis.nl" ? "admin" : "user";
@@ -130,10 +130,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If user creation fails due to duplicate email, handle cross-tenant scenarios
           if (createError.code === '23505') {
             console.log(`[AUTH] User with email ${email} already exists, attempting to find and resolve`);
-            
+
             // First try to find user in current tenant
             user = await storage.getUserByEmail(email, tenant.id);
-            
+
             if (user) {
               // User exists in current tenant, update with Microsoft ID
               user = await storage.updateUser(user.id, { microsoftId, name });
@@ -141,10 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               // User might exist in a different tenant, check globally
               const globalUser = await storage.getUserByEmail(email);
-              
+
               if (globalUser) {
                 console.log(`[AUTH] User ${email} exists in tenant ${globalUser.tenantId}, but trying to access tenant ${tenant.id}`);
-                
+
                 // If user is trying to access the correct tenant based on their email domain
                 if (globalUser.tenantId === tenant.id) {
                   // This shouldn't happen, but handle it gracefully
@@ -178,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set user session
       (req as any).session.userId = user.id;
-      
+
       res.json({ user: { ...user, tenant } });
     } catch (error) {
       console.error("Login error:", error);
@@ -190,13 +190,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/simple-login", async (req, res) => {
     try {
       const { email, password } = req.body;
-      
+
       // For now, accept any password for the admin user
       if (email === "b.weinreder@nijhuis.nl" && password === "admin123") {
         // Get or create tenant
         const emailDomain = email.split('@')[1];
         let tenant = await storage.getTenantByDomain(emailDomain);
-        
+
         if (!tenant) {
           tenant = await storage.createTenant({
             name: 'Nijhuis',
@@ -205,9 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             settings: {},
           });
         }
-        
+
         let user = await storage.getUserByEmail(email, tenant.id);
-        
+
         if (!user) {
           // Create admin user if doesn't exist
           user = await storage.createUser({
@@ -221,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Set user session
         (req as any).session.userId = user.id;
-        
+
         res.json({ user: { ...user, tenant } });
       } else {
         res.status(401).json({ message: "Invalid credentials" });
@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contacts", requireAuth, async (req: any, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);
-      
+
       const contact = await storage.createContact({
         ...contactData,
         createdBy: req.user.id,
@@ -315,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contactId = parseInt(req.params.id);
       const contactData = insertContactSchema.partial().parse(req.body);
-      
+
       const contact = await storage.updateContact(contactId, contactData);
       if (!contact) {
         res.status(404).json({ message: "Contact not found" });
@@ -339,24 +339,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/contacts/:id", requireAuth, async (req: any, res) => {
     try {
       const contactId = parseInt(req.params.id);
-      
+
       if (isNaN(contactId) || contactId <= 0) {
         return res.status(400).json({ message: "Invalid contact ID" });
       }
-      
+
       // Check if contact exists and belongs to user
       const existingContact = await storage.getContact(contactId);
       if (!existingContact) {
         return res.status(404).json({ message: "Contact not found" });
       }
-      
+
       if (existingContact.createdBy !== req.user.id) {
         return res.status(403).json({ message: "Not authorized to delete this contact" });
       }
-      
+
       await storage.deleteContact(contactId);
       console.log(`[API] Successfully deleted contact: ${contactId}`);
-      
+
       res.json({ message: "Contact deleted successfully" });
     } catch (error) {
       console.error("[API] Error deleting contact:", error);
@@ -389,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
         data.dueDate = new Date(dateValue);
       }
-      
+
       const activity = await storage.createActivity({
         ...data,
         createdBy: req.user.id,
@@ -406,13 +406,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activityId = parseInt(req.params.id);
       const data = { ...req.body };
-      
+
       // Convert string dates to Date objects for validation
       if (data.dueDate && typeof data.dueDate === 'string') {
         const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
         data.dueDate = new Date(dateValue);
       }
-      
+
       const activity = await storage.updateActivity(activityId, data);
       res.json(activity);
     } catch (error) {
@@ -437,14 +437,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activityId = parseInt(req.params.id);
       const { newOwnerId } = req.body;
-      
+
       if (!newOwnerId || typeof newOwnerId !== 'number') {
         return res.status(400).json({ message: "New owner ID is required" });
       }
 
       // Simplified: just update the created_by field
       const activity = await storage.updateActivity(activityId, { createdBy: newOwnerId });
-      
+
       res.json(activity);
     } catch (error) {
       console.error("Transfer ownership error:", error);
@@ -610,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         energyPattern: { morning: 0.75, afternoon: 0.70, evening: 0.60 },
         notificationSettings: { allowInterruptions: true, urgentOnly: false, quietHours: { start: "09:00", end: "11:00" } }
       };
-      
+
       const recommendations = flowProtectionService.getFlowRecommendations(defaultStrategy as any);
       res.json(recommendations);
     } catch (error) {
@@ -672,7 +672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/roadblocks", requireAuth, async (req: any, res) => {
     try {
       const { isRescueMode, linkedTaskId, ...roadblockData } = req.body;
-      
+
       const roadblock = await storage.createRoadblock({
         ...roadblockData,
         createdBy: req.user.id,
@@ -737,28 +737,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // QuickWins routes
   app.get("/api/quickwins", requireAuth, async (req: any, res) => {
     try {
-      const quickWins = await storage.getQuickWins(req.user.id);
-      res.json(quickWins);
+      const userId = req.user.id;
+
+      if (!storage.getQuickWins) {
+        console.error("getQuickWins method not found on storage");
+        return res.status(500).json({ error: "Internal server error", message: "Storage method not available" });
+      }
+
+      const quickWins = await storage.getQuickWins(userId);
+      res.json(Array.isArray(quickWins) ? quickWins : []);
     } catch (error) {
-      console.error("Get quick wins error:", error);
-      res.status(500).json({ message: "Failed to fetch quick wins" });
+      console.error("Error fetching quick wins:", error);
+      res.status(500).json({ error: "Internal server error", message: "Failed to fetch quick wins" });
     }
   });
 
   // Subtasks routes (stub implementation)
   app.get("/api/subtasks", requireAuth, async (req: any, res) => {
     try {
-      // Return child activities as subtasks
-      const subtasks = await db.select().from(activities)
-        .where(and(
-          eq(activities.createdBy, req.user.id),
-          sql`${activities.parentId} IS NOT NULL`
-        ))
-        .orderBy(desc(activities.createdAt));
-      res.json(subtasks);
+      const userId = req.user.id;
+
+      if (!storage.getSubtasks) {
+        console.error("getSubtasks method not found on storage");
+        return res.status(500).json({ error: "Internal server error", message: "Storage method not available" });
+      }
+
+      const subtasks = await storage.getSubtasks(userId);
+      res.json(Array.isArray(subtasks) ? subtasks : []);
     } catch (error) {
-      console.error("Get subtasks error:", error);
-      res.status(500).json({ message: "Failed to fetch subtasks" });
+      console.error("Error fetching subtasks:", error);
+      res.status(500).json({ error: "Internal server error", message: "Failed to fetch subtasks" });
     }
   });
 
@@ -776,13 +784,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subtasks", requireAuth, async (req: any, res) => {
     try {
       const data = { ...req.body };
-      
+
       // Convert string dates to Date objects for validation
       if (data.dueDate && typeof data.dueDate === 'string') {
         const dateValue = data.dueDate.includes('T') ? data.dueDate : data.dueDate + 'T23:59:59.999Z';
         data.dueDate = new Date(dateValue);
       }
-      
+
       const subtaskData = insertSubtaskSchema.parse(data);
       const subtask = await storage.createSubtask({
         ...subtaskData,
@@ -799,7 +807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subtaskId = parseInt(req.params.id);
       console.log(`[API] Updating subtask ${subtaskId} with data:`, req.body);
-      
+
       // Allow partial updates without strict validation for status changes
       const allowedFields = ['status', 'title', 'description', 'priority', 'dueDate', 'participants', 'participantTypes'];
       const updateData = Object.keys(req.body)
@@ -808,9 +816,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           obj[key] = req.body[key];
           return obj;
         }, {} as any);
-      
+
       console.log(`[API] Filtered update data:`, updateData);
-      
+
       const subtask = await storage.updateSubtask(subtaskId, updateData);
       console.log(`[API] Successfully updated subtask:`, subtask);
       res.json(subtask);
@@ -839,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subtaskId = parseInt(req.params.id);
       const { participantEmail, taskType } = req.body;
-      
+
       if (!participantEmail || !taskType) {
         return res.status(400).json({ error: "participantEmail and taskType are required" });
       }
@@ -871,7 +879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/daily-task-completions", requireAuth, async (req: any, res) => {
     try {
       const { activityId, taskDate, completed } = req.body;
-      
+
       if (!activityId || !taskDate || typeof completed !== 'boolean') {
         return res.status(400).json({ error: "activityId, taskDate, and completed are required" });
       }
@@ -879,7 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify either activity or subtask exists before creating completion
       const activity = await storage.getActivity(activityId);
       const subtask = activity ? null : await storage.getSubtask(activityId);
-      
+
       if (!activity && !subtask) {
         console.log(`[API] Task completion failed: Neither activity nor subtask found for ID ${activityId}`);
         return res.status(400).json({ error: `Task ${activityId} not found` });
@@ -889,7 +897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (activity && activity.createdBy !== req.user.id) {
         return res.status(403).json({ error: "Not authorized to update this task" });
       }
-      
+
       if (subtask) {
         const userEmail = req.user.email;
         if (!subtask.participants.includes(userEmail)) {
@@ -1001,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subtaskId = parseInt(req.params.id);
       const { proposedResolution, newDeadline, oorzaakCategory, oorzaakFactor, severity } = req.body;
-      
+
       if (!proposedResolution || !newDeadline || !oorzaakCategory) {
         return res.status(400).json({ error: "Proposed resolution, new deadline, and root cause category are required" });
       }
@@ -1142,10 +1150,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/send-email", requireAuth, async (req: any, res) => {
     try {
       const { to, subject, body } = req.body;
-      
+
       // TODO: Implement Microsoft Graph API email sending
       console.log("Email would be sent:", { to, subject, body });
-      
+
       res.json({ success: true, message: "Email sent successfully" });
     } catch (error) {
       console.error("Send email error:", error);
@@ -1160,21 +1168,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session.userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-      
+
       const { date, maxTaskSwitches } = req.body;
       const targetDate = new Date(date);
       const dayOfWeek = targetDate.getDay();
-      
+
       // Get activities for the user
       const user = await storage.getUser(req.session.userId);
       const activities = await storage.getActivities(req.session.userId, user?.email || '', user?.role === 'admin');
-      
+
       // Get subtasks for the user
       const subtasks = await storage.getSubtasks(req.session.userId);
-      
+
       // Get ethos for the day
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
-      
+
       // Generate AI-powered agenda
       const agendaSuggestion = await generateDailyAgenda(
         activities.filter(a => a.status !== 'completed'),
@@ -1183,7 +1191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ethos,
         maxTaskSwitches || 3
       );
-      
+
       res.json({
         priorityMatrix: agendaSuggestion.priorityMatrix,
         suggestions: agendaSuggestion.suggestions,
@@ -1218,22 +1226,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session.userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
-      
+
       const { date } = req.query;
       const targetDate = date ? new Date(date as string) : new Date();
       const dayOfWeek = targetDate.getDay();
-      
+
       // Get activities and ethos
       const user = await storage.getUser(req.session.userId);
       const activities = await storage.getActivities(req.session.userId, user?.email || '', user?.role === 'admin');
       const ethos = await storage.getWeeklyEthosByDay(req.session.userId, dayOfWeek);
-      
+
       // Categorize activities using priority matrix
       const matrix = await categorizeActivitiesWithPriority(
         activities.filter(a => a.status !== 'completed'),
         ethos
       );
-      
+
       res.json(matrix);
     } catch (error) {
       console.error("Get Eisenhower matrix error:", error);
@@ -1247,7 +1255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate } = req.query;
       const start = startDate ? new Date(startDate) : undefined;
       const end = endDate ? new Date(endDate) : undefined;
-      
+
       const timeBlocks = await storage.getTimeBlocks(req.user.id, start, end);
       res.json(timeBlocks);
     } catch (error) {
@@ -1298,14 +1306,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { activityIds, date, options } = req.body;
       const scheduleDate = new Date(date);
-      
+
       const result = await timeBlockingService.autoScheduleActivities(
         req.user.id,
         scheduleDate,
         activityIds,
         options
       );
-      
+
       res.json(result);
     } catch (error) {
       console.error("Smart schedule error:", error);
@@ -1318,7 +1326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { activityIds, date, options } = req.body;
       const scheduleDate = new Date(date);
-      
+
       // Get activities to schedule
       const activities = [];
       for (const id of activityIds) {
@@ -1327,14 +1335,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           activities.push(activity);
         }
       }
-      
+
       const result = await timeBlockingService.generateSmartSchedule(
         req.user.id,
         scheduleDate,
         activities,
         options
       );
-      
+
       res.json(result);
     } catch (error) {
       console.error("Schedule preview error:", error);
@@ -1348,7 +1356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate } = req.query;
       const start = startDate ? new Date(startDate) : new Date();
       const end = endDate ? new Date(endDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      
+
       const events = await microsoftCalendarService.getCalendarEvents(req.user.id, start, end);
       res.json(events);
     } catch (error) {
@@ -1384,7 +1392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { date, workingHours } = req.query;
       const targetDate = date ? new Date(date) : new Date();
       const hours = workingHours ? JSON.parse(workingHours) : { start: "09:00", end: "17:00" };
-      
+
       const slots = await microsoftCalendarService.getAvailableSlots(req.user.id, targetDate, hours);
       res.json(slots);
     } catch (error) {
@@ -1397,7 +1405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/preferences", requireAuth, async (req: any, res) => {
     try {
       let userPrefs = await storage.getUserPreferences(req.user.id);
-      
+
       if (!userPrefs) {
         // Create default preferences if none exist
         const defaultPrefs = {
@@ -1413,13 +1421,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           compactSidebar: false,
           aiSuggestions: true,
         };
-        
+
         userPrefs = await storage.createUserPreferences({
           ...defaultPrefs,
           createdBy: req.user.id,
         });
       }
-      
+
       res.json(userPrefs);
     } catch (error) {
       console.error("Get preferences error:", error);
@@ -1479,12 +1487,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/users/:id", requireAuth, async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       // Ensure users can only update their own profile (or admin can update any)
       if (userId !== req.user.id && req.user.role !== 'admin') {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const updatedUser = await storage.updateUser(userId, req.body);
       res.json(updatedUser);
     } catch (error) {
@@ -1496,7 +1504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/export", requireAuth, async (req: any, res) => {
     try {
       const isAdmin = req.user.role === 'admin';
-      
+
       // Get all user data for export
       const [activities, contacts, quickWins, roadblocks, weeklyEthos, dailyAgendas, timeBlocks] = await Promise.all([
         storage.getActivities(req.user.id, req.user.email, isAdmin),
@@ -1546,14 +1554,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { activityIds, date, options } = req.body;
       const userId = (req as any).user.id;
-      
+
       const result = await timeBlockingService.generateSmartSchedule(
         userId,
         new Date(date),
         activityIds,
         options
       );
-      
+
       res.json(result);
     } catch (error) {
       console.error("Schedule preview error:", error);
@@ -1651,15 +1659,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const searchFilter = req.query.search as string;
       console.log(`[API] Fetching Microsoft contacts for user ${req.user.id}${searchFilter ? ` with filter: ${searchFilter}` : ''}`);
-      
+
       const contacts = await microsoftCalendarService.getMicrosoftContacts(req.user.id, searchFilter);
-      
+
       const nijhuisContacts = contacts.filter(c => 
         c.emailAddresses?.some(e => e.address?.includes('nijhuis.nl'))
       );
-      
+
       console.log(`[API] Found ${contacts.length} total contacts (${nijhuisContacts.length} from Nijhuis domain)`);
-      
+
       res.json(contacts);
     } catch (error) {
       console.error("Error fetching Microsoft contacts:", error);
@@ -1754,7 +1762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // TODO: Implement integration settings storage
       const existingSettings = null; // await storage.getIntegrationSettings(req.user!.id, req.params.type);
-      
+
       if (existingSettings) {
         // const updated = await storage.updateIntegrationSettings(existingSettings.id, req.body);
         res.json({ message: "Settings updated successfully" });
@@ -1778,7 +1786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const configured = azureMigrationService.isConfigured();
       const migrationStatus = azureMigrationService.getMigrationStatus();
       const serviceHealth = await azureMigrationService.getAzureServiceHealth();
-      
+
       res.json({
         configured,
         migrationStatus,
@@ -1864,7 +1872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/digioffice/search", requireAuth, async (req, res) => {
     try {
       const { query, folderId, pageSize = 50, pageToken } = req.query;
-      
+
       if (!query) {
         return res.status(400).json({ message: "Search query is required" });
       }
@@ -1876,7 +1884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parseInt(pageSize as string),
         pageToken as string
       );
-      
+
       res.json(results);
     } catch (error) {
       console.error("DigiOffice search error:", error);
@@ -1914,11 +1922,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/digioffice/documents/:documentId", requireAuth, async (req, res) => {
     try {
       const document = await digiOfficeService.getDocument(req.user!.id, req.params.documentId);
-      
+
       if (!document) {
         return res.status(404).json({ message: "Document not found" });
       }
-      
+
       res.json(document);
     } catch (error) {
       console.error("DigiOffice document error:", error);
@@ -1954,11 +1962,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/digioffice/documents/:documentId/download-url", requireAuth, async (req, res) => {
     try {
       const downloadUrl = await digiOfficeService.getDocumentDownloadUrl(req.user!.id, req.params.documentId);
-      
+
       if (!downloadUrl) {
         return res.status(404).json({ message: "Download URL not available" });
       }
-      
+
       res.json({ downloadUrl });
     } catch (error) {
       console.error("DigiOffice download URL error:", error);
@@ -1969,14 +1977,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/digioffice/document-references", requireAuth, async (req, res) => {
     try {
       const { activityId, subtaskId, quickWinId, roadblockId, documentId, description } = req.body;
-      
+
       if (!documentId) {
         return res.status(400).json({ message: "Document ID is required" });
       }
 
       // Get document details from DigiOffice
       const document = await digiOfficeService.getDocument(req.user!.id, documentId);
-      
+
       if (!document) {
         return res.status(404).json({ message: "Document not found in DigiOffice" });
       }
@@ -2021,11 +2029,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/document-references/:referenceId", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteDocumentReference(parseInt(req.params.referenceId), req.user!.id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Document reference not found or not authorized" });
       }
-      
+
       res.json({ success: true });
     } catch (error) {
       console.error("Document reference deletion error:", error);
@@ -2039,7 +2047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
-      
+
       const tenants = await storage.getAllTenants();
       res.json(tenants);
     } catch (error) {
@@ -2053,7 +2061,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
-      
+
       const tenant = await storage.createTenant(req.body);
       res.status(201).json(tenant);
     } catch (error) {
@@ -2080,7 +2088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health/tests", async (req, res) => {
     try {
       const { spawn } = require('child_process');
-      
+
       // Run vitest in run mode (single execution)
       const vitestProcess = spawn('npx', ['vitest', 'run', '--reporter=json'], {
         cwd: process.cwd(),
@@ -2103,7 +2111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Parse the JSON output from vitest
           const lines = stdout.split('\n').filter(line => line.trim());
           let testResults = null;
-          
+
           // Find the JSON result line
           for (const line of lines) {
             try {
@@ -2225,7 +2233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user.id
       };
-      
+
       const integration = await storage.createCalendarIntegration(integrationData);
       res.status(201).json(integration);
     } catch (error) {
@@ -2343,7 +2351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate } = req.query;
       const start = startDate ? new Date(startDate) : undefined;
       const end = endDate ? new Date(endDate) : undefined;
-      
+
       const events = await storage.getCalendarEventsByUser(req.user.id, start, end);
       res.json(events);
     } catch (error) {
@@ -2366,7 +2374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { daysAhead } = req.query;
       const days = daysAhead ? parseInt(daysAhead) : 7;
-      
+
       const reminders = await storage.getUpcomingDeadlineReminders(req.user.id, days);
       res.json(reminders);
     } catch (error) {
@@ -2381,7 +2389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user.id
       };
-      
+
       const reminder = await storage.createDeadlineReminder(reminderData);
       res.status(201).json(reminder);
     } catch (error) {
@@ -2418,7 +2426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate } = req.query;
       const start = startDate ? new Date(startDate) : undefined;
       const end = endDate ? new Date(endDate) : undefined;
-      
+
       const blocks = await storage.getDeepFocusBlocks(req.user.id, start, end);
       res.json(blocks);
     } catch (error) {
@@ -2446,7 +2454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scheduledStart: req.body.scheduledStart ? new Date(req.body.scheduledStart) : undefined,
         scheduledEnd: req.body.scheduledEnd ? new Date(req.body.scheduledEnd) : undefined,
       };
-      
+
       const block = await storage.createDeepFocusBlock(blockData);
       res.status(201).json(block);
     } catch (error) {
@@ -2459,7 +2467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { selectedActivityId, selectedSubtaskId } = req.body;
-      
+
       const block = await storage.startDeepFocusBlock(parseInt(id), selectedActivityId, selectedSubtaskId);
       res.json(block);
     } catch (error) {
@@ -2472,7 +2480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { productivityRating, completionNotes } = req.body;
-      
+
       const block = await storage.endDeepFocusBlock(parseInt(id), productivityRating, completionNotes);
       res.json(block);
     } catch (error) {

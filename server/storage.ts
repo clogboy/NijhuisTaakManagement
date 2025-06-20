@@ -340,8 +340,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Daily task completions
-  async getDailyTaskCompletions(userId: number, date?: string): Promise<any[]> {
-    // Stub implementation - return empty array for now
+  async getDailyTaskCompletions(userId: number): Promise<any[]> {
     return [];
   }
 
@@ -387,13 +386,21 @@ export class DatabaseStorage implements IStorage {
 
   // Subtasks
   async getSubtasks(userId: number): Promise<any[]> {
-    // Return activities with parentId as subtasks
-    return await db.select().from(activities)
-      .where(and(
-        eq(activities.createdBy, userId),
-        sql`${activities.parentId} IS NOT NULL`
-      ))
-      .orderBy(desc(activities.createdAt));
+    try {
+      const userActivities = await this.getActivities(userId, '', false);
+      const subtasks = [];
+
+      for (const activity of userActivities) {
+        if (activity.subtasks && Array.isArray(activity.subtasks)) {
+          subtasks.push(...activity.subtasks);
+        }
+      }
+
+      return subtasks;
+    } catch (error) {
+      console.error('Error getting subtasks:', error);
+      return [];
+    }
   }
 
   async getSubtask(id: number): Promise<any | undefined> {
@@ -454,12 +461,35 @@ export class DatabaseStorage implements IStorage {
 
   // Quick wins
   async getQuickWins(userId: number): Promise<any[]> {
-    return await db.select().from(activities)
-      .where(and(
-        eq(activities.createdBy, userId),
-        eq(activities.type, 'quick_win')
-      ))
-      .orderBy(desc(activities.createdAt));
+    try {
+      const { db } = await import('./db');
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      const userActivities = await this.getActivities(userId, user.email, false);
+      const quickWins = [];
+
+      // Filter activities that are quick wins (estimated time <= 30 minutes)
+      for (const activity of userActivities) {
+        if (activity.estimatedMinutes && activity.estimatedMinutes <= 30) {
+          quickWins.push({
+            id: activity.id,
+            title: activity.title,
+            description: activity.description,
+            priority: activity.priority,
+            status: activity.status,
+            estimatedMinutes: activity.estimatedMinutes,
+            linkedActivityId: activity.id,
+            createdAt: activity.createdAt
+          });
+        }
+      }
+
+      return quickWins;
+    } catch (error) {
+      console.error('Error getting quick wins:', error);
+      return [];
+    }
   }
 
   async getQuickWinsByActivity(activityId: number): Promise<any[]> {
