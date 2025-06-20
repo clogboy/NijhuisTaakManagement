@@ -168,14 +168,17 @@ export default function QuickWins() {
   }, {} as Record<number, Activity>) || {};
 
   // Filter quick wins based on search query
-  const filteredQuickWins = Array.isArray(quickWins) ? quickWins.filter(qw => {
-    const matchesSearch = qw.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         qw.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  }) : [];
+  const searchTerm = searchQuery;
+
+  // Ensure quickWins is always an array before filtering
+  const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
+
+  const filteredQuickWins = quickWinsArray.filter((qw) => {
+    return qw.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           qw.description?.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   // Group quick wins by status
-  const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
   const quickWinsByStatus = {
     pending: filteredQuickWins.filter(qw => qw.status === "pending"),
     completed: filteredQuickWins.filter(qw => qw.status === "completed"),

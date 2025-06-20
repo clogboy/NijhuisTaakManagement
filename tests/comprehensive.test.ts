@@ -14,9 +14,43 @@ vi.mock('../server/db', () => ({
     values: vi.fn().mockReturnThis(),
     returning: vi.fn().mockReturnThis(),
     execute: vi.fn().mockResolvedValue([]),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
     $client: {
       execute: vi.fn().mockResolvedValue({ rows: [] })
     }
+  },
+  pool: {
+    connect: vi.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      release: vi.fn()
+    }),
+    end: vi.fn()
+  }
+}));
+
+// Mock the database pool utility
+vi.mock('../server/utils/database-pool', () => ({
+  databasePool: {
+    getPool: vi.fn().mockReturnValue({
+      connect: vi.fn().mockResolvedValue({
+        query: vi.fn().mockResolvedValue({ rows: [] }),
+        release: vi.fn()
+      }),
+      end: vi.fn()
+    }),
+    getDatabase: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue([])
+    })
   }
 }));
 

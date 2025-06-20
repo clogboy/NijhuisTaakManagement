@@ -93,8 +93,14 @@ describe('Authentication', () => {
 
     it('should reject invalid email formats', async () => {
       const validateEmail = (email: string): boolean => {
+        // More strict email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email) && !email.includes('..');
+        return emailRegex.test(email) && 
+               !email.includes('..') && 
+               !email.startsWith('@') && 
+               !email.endsWith('@') &&
+               email.includes('@') &&
+               email.split('@').length === 2;
       };
 
       const invalidEmails = [
