@@ -2,7 +2,8 @@ import { createServer, type Server } from "http";
 import express, { type Express, type Request, type Response } from "express";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db } from './db';
+import { users, activities, subtasks, analytics, quickWins, tenants, flowStrategies } from '@shared/schema';
 import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
 
 // Create temporary schemas for backwards compatibility  
@@ -10,6 +11,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { contacts, users, activities, activity_entries, subtasks } from "@shared/simplified-schema";
 import { insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema } from "@shared/schema";
 import { eq, and, sql, desc, ne } from "drizzle-orm";
+import { desc, count, and, or, gte, lte, isNull, inArray } from 'drizzle-orm';
 
 const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
