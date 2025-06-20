@@ -197,10 +197,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllTenants(): Promise<Tenant[]> {
-    return db.select().from(tenants).where(eq(tenants.isActive, true));
+    return db.select().from(tenants);
   }
 
-  // User operations
+  // User management
+  async getUserById(id: number): Promise<any> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || null;
+  }
+
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
