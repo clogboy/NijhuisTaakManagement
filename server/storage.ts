@@ -192,8 +192,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTenantByDomain(domain: string): Promise<Tenant | null> {
-    // Since we don't have domain field in simplified schema, return null for now
-    return null;
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.domain, domain));
+    return tenant || null;
   }
 
   async getAllTenants(): Promise<Tenant[]> {
