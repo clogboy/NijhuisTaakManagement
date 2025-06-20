@@ -168,11 +168,11 @@ export default function QuickWins() {
   }, {} as Record<number, Activity>) || {};
 
   // Filter quick wins based on search query
-  const filteredQuickWins = Array.isArray(quickWins) ? quickWins.filter(quickWin =>
-    quickWin.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    quickWin.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    activityMap[quickWin.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredQuickWins = Array.isArray(quickWins) ? quickWins.filter(qw => {
+    const matchesSearch = qw.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         qw.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  }) : [];
 
   // Group quick wins by status
   const quickWinsByStatus = {

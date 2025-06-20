@@ -1,4 +1,3 @@
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
@@ -29,7 +28,7 @@ vi.mock('../server/auth-config', () => ({
 
 describe('Authentication', () => {
   let app: express.Application;
-  
+
   beforeEach(() => {
     app = express();
     app.use(express.json());
@@ -45,7 +44,7 @@ describe('Authentication', () => {
         microsoftId: 'mock-ms-id',
         tenantId: 1,
       };
-      
+
       mockStorage.getUserByMicrosoftId.mockResolvedValue(mockUser);
 
       // This would be part of the actual auth route test
@@ -60,7 +59,7 @@ describe('Authentication', () => {
         domain: 'nijhuis.nl',
         slug: 'nijhuis',
       };
-      
+
       const newUser = {
         email: 'new@nijhuis.nl',
         name: 'New User',
@@ -68,7 +67,7 @@ describe('Authentication', () => {
         tenantId: 1,
         role: 'user',
       };
-      
+
       mockStorage.getUserByMicrosoftId.mockResolvedValue(undefined);
       mockStorage.getTenantByDomain.mockResolvedValue(mockTenant);
       mockStorage.createUser.mockResolvedValue({ id: 2, ...newUser });
@@ -86,25 +85,24 @@ describe('Authentication', () => {
         name: 'Test User',
         microsoftId: 'valid-id',
       };
-      
+
       expect(validAuthData.email).toContain('@');
       expect(validAuthData.name).toBeTruthy();
       expect(validAuthData.microsoftId).toBeTruthy();
     });
 
-    it('should reject invalid email formats', () => {
+    it('should reject invalid email formats', async () => {
       const invalidEmails = [
-        'not-an-email',
+        'invalid-email',
         '@domain.com',
         'user@',
-        '',
+        'user..name@domain.com'
       ];
-      
-      invalidEmails.forEach(email => {
-        // Check that invalid emails don't have both @ and . in proper format
-        const hasValidFormat = email.includes('@') && email.split('@')[1]?.includes('.');
-        expect(hasValidFormat).toBeFalsy();
-      });
+
+      for (const email of invalidEmails) {
+        const result = validateEmail(email);
+        expect(result).toBe(false);
+      }
     });
   });
 });

@@ -2097,7 +2097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unit tests health check endpoint
   app.get("/api/health/tests", async (req, res) => {
     try {
-      const { spawn } = require('child_process');
+      const { spawn } = await import('child_process');
 
       // Run vitest in run mode (single execution)
       const vitestProcess = spawn('npx', ['vitest', 'run', '--reporter=json'], {

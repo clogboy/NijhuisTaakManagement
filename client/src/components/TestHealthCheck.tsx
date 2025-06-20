@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,15 +36,15 @@ export default function TestHealthCheck() {
   const runTests = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/health/tests');
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to run tests');
       }
-      
+
       setTestData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -191,13 +190,38 @@ export default function TestHealthCheck() {
               </div>
             )}
 
-            {/* Errors */}
+            {/* Failed Tests Detail */}
+            {testData.testSummary.failedTests > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-red-800">Failed Tests</h4>
+                <div className="space-y-2">
+                  {testData.testFiles
+                    .filter(file => file.status === 'failed' || file.numFailed > 0)
+                    .map((file, index) => (
+                      <div key={index} className="p-3 border border-red-200 rounded-lg bg-red-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-mono text-sm font-medium text-red-800">{file.name}</span>
+                          <Badge className="bg-red-100 text-red-800" variant="outline">
+                            {file.numFailed} failed
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-red-700">
+                          Common issues: Database connection errors, authentication failures, data validation
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Error Details */}
             {testData.hasErrors && testData.errors.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium text-red-800">Errors</h4>
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <h4 className="font-medium text-red-800">Error Details</h4>
+                <div className="p-3 border border-red-200 rounded-lg bg-red-50">
                   <pre className="text-sm text-red-700 whitespace-pre-wrap overflow-x-auto">
-                    {testData.errors.join('\n')}
+                    {testData.errors.slice(0, 3).join('\n')}
+                    {testData.errors.length > 3 && '\n... and more errors'}
                   </pre>
                 </div>
               </div>
