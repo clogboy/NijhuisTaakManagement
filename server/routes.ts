@@ -41,8 +41,11 @@ function requireAuth(req: Request, res: Response, next: any) {
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // Initialize WebSocket server
-  const wss = new WebSocketServer({ server: httpServer });
+  // Initialize WebSocket server with path to avoid conflicts with Vite HMR
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/api/ws'
+  });
 
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected');

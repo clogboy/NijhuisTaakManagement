@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { culturalDateSchema } from "./validation/date-utils";
@@ -247,13 +247,7 @@ export const subtasks = pgTable("subtasks", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Add unique constraint on email+tenantId instead of just email
-export const userEmailTenantConstraint = pgTable("users", {
-  email: text("email").notNull(),
-  tenantId: integer("tenant_id").notNull(),
-}, (table) => ({
-  emailTenantUnique: unique().on(table.email, table.tenantId),
-}));
+// Note: Unique constraint on email+tenantId can be added via database migration if needed
 
 // Insert schemas
 export const insertTenantSchema = createInsertSchema(tenants).omit({
