@@ -1,4 +1,3 @@
-
 import { createServer, type Server } from "http";
 import express, { type Express, type Request, type Response } from "express";
 import { WebSocketServer } from "ws";
@@ -45,7 +44,7 @@ function requireAuth(req: Request, res: Response, next: any) {
       updated_at: new Date()
     };
   }
-  
+
   if (!req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
@@ -58,18 +57,37 @@ export function registerRoutes(app: Express): Server {
   // Initialize WebSocket server with path to avoid conflicts with Vite HMR
   const wss = new WebSocketServer({ 
     server: httpServer,
-    path: '/api/ws'
+    path: '/api/ws',
+    perMessageDeflate: false,
+    clientTracking: true
   });
 
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected');
-    
+
+    // Send ping every 30 seconds to keep connection alive
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === ws.OPEN) {
+        ws.ping();
+      }
+    }, 30000);
+
     ws.on('message', (message) => {
-      console.log('Received WebSocket message:', message.toString());
+      try {
+        console.log('Received WebSocket message:', message.toString());
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
     });
 
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
+      clearInterval(pingInterval);
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      clearInterval(pingInterval);
     });
   });
 
@@ -203,13 +221,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Subtasks endpoints
   app.get("/api/subtasks", requireAuth, async (req, res) => {
     try {
       console.log("Fetching subtasks for user:", req.user.id);
+
+      // Check if storage method exists
+      if (typeof storage.getSubtasks !== 'function') {
+        console.warn("getSubtasks method not available, returning empty array");
+        return res.json([]);
+      }
+
       const subtasks = await storage.getSubtasks(req.user.id);
-      console.log("Subtasks fetched successfully:", subtasks?.length || 0);
-      res.json(Array.isArray(subtasks) ? subtasks : []);
+      console.log("Subtasks fetched successfully:", Array.isArray(subtasks) ? subtasks.length : 0);
+
+      // Always return an array, handle null/undefined
+      const result = Array.isArray(subtasks) ? subtasks : [];
+      res.json(result);
     } catch (error) {
       console.error("Error fetching subtasks:", error);
       // Always return 200 with empty array to prevent client crashes

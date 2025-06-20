@@ -183,14 +183,18 @@ export default function QuickWins() {
   const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
 
   const filteredQuickWins = React.useMemo(() => {
-    const validQuickWins = Array.isArray(quickWins) ? quickWins : [];
-    return validQuickWins.filter(qw => {
+    // Ensure quickWins is always an array and handle undefined/null cases
+    if (!quickWins || !Array.isArray(quickWins)) {
+      return [];
+    }
+
+    return quickWins.filter((quickWin) => {
+      if (!quickWin) return false;
+
       const matchesSearch = searchTerm === "" || 
-        qw.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        qw.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = filterStatus === "all" || qw.status === filterStatus;
-
+        quickWin.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        quickWin.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || quickWin.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
   }, [quickWins, searchTerm, filterStatus]);
@@ -437,14 +441,13 @@ export default function QuickWins() {
                                 </Badge>
                               </div>
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          {subtask.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              {subtask.description}
-                            </p>
-                          )}
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            {subtask.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                {subtask.description}
+                              </p>
+                            )}
 
                           <div className="space-y-2 text-xs text-gray-500">
                             <div className="flex items-center gap-2">
