@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslations } from "@/hooks/useTranslations";
 import { downloadXMLFile } from "@/utils/xmlExport";
+import TestHealthCheck from "@/components/TestHealthCheck";
 
 import {
   User as UserIcon,
@@ -28,7 +29,8 @@ import {
   Settings2,
   Play,
   Pause,
-  RefreshCw
+  RefreshCw,
+  Activity
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 
@@ -86,7 +88,7 @@ export default function Settings() {
   useEffect(() => {
     if (serverPreferences) {
       setPreferences(serverPreferences);
-      
+
       // Apply dark mode immediately when preferences load
       if (serverPreferences.darkMode !== undefined) {
         if (serverPreferences.darkMode) {
@@ -139,7 +141,7 @@ export default function Settings() {
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/subtasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
-      
+
       toast({
         title: "Conversion Complete",
         description: `Converted ${data.totalConverted || 0} overdue subtasks to roadblocks across ${data.usersProcessed || 0} users`,
@@ -164,12 +166,12 @@ export default function Settings() {
   const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
     const newPreferences = { ...preferences, [key]: value };
     setPreferences(newPreferences);
-    
+
     // Apply immediate UI changes
     if (key === 'compactSidebar') {
       localStorage.setItem('sidebar-collapsed', JSON.stringify(value));
     }
-    
+
     if (key === 'darkMode') {
       // Apply dark mode immediately to document
       if (value) {
@@ -178,7 +180,7 @@ export default function Settings() {
         document.documentElement.classList.remove('dark');
       }
     }
-    
+
     // Debounced save to server
     setTimeout(() => {
       updatePreferencesMutation.mutate({ [key]: value });
@@ -190,7 +192,7 @@ export default function Settings() {
     const newWorkingHours = { ...currentWorkingHours, [type]: value };
     const newPreferences = { ...preferences, workingHours: newWorkingHours };
     setPreferences(newPreferences);
-    
+
     setTimeout(() => {
       updatePreferencesMutation.mutate({ workingHours: newWorkingHours });
     }, 500);
@@ -223,7 +225,7 @@ export default function Settings() {
             User ID: {user?.user.id}
           </Badge>
         </div>
-        
+
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Information */}
           <Card>
@@ -570,7 +572,7 @@ export default function Settings() {
                   }
                 />
               </div>
-              
+
               {user?.user?.role === 'admin' && (
                 <>
                   <Separator />
@@ -589,7 +591,7 @@ export default function Settings() {
                       {convertOverdueSubtasksMutation.isPending ? "Converting..." : "Convert Overdue Subtasks"}
                     </Button>
                   </div>
-                  
+
                   {apiUsageStats && (
                     <>
                       <Separator />
@@ -622,6 +624,22 @@ export default function Settings() {
                   )}
                 </>
               )}
+            </CardContent>
+          </Card>
+
+          {/* System Health */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                System Health
+              </CardTitle>
+              <CardDescription>
+                Monitor the health of your application's unit tests
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TestHealthCheck />
             </CardContent>
           </Card>
 

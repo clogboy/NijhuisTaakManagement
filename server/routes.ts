@@ -2074,6 +2074,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Unit tests health check endpoint
+  app.get("/api/health/tests", async (req, res) => {
+    try {
+      const { spawn } = require('child_process');
+      
+      // Run vitest in run mode (single execution)
+      const vitestProcess = spawn('npx', ['vitest', 'run', '--reporter=json'], {
+        cwd: process.cwd(),
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      vitestProcess.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      vitestProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      vitestProcess.on('close', (code) => {
+        try {
+          // Parse the JSON output from vitest
+          const lines = stdout.split('\n').filter(line => line.trim());
+          let testResults = null;
+          
+          // Find the JSON result line
+          for (const line of lines) {
+            try {
+              const parsed = JSON.parse(line);
+              if (parsed.testResults || parsed.numTotalTests !== undefined) {
+                testResults = parsed;
+                break;
+              }
+            } catch (e) {
+              // Not JSON, continue
+            }
+          }
+
+          if (!testResults) {
+            // Fallback: try to parse the last line
+            const lastLine = lines[lines.length - 1];
+            if (lastLine) {
+              try {
+                testResults = JSON.parse(lastLine);
+              } catch (e) {
+                // If JSON parsing fails, create a basic response
+                testResults = {
+                  success: code === 0,
+                  numTotalTests: 0,
+                  numPassedTests: code === 0 ? 0 : 0,
+                  numFailedTests: code === 0 ? 0 : 1,
+                  testResults: []
+                };
+              }
+            }
+          }
+
+          const response = {
+            status: code === 0 ? "healthy" : "unhealthy",
+            timestamp: new Date().toISOString(),
+            testSummary: {
+              totalTests: testResults?.numTotalTests || 0,
+              passedTests: testResults?.numPassedTests || 0,
+              failedTests: testResults?.numFailedTests || 0,
+              skippedTests: testResults?.numPendingTests || 0,
+              duration: testResults?.duration || 0,
+              success: code === 0
+            },
+            testFiles: testResults?.testResults?.map((file: any) => ({
+              name: file.name || file.file || 'unknown',
+              status: file.status || (file.numFailingTests > 0 ? 'failed' : 'passed'),
+              duration: file.duration || 0,
+              numTests: file.numPassingTests + file.numFailingTests || 0,
+              numPassed: file.numPassingTests || 0,
+              numFailed: file.numFailingTests || 0
+            })) || [],
+            exitCode: code,
+            hasErrors: stderr.length > 0,
+            errors: stderr ? stderr.split('\n').filter(line => line.trim()) : []
+          };
+
+          res.json(response);
+        } catch (error) {
+          console.error('Error parsing test results:', error);
+          res.status(500).json({
+            status: "error",
+            timestamp: new Date().toISOString(),
+            message: "Failed to parse test results",
+            error: error.message,
+            rawOutput: stdout,
+            rawErrors: stderr
+          });
+        }
+      });
+
+      vitestProcess.on('error', (error) => {
+        console.error('Failed to start test process:', error);
+        res.status(500).json({
+          status: "error",
+          timestamp: new Date().toISOString(),
+          message: "Failed to start test runner",
+          error: error.message
+        });
+      });
+
+      // Set a timeout to prevent hanging
+      setTimeout(() => {
+        if (!vitestProcess.killed) {
+          vitestProcess.kill();
+          res.status(408).json({
+            status: "timeout",
+            timestamp: new Date().toISOString(),
+            message: "Test execution timed out after 30 seconds"
+          });
+        }
+      }, 30000);
+
+    } catch (error) {
+      console.error('Test health check error:', error);
+      res.status(500).json({
+        status: "error",
+        timestamp: new Date().toISOString(),
+        message: "Test health check failed",
+        error: error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // Calendar Integration API
   app.get("/api/calendar/integrations", requireAuth, async (req: any, res) => {
