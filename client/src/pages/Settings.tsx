@@ -17,7 +17,7 @@ import TestHealthCheck from "@/components/TestHealthCheck";
 
 import { 
   Settings as SettingsIcon, 
-  User, 
+  User as UserIcon, 
   Bell, 
   Shield, 
   Zap, 
