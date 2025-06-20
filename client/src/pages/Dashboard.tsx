@@ -573,11 +573,22 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           <div className="space-y-8">
 
             {/* Productivity Health Card - Keep this visible in focus mode */}
-            {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && (
+            {userPreferences?.productivityHealthEnabled === true && !healthCardDismissed && stats && (
               <ProductivityHealthCard
+                stats={{
+                  urgentCount: stats.urgentCount || 0,
+                  dueThisWeek: stats.dueThisWeek || 0,
+                  completedCount: stats.completedCount || 0,
+                  activeContacts: stats.activeContacts || 0,
+                  overdueCount: stats.overdueCount || 0,
+                  roadblocksCount: stats.roadblocksCount || 0,
+                  quickWinsCount: quickWins?.length || 0,
+                  subtasksCompleted: subtasks?.filter(s => s.completed).length || 0,
+                  totalSubtasks: subtasks?.length || 0
+                }}
                 onDismiss={() => setHealthCardDismissed(true)}
-                userPreferences={userPreferences}
-                updatePreferences={updatePreferencesMutation.mutate}
+                onDisable={() => updatePreferencesMutation.mutate({ productivityHealthEnabled: false })}
+                showSettings={true}
               />
             )}
 
