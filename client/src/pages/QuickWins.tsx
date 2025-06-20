@@ -423,27 +423,28 @@ export default function QuickWins() {
 
                     return (
                       <Card key={`subtask-${subtask.id}`} className={`transition-all hover:shadow-md ${isOverdue ? "ring-2 ring-red-200" : ""}`}>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-sm font-medium mb-2">
-                                {subtask.title}
-                              </CardTitle>
-                              <div className="flex gap-2 mb-2">
-                                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                  Quick Win
-                                </Badge>
-                                <Badge className={`${
-                                  subtask.status === "completed" || subtask.status === "resolved" 
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                    : subtask.status === "in_progress" 
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                                }`}>
-                                  {subtask.status === "pending" ? "In wachtrij" :
-                                   subtask.status === "in_progress" ? "In uitvoering" :
-                                   subtask.status === "completed" ? "Voltooid" : "Opgelost"}
-                                </Badge>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <CardTitle className="text-sm font-medium mb-2">
+                                  {subtask.title}
+                                </CardTitle>
+                                <div className="flex gap-2 mb-2">
+                                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    Quick Win
+                                  </Badge>
+                                  <Badge className={`${
+                                    subtask.status === "completed" || subtask.status === "resolved" 
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                      : subtask.status === "in_progress" 
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                  }`}>
+                                    {subtask.status === "pending" ? "In wachtrij" :
+                                     subtask.status === "in_progress" ? "In uitvoering" :
+                                     subtask.status === "completed" ? "Voltooid" : "Opgelost"}
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
                           </CardHeader>
