@@ -22,6 +22,7 @@ interface TestHealthData {
     numTests: number;
     numPassed: number;
     numFailed: number;
+    failures: string[];
   }>;
   exitCode: number;
   hasErrors: boolean;
@@ -182,7 +183,10 @@ export default function TestHealthCheck() {
                         <span className="font-mono text-sm">{file.name}</span>
                       </div>
                       <div className="text-sm text-gray-600">
-                        {file.numPassed}/{file.numTests} passed • {file.duration}ms
+                        {file.numTests > 0 
+                        ? `${file.numPassed}/${file.numTests} passed • ${Math.round(file.duration)}ms`
+                        : `${file.status} • ${Math.round(file.duration)}ms`
+                      }
                       </div>
                     </div>
                   ))}
