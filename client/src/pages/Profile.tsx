@@ -68,11 +68,11 @@ export default function Profile() {
                 <label className="text-sm font-medium text-gray-700">{t('profile.role')}</label>
                 <div className="mt-1">
                   <Badge 
-                    variant={user.user.role === "admin" ? "default" : "secondary"}
+                    variant={user.user?.role === "admin" ? "default" : "secondary"}
                     className="flex items-center w-fit"
                   >
                     <Shield className="mr-1 h-3 w-3" />
-                    {user.user.role === "admin" ? t('profile.admin') : t('profile.user')}
+                    {user.user?.role === "admin" ? t('profile.admin') : t('profile.user')}
                   </Badge>
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function Profile() {
                 <label className="text-sm font-medium text-gray-700">{t('profile.memberSince')}</label>
                 <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50 flex items-center">
                   <Calendar className="mr-2 h-4 w-4 text-gray-500" />
-                  {new Date(user.user.createdAt).toLocaleDateString()}
+                  {user.user?.createdAt ? new Date(user.user.createdAt).toLocaleDateString() : "Unknown"}
                 </div>
               </div>
             </div>
