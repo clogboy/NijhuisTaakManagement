@@ -327,55 +327,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.dueDate = new Date(dateValue);
       }
       
-      const activityData = insertActivitySchema.parse(data);
       const activity = await storage.createActivity({
-        ...activityData,
+        ...data,
         createdBy: req.user.id,
       });
-
-      // Send email notifications to participants and collaborators
-      const authorName = req.user.name || req.user.email;
-      const authorEmail = req.user.email;
-
-      // Notify participants (they can interact with the activity)
-      if (activity.participants && activity.participants.length > 0) {
-        for (const participantEmail of activity.participants) {
-          if (participantEmail !== authorEmail) { // Don't notify the author
-            try {
-              await emailService.sendActivityInvitation(
-                participantEmail,
-                activity.title,
-                activity.description || '',
-                authorName,
-                authorEmail,
-                activity.id
-              );
-            } catch (error) {
-              console.error(`Failed to send invitation to ${participantEmail}:`, error);
-            }
-          }
-        }
-      }
-
-      // Notify collaborators (they have read-only access)
-      if (activity.collaborators && activity.collaborators.length > 0) {
-        for (const collaboratorEmail of activity.collaborators) {
-          if (collaboratorEmail !== authorEmail) { // Don't notify the author
-            try {
-              await emailService.sendCollaboratorInvitation(
-                collaboratorEmail,
-                activity.title,
-                activity.description || '',
-                authorName,
-                authorEmail,
-                activity.id
-              );
-            } catch (error) {
-              console.error(`Failed to send collaboration invite to ${collaboratorEmail}:`, error);
-            }
-          }
-        }
-      }
 
       res.json(activity);
     } catch (error) {
@@ -395,8 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.dueDate = new Date(dateValue);
       }
       
-      const activityData = insertActivitySchema.partial().parse(data);
-      const activity = await storage.updateActivity(activityId, activityData);
+      const activity = await storage.updateActivity(activityId, data);
       res.json(activity);
     } catch (error) {
       console.error("Update activity error:", error);
@@ -425,13 +379,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "New owner ID is required" });
       }
 
-      const updatedActivity = await storage.transferActivityOwnership(
-        activityId, 
-        newOwnerId, 
-        req.user.id
-      );
+      // Simplified: just update the created_by field
+      const activity = await storage.updateActivity(activityId, { createdBy: newOwnerId });
       
-      res.json(updatedActivity);
+      res.json(activity);
     } catch (error) {
       console.error("Transfer ownership error:", error);
       res.status(400).json({ message: error.message || "Failed to transfer ownership" });
@@ -461,11 +412,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Activity logs routes
+  // Activity logs routes (simplified - using activity_entries)
   app.get("/api/activities/:id/logs", requireAuth, async (req: any, res) => {
     try {
       const activityId = parseInt(req.params.id);
-      const logs = await storage.getActivityLogs(activityId);
+      // Return activity entries for now
+      const logs = await db.select().from(activity_entries)
+        .where(eq(activity_entries.activityId, activityId))
+        .orderBy(desc(activity_entries.createdAt));
       res.json(logs);
     } catch (error) {
       console.error("Get activity logs error:", error);
@@ -476,12 +430,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/activities/:id/logs", requireAuth, async (req: any, res) => {
     try {
       const activityId = parseInt(req.params.id);
-      const logData = insertActivityLogSchema.parse(req.body);
-      const log = await storage.createActivityLog({
-        ...logData,
+      const [log] = await db.insert(activity_entries).values({
         activityId,
+        type: 'log',
+        content: req.body.entry || req.body.content,
+        metadata: {},
         createdBy: req.user.id,
-      });
+      }).returning();
       res.json(log);
     } catch (error) {
       console.error("Create activity log error:", error);
@@ -489,10 +444,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Quick wins routes
+  // Quick wins routes (stub implementation)
   app.get("/api/quickwins", requireAuth, async (req: any, res) => {
     try {
-      const quickWins = await storage.getQuickWins(req.user.id);
+      // Return activities marked as quick wins
+      const quickWins = await db.select().from(activities)
+        .where(and(
+          eq(activities.createdBy, req.user.id),
+          eq(activities.type, 'quick_win')
+        ))
+        .orderBy(desc(activities.createdAt));
       res.json(quickWins);
     } catch (error) {
       console.error("Get quick wins error:", error);
@@ -502,11 +463,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quickwins", requireAuth, async (req: any, res) => {
     try {
-      const quickWinData = insertQuickWinSchema.parse(req.body);
-      const quickWin = await storage.createQuickWin({
-        ...quickWinData,
+      const [quickWin] = await db.insert(activities).values({
+        title: req.body.title,
+        description: req.body.description,
+        type: 'quick_win',
+        priority: 'low',
+        status: 'pending',
         createdBy: req.user.id,
-      });
+      }).returning();
       res.json(quickWin);
     } catch (error) {
       console.error("Create quick win error:", error);
@@ -517,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/quickwins/:id", requireAuth, async (req: any, res) => {
     try {
       const quickWinId = parseInt(req.params.id);
-      await storage.deleteQuickWin(quickWinId);
+      await db.delete(activities).where(eq(activities.id, quickWinId));
       res.json({ success: true });
     } catch (error) {
       console.error("Delete quick win error:", error);
@@ -625,10 +589,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Roadblocks routes
+  // Roadblocks routes (stub implementation)
   app.get("/api/roadblocks", requireAuth, async (req: any, res) => {
     try {
-      const roadblocks = await storage.getRoadblocks(req.user.id, req.user.role === "admin");
+      // Return activities marked as roadblocks
+      const roadblocks = await db.select().from(activities)
+        .where(and(
+          eq(activities.createdBy, req.user.id),
+          eq(activities.type, 'roadblock')
+        ))
+        .orderBy(desc(activities.createdAt));
       res.json(roadblocks);
     } catch (error) {
       console.error("Get roadblocks error:", error);
@@ -712,16 +682,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Subtasks routes (unified Quick Wins and Roadblocks)
+  // Subtasks routes (stub implementation)
   app.get("/api/subtasks", requireAuth, async (req: any, res) => {
     try {
-      const allSubtasks = await storage.getSubtasks(req.user.id);
-      // Filter subtasks to only show those assigned to the current user
-      const userEmail = req.user.email;
-      const assignedSubtasks = allSubtasks.filter(subtask => 
-        subtask.participants.includes(userEmail)
-      );
-      res.json(assignedSubtasks);
+      // Return child activities as subtasks
+      const subtasks = await db.select().from(activities)
+        .where(and(
+          eq(activities.createdBy, req.user.id),
+          sql`${activities.parentId} IS NOT NULL`
+        ))
+        .orderBy(desc(activities.createdAt));
+      res.json(subtasks);
     } catch (error) {
       console.error("Get subtasks error:", error);
       res.status(500).json({ message: "Failed to fetch subtasks" });
