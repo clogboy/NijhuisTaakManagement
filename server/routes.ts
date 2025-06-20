@@ -32,6 +32,20 @@ import { bimCollabService } from "./bimcollab-service";
 
 // Add auth middleware
 function requireAuth(req: Request, res: Response, next: any) {
+  // For development, create a mock user if none exists
+  if (!req.user && process.env.NODE_ENV === 'development') {
+    req.user = {
+      id: 1,
+      email: 'dev@nijhuis.nl',
+      name: 'Development User',
+      role: 'user',
+      tenant_id: 1,
+      microsoft_id: 'dev-user',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+  }
+  
   if (!req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
@@ -60,6 +74,25 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Auth endpoints
+  app.post("/api/auth/login", async (req, res) => {
+    // For development, create a session
+    if (process.env.NODE_ENV === 'development') {
+      req.session.user = {
+        id: 1,
+        email: 'dev@nijhuis.nl',
+        name: 'Development User',
+        role: 'user',
+        tenant_id: 1,
+        microsoft_id: 'dev-user',
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      req.user = req.session.user;
+      return res.json({ success: true, user: req.user });
+    }
+    res.status(501).json({ message: "Production auth not implemented" });
+  });
+
   app.get("/api/auth/me", requireAuth, async (req, res) => {
     try {
       const user = await storage.getUserById(req.user.id);
@@ -180,7 +213,7 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error fetching subtasks:", error);
       // Return empty array instead of error to prevent client-side crashes
-      res.json([]);
+      res.status(200).json([]);
     }
   });
 

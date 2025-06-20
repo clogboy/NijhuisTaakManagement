@@ -26,10 +26,18 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     secure: false, // Allow non-HTTPS in development
-    httpOnly: true,
+    httpOnly: false, // Allow client-side access in development
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
+
+// Add user session middleware
+app.use((req, res, next) => {
+  if (req.session?.user) {
+    req.user = req.session.user;
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

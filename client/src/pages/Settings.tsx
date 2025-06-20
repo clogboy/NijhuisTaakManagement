@@ -33,7 +33,16 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Info
+  Info,
+  Save,
+  Moon,
+  Sun,
+  Calendar,
+  Brain,
+  Sidebar,
+  TestTube,
+  RefreshCw,
+  Download
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 

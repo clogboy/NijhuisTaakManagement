@@ -22,7 +22,7 @@ export default function Login() {
       try {
         // In production, this would use MSAL library
         const microsoftUser = await mockMicrosoftLogin();
-        
+
         const response = await apiRequest("/api/auth/login", "POST", microsoftUser);
         return await response.json();
       } finally {
@@ -97,6 +97,31 @@ export default function Login() {
                   {t("login.microsoftSignIn")}
                 </div>
               )}
+            </Button>
+
+            <Button 
+              type="button" 
+              className="w-full" 
+              disabled={isLoading}
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dev: true })
+                  });
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                } catch (error) {
+                  console.error('Login error:', error);
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              {isLoading ? "Signing in..." : "Sign in (Development)"}
             </Button>
 
             <div className="text-center">
