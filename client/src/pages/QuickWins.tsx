@@ -37,9 +37,11 @@ export default function QuickWins() {
     queryFn: async () => {
       const response = await fetch("/api/quickwins", { credentials: "include" });
       if (!response.ok) {
-        throw new Error("Failed to fetch quick wins");
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      // Ensure we always get an array
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -169,6 +171,11 @@ export default function QuickWins() {
 
   // Filter quick wins based on search query
   const searchTerm = searchQuery;
+
+    // Ensure quickWins is always an array before filtering
+  const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
+  const activeQuickWins = safeQuickWins.filter((qw: any) => qw.status !== 'completed');
+  const completedQuickWins = safeQuickWins.filter((qw: any) => qw.status === 'completed');
 
   // Ensure quickWins is always an array before filtering
   const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];

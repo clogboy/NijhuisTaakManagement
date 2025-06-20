@@ -210,10 +210,14 @@ export default function TestHealthCheck() {
                           </Badge>
                         </div>
                         <div className="text-sm text-red-700">
-                          {file.numFailed} failed
-                          {file.numFailed > 0 && (
-                            <div className="mt-1 text-xs">
-                              Common issues: Database connection errors, authentication failures, data validation
+                          <div className="font-medium">{file.numFailed} failed out of {file.numTests} tests</div>
+                          {file.failures && file.failures.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {file.failures.map((failure, failIndex) => (
+                                <div key={failIndex} className="text-xs bg-red-100 p-2 rounded border-l-2 border-red-300">
+                                  {failure}
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
