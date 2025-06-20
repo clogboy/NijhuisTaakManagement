@@ -174,10 +174,7 @@ export default function QuickWins() {
   // Filter quick wins based on search query
   const searchTerm = searchQuery;
 
-  const { data: quickWins, isLoading } = useQuery<QuickWin[]>({
-    queryKey: ["/api/quickwins"],
-  });
-
+  // Use the existing quickWins data from above
   // Ensure quickWins is always an array
   const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
   const activeQuickWins = safeQuickWins.filter((qw: any) => qw.status !== 'completed');

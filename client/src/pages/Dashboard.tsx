@@ -446,9 +446,9 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       // Use smart prioritization if available, fall back to basic priority
       if (smartInsights) {
         const allPrioritizedActivities = [
-          ...smartInsights.topPriority,
-          ...smartInsights.quickWins,
-          ...Object.values(smartInsights.timeSlotSuggestions).flat()
+          ...(smartInsights.topPriority || []),
+          ...(smartInsights.quickWins || []),
+          ...Object.values(smartInsights.timeSlotSuggestions || {}).flat()
         ];
         
         const aSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === a.id);

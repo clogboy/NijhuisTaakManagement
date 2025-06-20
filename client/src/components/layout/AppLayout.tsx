@@ -380,7 +380,7 @@ export default function AppLayout({
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-ms-blue text-white">
-                        {getInitials(user.user.name)}
+                        {getInitials(user.user?.name || 'U')}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -388,15 +388,15 @@ export default function AppLayout({
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.user.name}</p>
+                      <p className="text-sm font-medium leading-none">{user.user?.name || 'User'}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.user.email}
+                        {user.user?.email || 'user@example.com'}
                       </p>
                       <Badge 
-                        variant={user.user.role === "admin" ? "default" : "secondary"} 
+                        variant={user.user?.role === "admin" ? "default" : "secondary"} 
                         className="text-xs w-fit"
                       >
-                        {user.user.role === "admin" ? "Admin" : "User"}
+                        {user.user?.role === "admin" ? "Admin" : "User"}
                       </Badge>
                     </div>
                   </DropdownMenuLabel>

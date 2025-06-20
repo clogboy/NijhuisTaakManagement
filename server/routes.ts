@@ -3,20 +3,16 @@ import express, { type Express, type Request, type Response } from "express";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 import { db } from './db';
-import { users, activities, subtasks, analytics, quickWins, tenants, flowStrategies } from '@shared/schema';
-import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
-
-// Create temporary schemas for backwards compatibility  
 import { createInsertSchema } from "drizzle-zod";
-import { contacts, users, activities, activity_entries, subtasks } from "@shared/simplified-schema";
-import { insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema } from "@shared/schema";
-import { eq, and, sql, desc, ne } from "drizzle-orm";
-import { desc, count, and, or, gte, lte, isNull, inArray } from 'drizzle-orm';
+import { eq, and, sql, desc, ne, count, or, gte, lte, isNull, inArray } from "drizzle-orm";
+
+// Schema imports
+import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
+import { contacts, users as schemaUsers, activities as schemaActivities, activity_entries } from "@shared/simplified-schema";
+import { insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema, quickWins, tenants, flowStrategies } from "@shared/schema";
 
 const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
-  created_at: true,
-  updated_at: true,
 });
 
 // Import services
@@ -29,7 +25,7 @@ import { analyticsService } from "./analytics-service";
 import { auditService } from "./audit-service";
 import { azureMigrationService } from "./azure-migration-service";
 import { digiOfficeService } from "./digioffice-service";
-import { bimCollabService } from "./bimcollab-service";
+import { bimcollabService } from "./bimcollab-service";
 
 // Add auth middleware
 function requireAuth(req: Request, res: Response, next: any) {
@@ -376,7 +372,7 @@ export function registerRoutes(app: Express): Server {
 
       // Test database connection
       try {
-        await db.select().from(users).limit(1);
+        await db.select().from(schemaUsers).limit(1);
       } catch (error) {
         testResults.status = 'unhealthy';
         testResults.testSummary.failedTests = 1;
