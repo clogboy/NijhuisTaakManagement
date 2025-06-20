@@ -104,13 +104,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         // Create new user within the tenant
         const role = email === "b.weinreder@nijhuis.nl" ? "admin" : "user";
-        user = await storage.createUser({
-          tenantId: tenant.id,
-          email,
-          name,
-          microsoftId,
-          role,
-        });
+        try {
+          user = await storage.createUser({
+            tenantId: tenant.id,
+            email,
+            name,
+            microsoftId,
+            role,
+          });
+        } catch (createError: any) {
+          // If user creation fails due to duplicate email, try to find the existing user
+          if (createError.code === '23505') {
+            user = await storage.getUserByEmail(email, tenant.id);
+            if (user && !user.microsoftId) {
+              user = await storage.updateUser(user.id, { microsoftId, name });
+            }
+          } else {
+            throw createError;
+          }
+        }
       }
 
       // Set user session
