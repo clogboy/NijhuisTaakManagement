@@ -115,11 +115,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (createError: any) {
           // If user creation fails due to duplicate email, try to find the existing user
           if (createError.code === '23505') {
+            console.log(`[AUTH] User with email ${email} already exists, attempting to find and update`);
             user = await storage.getUserByEmail(email, tenant.id);
-            if (user && !user.microsoftId) {
+            if (user) {
+              // Update the existing user with Microsoft ID and latest name
               user = await storage.updateUser(user.id, { microsoftId, name });
+              console.log(`[AUTH] Updated existing user ${user.id} with Microsoft ID`);
+            } else {
+              // If we can't find the user by email in this tenant, there might be a cross-tenant issue
+              console.error(`[AUTH] Could not find user with email ${email} in tenant ${tenant.id} after duplicate constraint error`);
+              return res.status(500).json({ message: "User exists but cannot be accessed in this tenant" });
             }
           } else {
+            console.error(`[AUTH] User creation failed with error:`, createError);
             throw createError;
           }
         }
@@ -127,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ensure we have a user before proceeding
       if (!user) {
-        console.error("Failed to create or find user after all attempts");
+        console.error(`[AUTH] Failed to create or find user after all attempts for email: ${email}`);
         return res.status(500).json({ message: "Failed to create user account" });
       }
 
