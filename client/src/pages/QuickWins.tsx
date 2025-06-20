@@ -14,6 +14,7 @@ import { Edit, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TaskCelebration from "@/components/celebrations/TaskCelebration";
+import React from "react";
 
 export default function QuickWins() {
   const { t } = useTranslations();
@@ -31,6 +32,7 @@ export default function QuickWins() {
     taskType: 'quickwin',
     taskTitle: ''
   });
+  const [filterStatus, setFilterStatus] = useState("all"); // Add filterStatus state
 
   const { data: quickWinsData, isLoading: quickWinsLoading, error: quickWinsError } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
@@ -180,10 +182,18 @@ export default function QuickWins() {
   // Ensure quickWins is always an array before filtering
   const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
 
-  const filteredQuickWins = (Array.isArray(quickWins) ? quickWins : []).filter(qw =>
-    qw.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    qw.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredQuickWins = React.useMemo(() => {
+    const validQuickWins = Array.isArray(quickWins) ? quickWins : [];
+    return validQuickWins.filter(qw => {
+      const matchesSearch = searchTerm === "" || 
+        qw.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        qw.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus = filterStatus === "all" || qw.status === filterStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [quickWins, searchTerm, filterStatus]);
 
   // Group quick wins by status
   const quickWinsByStatus = {

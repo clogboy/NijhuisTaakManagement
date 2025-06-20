@@ -186,6 +186,96 @@ interface ErrorReport {
 }
 
 class ErrorReportingService {
+  private errorLog: ErrorReport[] = [];
+  private isInitialized = false;
+  
+  initialize() {
+    if (this.isInitialized) return;
+    
+    // Schedule daily error report email
+    this.scheduleDailyReport();
+    this.isInitialized = true;
+  }
+  
+  logError(error: ErrorReport) {
+    this.errorLog.push(error);
+    console.error('[ERROR REPORTING]', error);
+  }
+  
+  private scheduleDailyReport() {
+    // Send daily error report at 8 AM
+    const scheduleNextReport = () => {
+      const now = new Date();
+      const nextReport = new Date();
+      nextReport.setHours(8, 0, 0, 0);
+      
+      // If 8 AM already passed today, schedule for tomorrow
+      if (nextReport <= now) {
+        nextReport.setDate(nextReport.getDate() + 1);
+      }
+      
+      const timeUntilReport = nextReport.getTime() - now.getTime();
+      
+      setTimeout(() => {
+        this.sendDailyErrorReport();
+        scheduleNextReport(); // Schedule next day
+      }, timeUntilReport);
+    };
+    
+    scheduleNextReport();
+  }
+  
+  private async sendDailyErrorReport() {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const dailyErrors = this.errorLog.filter(error => {
+      const errorDate = new Date(error.timestamp);
+      return errorDate >= yesterday && errorDate < today;
+    });
+    
+    if (dailyErrors.length === 0) {
+      console.log('[ERROR REPORTING] No errors to report for yesterday');
+      return;
+    }
+    
+    const errorSummary = this.generateErrorSummary(dailyErrors);
+    
+    try {
+      // Send email report (integrate with your email service)
+      await this.emailService.sendErrorReport(errorSummary);
+      console.log(`[ERROR REPORTING] Daily error report sent: ${dailyErrors.length} errors`);
+    } catch (error) {
+      console.error('[ERROR REPORTING] Failed to send daily error report:', error);
+    }
+  }
+  
+  private generateErrorSummary(errors: ErrorReport[]) {
+    const errorsByType = errors.reduce((acc, error) => {
+      const key = error.message.split(':')[0] || 'Unknown';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return {
+      totalErrors: errors.length,
+      errorsByType,
+      criticalErrors: errors.filter(e => e.level === 'error').length,
+      timeRange: {
+        start: errors[0]?.timestamp,
+        end: errors[errors.length - 1]?.timestamp
+      }
+    };
+  }
+}
+
+export const errorReportingService = new ErrorReportingService();
+
+class ErrorReportingService {
   private errors: ErrorReport[] = [];
   private isReportingEnabled = process.env.NODE_ENV === 'production';
   private reportEmail = process.env.ERROR_REPORT_EMAIL || 'b.weinreder@nijhuis.nl';

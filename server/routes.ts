@@ -212,7 +212,7 @@ export function registerRoutes(app: Express): Server {
       res.json(Array.isArray(subtasks) ? subtasks : []);
     } catch (error) {
       console.error("Error fetching subtasks:", error);
-      // Return empty array instead of error to prevent client-side crashes
+      // Always return 200 with empty array to prevent client crashes
       res.status(200).json([]);
     }
   });
