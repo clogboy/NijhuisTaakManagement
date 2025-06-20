@@ -34,6 +34,9 @@ import {
   AlertTriangle,
   CheckCircle,
   Palette,
+  Clock,
+  RefreshCw,
+  Calendar,
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 

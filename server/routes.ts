@@ -224,8 +224,13 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/subtasks", requireAuth, async (req, res) => {
-    // Temporarily return empty array to stop 500 errors
-    res.json([]);
+    try {
+      const subtasks = await storage.getSubtasks(req.user.id);
+      res.json(Array.isArray(subtasks) ? subtasks : []);
+    } catch (error) {
+      console.error("Error fetching subtasks:", error);
+      res.json([]);
+    }
   });
 
   app.post("/api/subtasks", requireAuth, async (req, res) => {
