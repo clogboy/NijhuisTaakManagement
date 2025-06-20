@@ -2104,6 +2104,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Unit tests health check endpoint
   app.get("/api/health/tests", async (req, res) => {
+    let responseAlreadySent = false;
+
+    const sendResponse = (data: any, statusCode = 200) => {
+      if (!responseAlreadySent) {
+        responseAlreadySent = true;
+        res.status(statusCode).json(data);
+      }
+    };
+
     try {
       const { spawn } = await import('child_process');
 
@@ -2125,16 +2134,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       vitestProcess.on('close', (code) => {
+        if (responseAlreadySent) return;
+
         try {
           // Parse the JSON output from vitest
           const lines = stdout.split('\n').filter(line => line.trim());
           let testResults = null;
 
-          // Find the JSON result line
+          // Find the JSON result line - look for the summary object
           for (const line of lines) {
             try {
               const parsed = JSON.parse(line);
-              if (parsed.testResults || parsed.numTotalTests !== undefined) {
+              if (parsed.numTotalTests !== undefined || parsed.testResults) {
                 testResults = parsed;
                 break;
               }
@@ -2143,41 +2154,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
+          // If no JSON found, analyze the raw output to count tests
           if (!testResults) {
-            // Fallback: try to parse the last line
-            const lastLine = lines[lines.length - 1];
-            if (lastLine) {
-              try {
-                testResults = JSON.parse(lastLine);
-              } catch (e) {
-                // If JSON parsing fails, create a basic response
-                testResults = {
-                  success: code === 0,
-                  numTotalTests: 0,
-                  numPassedTests: code === 0 ? 0 : 0,
-                  numFailedTests: code === 0 ? 0 : 1,
-                  testResults: []
-                };
-              }
-            }
+            const failedMatches = stdout.match(/(\d+) failed/g) || [];
+            const passedMatches = stdout.match(/(\d+) passed/g) || [];
+            
+            let totalFailed = 0;
+            let totalPassed = 0;
+
+            failedMatches.forEach(match => {
+              const num = parseInt(match.match(/\d+/)?.[0] || '0');
+              totalFailed += num;
+            });
+
+            passedMatches.forEach(match => {
+              const num = parseInt(match.match(/\d+/)?.[0] || '0');
+              totalPassed += num;
+            });
+
+            testResults = {
+              numTotalTests: totalPassed + totalFailed,
+              numPassedTests: totalPassed,
+              numFailedTests: totalFailed,
+              numPendingTests: 0,
+              success: code === 0 && totalFailed === 0,
+              testResults: []
+            };
           }
 
+          // Count actual failed tests from test files
+          let actualFailedTests = 0;
+          let actualPassedTests = 0;
+          let totalTestFiles = 0;
+
+          if (testResults.testResults && Array.isArray(testResults.testResults)) {
+            testResults.testResults.forEach((file: any) => {
+              totalTestFiles++;
+              const fileFailed = file.numFailingTests || 0;
+              const filePassed = file.numPassingTests || 0;
+              actualFailedTests += fileFailed;
+              actualPassedTests += filePassed;
+            });
+          }
+
+          // Use actual counts if available, otherwise use parsed results
+          const finalFailedCount = actualFailedTests > 0 ? actualFailedTests : testResults.numFailedTests || 0;
+          const finalPassedCount = actualPassedTests > 0 ? actualPassedTests : testResults.numPassedTests || 0;
+          const finalTotalCount = finalFailedCount + finalPassedCount || testResults.numTotalTests || 0;
+
           const response = {
-            status: code === 0 ? "healthy" : "unhealthy",
+            status: code === 0 && finalFailedCount === 0 ? "healthy" : "unhealthy",
             timestamp: new Date().toISOString(),
             testSummary: {
-              totalTests: testResults?.numTotalTests || 0,
-              passedTests: testResults?.numPassedTests || 0,
-              failedTests: testResults?.numFailedTests || 0,
+              totalTests: finalTotalCount,
+              passedTests: finalPassedCount,
+              failedTests: finalFailedCount,
               skippedTests: testResults?.numPendingTests || 0,
               duration: testResults?.duration || 0,
-              success: code === 0
+              success: code === 0 && finalFailedCount === 0
             },
             testFiles: testResults?.testResults?.map((file: any) => ({
               name: file.name || file.file || 'unknown',
-              status: file.status || (file.numFailingTests > 0 ? 'failed' : 'passed'),
+              status: (file.numFailingTests && file.numFailingTests > 0) ? 'failed' : 'passed',
               duration: file.duration || 0,
-              numTests: file.numPassingTests + file.numFailingTests || 0,
+              numTests: (file.numPassingTests || 0) + (file.numFailingTests || 0),
               numPassed: file.numPassingTests || 0,
               numFailed: file.numFailingTests || 0
             })) || [],
@@ -2186,50 +2226,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
             errors: stderr ? stderr.split('\n').filter(line => line.trim()) : []
           };
 
-          res.json(response);
+          sendResponse(response);
         } catch (error) {
           console.error('Error parsing test results:', error);
-          res.status(500).json({
+          sendResponse({
             status: "error",
             timestamp: new Date().toISOString(),
             message: "Failed to parse test results",
-            error: error.message,
-            rawOutput: stdout,
-            rawErrors: stderr
-          });
+            error: error instanceof Error ? error.message : String(error),
+            rawOutput: stdout.substring(0, 1000), // Limit output size
+            rawErrors: stderr.substring(0, 1000)
+          }, 500);
         }
       });
 
       vitestProcess.on('error', (error) => {
         console.error('Failed to start test process:', error);
-        res.status(500).json({
+        sendResponse({
           status: "error",
           timestamp: new Date().toISOString(),
           message: "Failed to start test runner",
           error: error.message
-        });
+        }, 500);
       });
 
       // Set a timeout to prevent hanging
       setTimeout(() => {
         if (!vitestProcess.killed) {
           vitestProcess.kill();
-          res.status(408).json({
+          sendResponse({
             status: "timeout",
             timestamp: new Date().toISOString(),
             message: "Test execution timed out after 30 seconds"
-          });
+          }, 408);
         }
       }, 30000);
 
     } catch (error) {
       console.error('Test health check error:', error);
-      res.status(500).json({
+      sendResponse({
         status: "error",
         timestamp: new Date().toISOString(),
         message: "Test health check failed",
-        error: error.message
-      });
+        error: error instanceof Error ? error.message : String(error)
+      }, 500);
     }
   });
 

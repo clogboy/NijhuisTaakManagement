@@ -206,7 +206,12 @@ export default function TestHealthCheck() {
                           </Badge>
                         </div>
                         <div className="text-sm text-red-700">
-                          Common issues: Database connection errors, authentication failures, data validation
+                          {file.numFailed} failed
+                          {file.numFailed > 0 && (
+                            <div className="mt-1 text-xs">
+                              Common issues: Database connection errors, authentication failures, data validation
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
