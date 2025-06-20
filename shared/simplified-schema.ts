@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   name: text("name").notNull(),
   role: text("role").notNull().default("user"),
+  microsoftId: text("microsoft_id"),
   settings: json("settings").default({}), // All user preferences in JSON
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

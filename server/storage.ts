@@ -222,12 +222,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByMicrosoftId(microsoftId: string): Promise<User | undefined> {
-    // This field doesn't exist in simplified schema, return undefined
-    return undefined;
+    const [user] = await db.select().from(users).where(eq(users.microsoftId, microsoftId));
+    return user || undefined;
   }
 
   async getUserByReplitId(replitId: string): Promise<User | undefined> {
-    // This field doesn't exist in simplified schema, return undefined
+    // Replit ID field doesn't exist in simplified schema  
     return undefined;
   }
 
