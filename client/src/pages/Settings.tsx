@@ -21,28 +21,19 @@ import {
   Bell, 
   Shield, 
   Zap, 
-  Palette,
-  Globe,
-  Clock,
   Monitor,
-  Smartphone,
+  Sun,
+  Moon,
+  Globe,
+  FileText,
+  Download,
+  Upload,
   Mail,
-  Key,
-  Database,
-  Activity,
+  Users,
+  Lock,
   AlertTriangle,
   CheckCircle,
-  XCircle,
-  Info,
-  Save,
-  Moon,
-  Sun,
-  Calendar,
-  Brain,
-  Sidebar,
-  TestTube,
-  RefreshCw,
-  Download
+  Palette,
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 
@@ -164,7 +155,7 @@ export default function Settings() {
 
       toast({
         title: "Conversion Complete",
-        description: `Converted ${data.totalConverted || 0} overdue subtasks to roadblocks across ${data.usersProcessed || 0} users`,
+        description: `Converted ${data.totalConverted || 0} overdue subtasks to roadblocks to roadblocks across ${data.usersProcessed || 0} users`,
       });
     },
     onError: (error: any) => {

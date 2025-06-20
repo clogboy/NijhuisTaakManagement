@@ -407,5 +407,171 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Flow Protection endpoints
+  app.get("/api/flow/personality-presets", async (req, res) => {
+    try {
+      const { flowProtectionService } = await import("./flow-protection-service");
+      const presets = flowProtectionService.getPersonalityPresets();
+      res.json(presets);
+    } catch (error) {
+      console.error("Error fetching personality presets:", error);
+      res.status(500).json({ message: "Failed to fetch personality presets" });
+    }
+  });
+
+  app.get("/api/flow/current-strategy", requireAuth, async (req, res) => {
+    try {
+      const currentStrategy = await db.select()
+        .from(flowStrategies)
+        .where(and(
+          eq(flowStrategies.userId, req.user.id),
+          eq(flowStrategies.isActive, true)
+        ))
+        .limit(1);
+
+      res.json(currentStrategy[0] || null);
+    } catch (error) {
+      console.error("Error fetching current strategy:", error);
+      res.status(500).json({ message: "Failed to fetch current strategy" });
+    }
+  });
+
+  app.get("/api/flow/recommendations", requireAuth, async (req, res) => {
+    try {
+      const { flowProtectionService } = await import("./flow-protection-service");
+      
+      // Get current strategy
+      const currentStrategy = await db.select()
+        .from(flowStrategies)
+        .where(and(
+          eq(flowStrategies.userId, req.user.id),
+          eq(flowStrategies.isActive, true)
+        ))
+        .limit(1);
+
+      if (!currentStrategy[0]) {
+        return res.json({
+          shouldFocus: true,
+          suggestedTaskTypes: ['deep_work'],
+          allowInterruptions: false,
+          energyLevel: 0.7,
+          timeSlotType: 'productive',
+          recommendation: 'No active flow strategy. Consider setting up a personality-based strategy.'
+        });
+      }
+
+      const recommendations = flowProtectionService.getFlowRecommendations(currentStrategy[0]);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching flow recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch flow recommendations" });
+    }
+  });
+
+  app.post("/api/flow/apply-preset", requireAuth, async (req, res) => {
+    try {
+      const { personalityType } = req.body;
+      const { flowProtectionService } = await import("./flow-protection-service");
+      
+      const presets = flowProtectionService.getPersonalityPresets();
+      const preset = presets.find(p => p.personalityType === personalityType);
+      
+      if (!preset) {
+        return res.status(400).json({ message: "Invalid personality type" });
+      }
+
+      // Deactivate existing strategies
+      await db.update(flowStrategies)
+        .set({ isActive: false })
+        .where(eq(flowStrategies.userId, req.user.id));
+
+      // Create or update strategy
+      const newStrategy = await db.insert(flowStrategies).values({
+        userId: req.user.id,
+        personalityType: preset.personalityType,
+        strategyName: preset.strategyName,
+        description: preset.description,
+        workingHours: preset.workingHours,
+        maxTaskSwitches: preset.maxTaskSwitches,
+        focusBlockDuration: preset.focusBlockDuration,
+        breakDuration: preset.breakDuration,
+        preferredTaskTypes: preset.preferredTaskTypes,
+        energyPattern: preset.energyPattern,
+        notificationSettings: preset.notificationSettings,
+        isActive: true
+      }).returning();
+
+      res.json(newStrategy[0]);
+    } catch (error) {
+      console.error("Error applying preset:", error);
+      res.status(500).json({ message: "Failed to apply preset" });
+    }
+  });
+
+  app.post("/api/flow/low-stimulus", requireAuth, async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      
+      if (enabled) {
+        const { flowProtectionService } = await import("./flow-protection-service");
+        const lowStimulusSettings = flowProtectionService.getLowStimulusMode();
+        
+        // Update current strategy with low stimulus settings
+        await db.update(flowStrategies)
+          .set({
+            maxTaskSwitches: lowStimulusSettings.maxTaskSwitches,
+            focusBlockDuration: lowStimulusSettings.focusBlockDuration,
+            breakDuration: lowStimulusSettings.breakDuration,
+            preferredTaskTypes: lowStimulusSettings.preferredTaskTypes,
+            notificationSettings: lowStimulusSettings.notificationSettings
+          })
+          .where(and(
+            eq(flowStrategies.userId, req.user.id),
+            eq(flowStrategies.isActive, true)
+          ));
+      }
+
+      res.json({ success: true, lowStimulusMode: enabled });
+    } catch (error) {
+      console.error("Error toggling low stimulus mode:", error);
+      res.status(500).json({ message: "Failed to toggle low stimulus mode" });
+    }
+  });
+
+  // Smart insights endpoint
+  app.get("/api/smart-insights", requireAuth, async (req, res) => {
+    try {
+      // Get user's activities
+      const userActivities = await db.select()
+        .from(activities)
+        .where(eq(activities.createdBy, req.user.id));
+
+      // Simple time slot suggestions based on priority and estimated duration
+      const timeSlotSuggestions = {
+        morning: userActivities
+          .filter(a => a.priority === 'urgent' || a.priority === 'high')
+          .slice(0, 3),
+        afternoon: userActivities
+          .filter(a => a.priority === 'normal')
+          .slice(0, 3),
+        evening: userActivities
+          .filter(a => a.priority === 'low' || a.estimatedDuration && a.estimatedDuration <= 30)
+          .slice(0, 3)
+      };
+
+      res.json({
+        timeSlotSuggestions,
+        insights: [
+          "Morning hours are best for high-priority tasks",
+          "Afternoon is ideal for collaborative work",
+          "Evening works well for quick wins and admin tasks"
+        ]
+      });
+    } catch (error) {
+      console.error("Error fetching smart insights:", error);
+      res.status(500).json({ message: "Failed to fetch smart insights" });
+    }
+  });
+
   return httpServer;
 }
