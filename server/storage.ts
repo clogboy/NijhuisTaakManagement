@@ -222,8 +222,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByMicrosoftId(microsoftId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.microsoftId, microsoftId));
-    return user || undefined;
+    try {
+      const result = await db.execute(sql`SELECT * FROM users WHERE microsoft_id = ${microsoftId} LIMIT 1`);
+      return result[0] || undefined;
+    } catch (error) {
+      console.error('Error in getUserByMicrosoftId:', error);
+      return undefined;
+    }
   }
 
   async getUserByReplitId(replitId: string): Promise<User | undefined> {
