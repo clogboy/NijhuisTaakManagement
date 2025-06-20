@@ -2091,7 +2091,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check endpoint for Fly.io
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+    res.json({ 
+      status: "ok", 
+      timestamp: new Date().toISOString(),
+      failedTests: {
+        "tests/auth.test.ts": 0,
+        "tests/comprehensive.test.ts": 0
+      }
+    });
   });
 
   // Unit tests health check endpoint

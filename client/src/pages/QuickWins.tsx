@@ -175,6 +175,7 @@ export default function QuickWins() {
   }) : [];
 
   // Group quick wins by status
+  const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
   const quickWinsByStatus = {
     pending: filteredQuickWins.filter(qw => qw.status === "pending"),
     completed: filteredQuickWins.filter(qw => qw.status === "completed"),
