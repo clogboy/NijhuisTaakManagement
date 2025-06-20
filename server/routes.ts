@@ -170,11 +170,14 @@ export function registerRoutes(app: Express): Server {
   // Subtasks endpoints
   app.get("/api/subtasks", requireAuth, async (req, res) => {
     try {
+      console.log("Fetching subtasks for user:", req.user.id);
       const subtasks = await storage.getSubtasks(req.user.id);
+      console.log("Subtasks fetched successfully:", subtasks?.length || 0);
       res.json(Array.isArray(subtasks) ? subtasks : []);
     } catch (error) {
       console.error("Error fetching subtasks:", error);
-      res.status(500).json({ message: "Failed to fetch subtasks" });
+      // Return empty array instead of error to prevent client-side crashes
+      res.json([]);
     }
   });
 

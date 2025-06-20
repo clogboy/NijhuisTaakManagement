@@ -19,7 +19,7 @@ localPort = 8080
 externalPort = 8080
 
 [workflows]
-runButton = "Project"
+runButton = "Restart Dev Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -38,3 +38,20 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Restart Dev Server"
+author = 876735
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pkill -f \"tsx server/index.ts\" || true"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sleep 2"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"

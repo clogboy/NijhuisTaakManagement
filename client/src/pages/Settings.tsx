@@ -16,27 +16,24 @@ import { downloadXMLFile } from "@/utils/xmlExport";
 import TestHealthCheck from "@/components/TestHealthCheck";
 
 import { 
-  Save, 
-  Clock, 
-  Globe, 
+  Settings as SettingsIcon, 
+  User, 
   Bell, 
-  Mail, 
-  Smartphone, 
-  Monitor, 
-  Moon, 
-  Sun,
-  Calendar,
-  Brain,
-  Sidebar,
-  TestTube,
-  AlertTriangle
-} from "lucide-react";
-import { User as UserIcon,
-  Activity,
+  Shield, 
+  Zap, 
   Palette,
-  RefreshCw,
-  Download,
-  Shield
+  Globe,
+  Clock,
+  Monitor,
+  Smartphone,
+  Mail,
+  Key,
+  Database,
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Info
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 
