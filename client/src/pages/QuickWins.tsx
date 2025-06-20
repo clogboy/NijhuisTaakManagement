@@ -32,14 +32,27 @@ export default function QuickWins() {
     taskTitle: ''
   });
 
-  const { data: quickWins, isLoading: quickWinsLoading } = useQuery<QuickWin[]>({
+  const { data: quickWins = [], isLoading: quickWinsLoading, error: quickWinsError } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
-    queryFn: () => fetch("/api/quickwins", { credentials: "include" }).then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch("/api/quickwins", { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch quick wins");
+      }
+      return response.json();
+    },
   });
 
   // Also fetch subtasks that are classified as quick wins
-  const { data: subtasks = [] } = useQuery<any[]>({
+  const { data: subtasks = [], error: subtasksError } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
+    queryFn: async () => {
+      const response = await fetch("/api/subtasks", { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch subtasks");
+      }
+      return response.json();
+    },
   });
 
   const deleteSubtaskMutation = useMutation({
@@ -134,8 +147,15 @@ export default function QuickWins() {
     activityMap[subtask.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const { data: activities } = useQuery<Activity[]>({
+  const { data: activities = [], error: activitiesError } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
+    queryFn: async () => {
+      const response = await fetch("/api/activities", { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch activities");
+      }
+      return response.json();
+    },
   });
 
   // Create a map of activity IDs to activity titles
@@ -145,11 +165,11 @@ export default function QuickWins() {
   }, {} as Record<number, Activity>) || {};
 
   // Filter quick wins based on search query
-  const filteredQuickWins = quickWins?.filter(quickWin =>
+  const filteredQuickWins = Array.isArray(quickWins) ? quickWins.filter(quickWin =>
     quickWin.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     quickWin.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     activityMap[quickWin.linkedActivityId]?.title.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  ) : [];
 
   // Group quick wins by status
   const quickWinsByStatus = {
@@ -205,6 +225,14 @@ export default function QuickWins() {
         {quickWinsLoading ? (
           <div className="text-center py-12">
             <p className="text-neutral-medium">{t('common.loading')}</p>
+          </div>
+        ) : (quickWinsError || subtasksError || activitiesError) ? (
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600 text-lg mb-2">Error loading data</p>
+            <p className="text-neutral-medium">
+              {quickWinsError?.message || subtasksError?.message || activitiesError?.message || 'Unknown error occurred'}
+            </p>
           </div>
         ) : filteredQuickWins.length === 0 && filteredQuickWinSubtasks.length === 0 ? (
           <div className="text-center py-12">
