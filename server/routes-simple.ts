@@ -88,6 +88,29 @@ export function registerRoutes(app: Express): Server {
     res.json(req.user);
   });
 
+  // User preferences routes
+  app.get("/api/user/preferences", requireAuth, async (req: any, res) => {
+    console.log("User preferences route hit for user:", req.user?.id);
+    try {
+      const preferences = await storage.getUserPreferences(req.user.id);
+      console.log("Fetched preferences:", preferences);
+      res.json(preferences || { productivityHealthEnabled: true });
+    } catch (error) {
+      console.error("Error fetching user preferences:", error);
+      res.json({ productivityHealthEnabled: true });
+    }
+  });
+
+  app.patch("/api/user/preferences", requireAuth, async (req: any, res) => {
+    try {
+      const updatedPreferences = await storage.updateUserPreferences(req.user.id, req.body);
+      res.json(updatedPreferences);
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      res.status(500).json({ message: "Failed to update preferences" });
+    }
+  });
+
   // Basic activity routes
   app.get("/api/activities", requireAuth, async (req: any, res) => {
     try {

@@ -15,6 +15,8 @@ import {
   insertTimeBlockSchema,
   insertUserMetricSchema
 } from "@shared/simplified-schema";
+import { userPreferences } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 // Keep backwards compatibility types for now
 type Contact = typeof contacts.$inferSelect;
@@ -597,9 +599,55 @@ export class DatabaseStorage implements IStorage {
   async createTimeBlock(timeBlockData: any): Promise<any> { return { id: 1, ...timeBlockData }; }
   async updateTimeBlock(id: number, updates: any): Promise<any> { return { id, ...updates }; }
   async deleteTimeBlock(id: number): Promise<void> { }
-  async getUserPreferences(userId: number): Promise<any | null> { return null; }
-  async createUserPreferences(prefsData: any): Promise<any> { return { id: 1, ...prefsData }; }
-  async updateUserPreferences(userId: number, updates: any): Promise<any> { return { userId, ...updates }; }
+  async getUserPreferences(userId: number): Promise<any | null> { 
+    try {
+      const [prefs] = await db.select().from(userPreferences).where(eq(userPreferences.userId, userId));
+      return prefs ? prefs.preferences : { productivityHealthEnabled: true };
+    } catch (error) {
+      console.error("Error getting user preferences:", error);
+      return { productivityHealthEnabled: true };
+    }
+  }
+  
+  async createUserPreferences(prefsData: any): Promise<any> { 
+    try {
+      const [created] = await db.insert(userPreferences).values({
+        userId: prefsData.userId,
+        preferences: prefsData
+      }).returning();
+      return created.preferences;
+    } catch (error) {
+      console.error("Error creating user preferences:", error);
+      return prefsData;
+    }
+  }
+  
+  async updateUserPreferences(userId: number, updates: any): Promise<any> { 
+    try {
+      // Get existing preferences first
+      const existing = await this.getUserPreferences(userId);
+      const merged = { ...existing, ...updates };
+      
+      // Try to update existing record
+      const [updated] = await db.update(userPreferences)
+        .set({ 
+          preferences: merged,
+          updatedAt: new Date()
+        })
+        .where(eq(userPreferences.userId, userId))
+        .returning();
+      
+      if (updated) {
+        return updated.preferences;
+      }
+      
+      // If no existing record, create new one
+      return await this.createUserPreferences({ userId, ...merged });
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      return updates;
+    }
+  }
   async getCalendarIntegrations(userId: number): Promise<any[]> { return []; }
   async createCalendarIntegration(integrationData: any): Promise<any> { return { id: 1, ...integrationData }; }
   async updateCalendarIntegration(id: number, updates: any): Promise<any> { return { id, ...updates }; }
