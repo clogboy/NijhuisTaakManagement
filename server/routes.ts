@@ -2449,8 +2449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activeBlock = await storage.getActiveDeepFocusBlock(req.user.id);
       res.json(activeBlock || null);
-    }```text
-     catch (error) {
+    } catch (error) {
       console.error("Get active deep focus block error:", error);
       res.status(500).json({ message: "Failed to get active deep focus block" });
     }
