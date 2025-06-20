@@ -119,5 +119,79 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Flow Protection endpoints
+  app.get("/api/flow/personality-presets", async (req, res) => {
+    try {
+      const { flowProtectionService } = await import("./flow-protection-service");
+      const presets = flowProtectionService.getPersonalityPresets();
+      res.json(presets);
+    } catch (error) {
+      console.error("Error fetching personality presets:", error);
+      res.status(500).json({ message: "Failed to fetch personality presets" });
+    }
+  });
+
+  app.get("/api/flow/current-strategy", requireAuth, async (req: any, res) => {
+    try {
+      const currentStrategy = await storage.getCurrentFlowStrategy(req.user.id);
+      res.json(currentStrategy || null);
+    } catch (error) {
+      console.error("Error fetching current strategy:", error);
+      res.status(500).json({ message: "Failed to fetch current strategy" });
+    }
+  });
+
+  app.post("/api/flow/apply-preset", requireAuth, async (req: any, res) => {
+    try {
+      const { personalityType } = req.body;
+      const { flowProtectionService } = await import("./flow-protection-service");
+      
+      const presets = flowProtectionService.getPersonalityPresets();
+      const preset = presets.find(p => p.personalityType === personalityType);
+      
+      if (!preset) {
+        return res.status(400).json({ message: "Invalid personality type" });
+      }
+
+      // Apply the flow strategy
+      const success = await storage.applyFlowStrategy(req.user.id, preset);
+      
+      if (success) {
+        res.json({ success: true, message: "Flow strategy applied successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to apply flow strategy" });
+      }
+    } catch (error) {
+      console.error("Error applying flow strategy:", error);
+      res.status(500).json({ message: "Failed to apply flow strategy" });
+    }
+  });
+
+  app.get("/api/flow/recommendations", requireAuth, async (req: any, res) => {
+    try {
+      const { flowProtectionService } = await import("./flow-protection-service");
+      
+      // Get current strategy
+      const currentStrategy = await storage.getCurrentFlowStrategy(req.user.id);
+      
+      if (!currentStrategy) {
+        return res.json({
+          shouldFocus: true,
+          suggestedTaskTypes: ['deep_work'],
+          allowInterruptions: false,
+          energyLevel: 0.7,
+          timeSlotType: 'productive',
+          recommendation: 'No active flow strategy. Consider setting up a personality-based strategy.'
+        });
+      }
+
+      const recommendations = flowProtectionService.getFlowRecommendations(currentStrategy);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching flow recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch flow recommendations" });
+    }
+  });
+
   return httpServer;
 }

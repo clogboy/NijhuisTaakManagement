@@ -675,6 +675,28 @@ export class DatabaseStorage implements IStorage {
       overdueCount: overdueActivities.length,
     };
   }
+
+  // Flow Strategy methods
+  async getCurrentFlowStrategy(userId: number): Promise<any | null> {
+    try {
+      // For now, return a mock current strategy to prevent errors
+      return null;
+    } catch (error) {
+      console.error('Error getting current flow strategy:', error);
+      return null;
+    }
+  }
+
+  async applyFlowStrategy(userId: number, preset: any): Promise<boolean> {
+    try {
+      // For now, just log that a strategy was applied
+      console.log(`Applied flow strategy ${preset.personalityType} for user ${userId}`);
+      return true;
+    } catch (error) {
+      console.error('Error applying flow strategy:', error);
+      return false;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

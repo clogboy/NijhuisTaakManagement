@@ -1,4 +1,4 @@
-import { FlowStrategy } from "@shared/schema";
+import type { FlowStrategy } from "@shared/schema";
 
 interface PersonalityPreset {
   personalityType: string;
