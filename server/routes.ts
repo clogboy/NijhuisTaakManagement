@@ -1,11 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
 import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
 
 // Create temporary schemas for backwards compatibility
 import { createInsertSchema } from "drizzle-zod";
-import { contacts, users } from "@shared/simplified-schema";
+import { contacts, users, activities, activity_entries } from "@shared/simplified-schema";
+import { eq, and, sql, desc, ne } from "drizzle-orm";
 
 const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,

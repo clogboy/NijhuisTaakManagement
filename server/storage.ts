@@ -339,6 +339,250 @@ export class DatabaseStorage implements IStorage {
     await db.delete(activities).where(eq(activities.id, id));
   }
 
+  // Daily task completions
+  async getDailyTaskCompletions(userId: number, date?: string): Promise<any[]> {
+    // Stub implementation - return empty array for now
+    return [];
+  }
+
+  async createOrUpdateDailyTaskCompletion(userId: number, activityId: number, taskDate: string, completed: boolean): Promise<any> {
+    // Stub implementation
+    return { userId, activityId, taskDate, completed };
+  }
+
+  // Deep focus blocks
+  async getDeepFocusBlocks(userId: number, start?: Date, end?: Date): Promise<any[]> {
+    // Stub implementation
+    return [];
+  }
+
+  async getActiveDeepFocusBlock(userId: number): Promise<any | null> {
+    // Stub implementation
+    return null;
+  }
+
+  async createDeepFocusBlock(blockData: any): Promise<any> {
+    // Stub implementation
+    return { id: 1, ...blockData };
+  }
+
+  async startDeepFocusBlock(id: number, selectedActivityId?: number, selectedSubtaskId?: number): Promise<any> {
+    // Stub implementation
+    return { id, selectedActivityId, selectedSubtaskId, status: 'active' };
+  }
+
+  async endDeepFocusBlock(id: number, productivityRating?: number, completionNotes?: string): Promise<any> {
+    // Stub implementation
+    return { id, productivityRating, completionNotes, status: 'completed' };
+  }
+
+  async updateDeepFocusBlock(id: number, updates: any): Promise<any> {
+    // Stub implementation
+    return { id, ...updates };
+  }
+
+  async deleteDeepFocusBlock(id: number): Promise<void> {
+    // Stub implementation
+  }
+
+  // Subtasks
+  async getSubtasks(userId: number): Promise<any[]> {
+    // Return activities with parentId as subtasks
+    return await db.select().from(activities)
+      .where(and(
+        eq(activities.createdBy, userId),
+        sql`${activities.parentId} IS NOT NULL`
+      ))
+      .orderBy(desc(activities.createdAt));
+  }
+
+  async getSubtask(id: number): Promise<any | undefined> {
+    const [subtask] = await db.select().from(activities).where(eq(activities.id, id));
+    return subtask || undefined;
+  }
+
+  async createSubtask(subtaskData: any): Promise<any> {
+    const data = {
+      title: subtaskData.title,
+      description: subtaskData.description,
+      type: subtaskData.type || 'task',
+      priority: subtaskData.priority || 'normal',
+      status: subtaskData.status || 'pending',
+      dueDate: subtaskData.dueDate,
+      parentId: subtaskData.linkedActivityId,
+      participants: subtaskData.participants || [],
+      metadata: {
+        participantTypes: subtaskData.participantTypes || {},
+        ...subtaskData.metadata
+      },
+      createdBy: subtaskData.createdBy
+    };
+
+    const [newSubtask] = await db.insert(activities).values(data).returning();
+    return newSubtask;
+  }
+
+  async updateSubtask(id: number, updates: any): Promise<any> {
+    const [updatedSubtask] = await db.update(activities)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(activities.id, id))
+      .returning();
+    return updatedSubtask;
+  }
+
+  async deleteSubtask(id: number): Promise<void> {
+    await db.delete(activities).where(eq(activities.id, id));
+  }
+
+  async getSubtasksByActivity(activityId: number): Promise<any[]> {
+    return await db.select().from(activities)
+      .where(eq(activities.parentId, activityId))
+      .orderBy(desc(activities.createdAt));
+  }
+
+  async updateSubtaskParticipantType(subtaskId: number, participantEmail: string, taskType: string): Promise<any> {
+    const subtask = await this.getSubtask(subtaskId);
+    if (!subtask) throw new Error('Subtask not found');
+
+    const participantTypes = subtask.metadata?.participantTypes || {};
+    participantTypes[participantEmail] = taskType;
+
+    return await this.updateSubtask(subtaskId, {
+      metadata: { ...subtask.metadata, participantTypes }
+    });
+  }
+
+  // Quick wins
+  async getQuickWins(userId: number): Promise<any[]> {
+    return await db.select().from(activities)
+      .where(and(
+        eq(activities.createdBy, userId),
+        eq(activities.type, 'quick_win')
+      ))
+      .orderBy(desc(activities.createdAt));
+  }
+
+  async getQuickWinsByActivity(activityId: number): Promise<any[]> {
+    return await db.select().from(activities)
+      .where(and(
+        eq(activities.parentId, activityId),
+        eq(activities.type, 'quick_win')
+      ))
+      .orderBy(desc(activities.createdAt));
+  }
+
+  // Roadblocks
+  async getRoadblocks(userId?: number, isAdmin?: boolean): Promise<any[]> {
+    if (isAdmin) {
+      return await db.select().from(activities)
+        .where(eq(activities.type, 'roadblock'))
+        .orderBy(desc(activities.createdAt));
+    } else if (userId) {
+      return await db.select().from(activities)
+        .where(and(
+          eq(activities.createdBy, userId),
+          eq(activities.type, 'roadblock')
+        ))
+        .orderBy(desc(activities.createdAt));
+    }
+    return [];
+  }
+
+  async createRoadblock(roadblockData: any): Promise<any> {
+    const data = {
+      title: roadblockData.title,
+      description: roadblockData.description,
+      type: 'roadblock' as const,
+      priority: roadblockData.severity || 'medium',
+      status: roadblockData.status || 'pending',
+      metadata: {
+        severity: roadblockData.severity,
+        assignedTo: roadblockData.assignedTo,
+        oorzaakCategory: roadblockData.oorzaakCategory,
+        oorzaakFactor: roadblockData.oorzaakFactor,
+        departmentImpact: roadblockData.departmentImpact,
+        linkedActivityId: roadblockData.linkedActivityId,
+        linkedSubtaskId: roadblockData.linkedSubtaskId,
+        reportedDate: roadblockData.reportedDate,
+        resolvedAt: roadblockData.resolvedAt,
+        proposedResolution: roadblockData.proposedResolution,
+        newDeadline: roadblockData.newDeadline
+      },
+      parentId: roadblockData.linkedActivityId,
+      createdBy: roadblockData.createdBy
+    };
+
+    const [newRoadblock] = await db.insert(activities).values(data).returning();
+    return newRoadblock;
+  }
+
+  async updateRoadblock(id: number, updates: any): Promise<any> {
+    const [updatedRoadblock] = await db.update(activities)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(activities.id, id))
+      .returning();
+    return updatedRoadblock;
+  }
+
+  async deleteRoadblock(id: number): Promise<void> {
+    await db.delete(activities).where(eq(activities.id, id));
+  }
+
+  async getRoadblocksByActivity(activityId: number): Promise<any[]> {
+    return await db.select().from(activities)
+      .where(and(
+        eq(activities.parentId, activityId),
+        eq(activities.type, 'roadblock')
+      ))
+      .orderBy(desc(activities.createdAt));
+  }
+
+  // Task comments
+  async getTaskComments(activityId: number): Promise<any[]> {
+    return await db.select().from(activity_entries)
+      .where(and(
+        eq(activity_entries.activityId, activityId),
+        eq(activity_entries.type, 'comment')
+      ))
+      .orderBy(desc(activity_entries.createdAt));
+  }
+
+  async createTaskComment(commentData: any): Promise<any> {
+    const [comment] = await db.insert(activity_entries).values({
+      activityId: commentData.activityId,
+      type: 'comment',
+      content: commentData.comment,
+      metadata: {},
+      createdBy: commentData.createdBy
+    }).returning();
+    return comment;
+  }
+
+  // Stubs for other missing methods
+  async getWeeklyEthos(userId: number): Promise<any[]> { return []; }
+  async getWeeklyEthosByDay(userId: number, dayOfWeek: number): Promise<any> { return null; }
+  async getDailyAgendas(userId: number): Promise<any[]> { return []; }
+  async getTimeBlocks(userId: number, start?: Date, end?: Date): Promise<any[]> { return []; }
+  async createTimeBlock(timeBlockData: any): Promise<any> { return { id: 1, ...timeBlockData }; }
+  async updateTimeBlock(id: number, updates: any): Promise<any> { return { id, ...updates }; }
+  async deleteTimeBlock(id: number): Promise<void> { }
+  async getUserPreferences(userId: number): Promise<any | null> { return null; }
+  async createUserPreferences(prefsData: any): Promise<any> { return { id: 1, ...prefsData }; }
+  async updateUserPreferences(userId: number, updates: any): Promise<any> { return { userId, ...updates }; }
+  async getCalendarIntegrations(userId: number): Promise<any[]> { return []; }
+  async createCalendarIntegration(integrationData: any): Promise<any> { return { id: 1, ...integrationData }; }
+  async updateCalendarIntegration(id: number, updates: any): Promise<any> { return { id, ...updates }; }
+  async deleteCalendarIntegration(id: number): Promise<void> { }
+  async getCalendarEventsByUser(userId: number, start?: Date, end?: Date): Promise<any[]> { return []; }
+  async createCalendarEvent(eventData: any): Promise<any> { return { id: 1, ...eventData }; }
+  async getUpcomingDeadlineReminders(userId: number, days: number): Promise<any[]> { return []; }
+  async createDeadlineReminder(reminderData: any): Promise<any> { return { id: 1, ...reminderData }; }
+  async createDeadlineRemindersForActivity(activityId: number, userId: number): Promise<void> { }
+  async createDeadlineRemindersForSubtask(subtaskId: number, userId: number): Promise<void> { }
+  async getDocumentReferences(filters: any): Promise<any[]> { return []; }
+  async createDocumentReference(referenceData: any): Promise<any> { return { id: 1, ...referenceData }; }
+  async deleteDocumentReference(id: number, userId: number): Promise<boolean> { return true; }
+
   async getActivityStats(userId: number, isAdmin: boolean): Promise<{
     urgentCount: number;
     dueThisWeek: number;
