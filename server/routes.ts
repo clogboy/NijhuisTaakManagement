@@ -4,11 +4,12 @@ import express, { type Express, type Request, type Response } from "express";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 import { db } from "./db";
-import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema, insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema } from "@shared/simplified-schema";
+import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
 
-// Create temporary schemas for backwards compatibility
+// Create temporary schemas for backwards compatibility  
 import { createInsertSchema } from "drizzle-zod";
 import { contacts, users, activities, activity_entries, subtasks } from "@shared/simplified-schema";
+import { insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema } from "@shared/schema";
 import { eq, and, sql, desc, ne } from "drizzle-orm";
 
 const insertContactSchema = createInsertSchema(contacts).omit({
