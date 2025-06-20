@@ -21,22 +21,13 @@ import {
   Bell, 
   Shield, 
   Zap, 
-  Monitor,
-  Sun,
-  Moon,
-  Globe,
-  FileText,
-  Download,
-  Upload,
-  Mail,
-  Users,
-  Lock,
   AlertTriangle,
   CheckCircle,
   Palette,
   Clock,
   RefreshCw,
   Calendar,
+  Activity, // Added missing import
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 

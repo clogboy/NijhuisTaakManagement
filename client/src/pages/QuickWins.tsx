@@ -181,7 +181,7 @@ export default function QuickWins() {
   // Ensure quickWins is always an array
   const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
   const activeQuickWins = safeQuickWins.filter((qw: any) => qw.status !== 'completed');
-  const completedQuickWins = safeQuickWins.filter(qw => qw.status === 'completed');
+  const completedQuickWins = safeQuickWins.filter((qw: any) => qw.status === 'completed');
 
   // Ensure quickWins is always an array before filtering
   const quickWinsArray = Array.isArray(quickWins) ? quickWins : [];
