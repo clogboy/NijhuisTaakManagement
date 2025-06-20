@@ -370,8 +370,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Activities routes
-  app.get("/api/activities", requireAuth, async (req: any, res) => {
+  app.get("/api/activities", requireAuth, async (req, res) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
       const activities = await storage.getActivities(req.user.id, req.user.email, req.user.role === "admin");
       res.json(activities);
     } catch (error) {
@@ -508,15 +512,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Quick wins routes (stub implementation)
-  app.get("/api/quickwins", requireAuth, async (req: any, res) => {
+  app.get("/api/quickwins", requireAuth, async (req, res) => {
     try {
-      // Return activities marked as quick wins
-      const quickWins = await db.select().from(activities)
-        .where(and(
-          eq(activities.createdBy, req.user.id),
-          eq(activities.type, 'quick_win')
-        ))
-        .orderBy(desc(activities.createdAt));
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const quickWins = await storage.getQuickWins(req.user.id);
       res.json(quickWins);
     } catch (error) {
       console.error("Get quick wins error:", error);
@@ -735,8 +737,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // QuickWins routes
-  app.get("/api/quickwins", requireAuth, async (req: any, res) => {
+  app.get("/api/quickwins", requireAuth, async (req, res) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
       const userId = req.user.id;
 
       if (!storage.getQuickWins) {
@@ -753,8 +759,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Subtasks routes (stub implementation)
-  app.get("/api/subtasks", requireAuth, async (req: any, res) => {
+  app.get("/api/subtasks", requireAuth, async (req, res) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
       const userId = req.user.id;
 
       if (!storage.getSubtasks) {
@@ -1615,7 +1625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Teams tasks error:", error);
       res.status(500).json({ message: "Failed to fetch Teams tasks" });
     }
-  });
+    });
 
   app.post("/api/teams/boards/:boardId/tasks", requireAuth, async (req, res) => {
     try {

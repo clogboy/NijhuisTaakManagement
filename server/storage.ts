@@ -264,9 +264,14 @@ export class DatabaseStorage implements IStorage {
   // Contact operations
   async getContacts(createdBy: number): Promise<Contact[]> {
     console.log(`[STORAGE] Getting contacts for user ${createdBy}`);
-    const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
-    console.log(`[STORAGE] Found ${result.length} contacts`);
-    return result;
+    try {
+      const result = await db.select().from(contacts).where(eq(contacts.createdBy, createdBy)).orderBy(contacts.name);
+      console.log(`[STORAGE] Found ${result.length} contacts`);
+      return result;
+    } catch (error) {
+      console.error('Error getting contacts:', error);
+      throw new Error('Failed to get contacts');
+    }
   }
 
   async getContact(id: number): Promise<Contact | undefined> {
@@ -466,7 +471,7 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return [];
 
-      const userActivities = await this.getActivities(userId, user.email, false);
+      const userActivities = await this.getActivities(userId, '', false);
       const quickWins = [];
 
       // Filter activities that are quick wins (estimated time <= 30 minutes)
