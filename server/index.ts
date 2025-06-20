@@ -36,9 +36,10 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    secure: false, // Allow non-HTTPS in development
-    httpOnly: false, // Allow client-side access in development
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    secure: process.env.NODE_ENV === 'production', // HTTPS in production, HTTP in development
+    httpOnly: true, // Secure cookie access
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax' // CSRF protection
   }
 }));
 
