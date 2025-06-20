@@ -27,7 +27,9 @@ import {
   Clock,
   RefreshCw,
   Calendar,
-  Activity, // Added missing import
+  Activity,
+  Globe,
+  Download
 } from "lucide-react";
 import { User as UserType } from "@shared/schema";
 
@@ -68,7 +70,7 @@ export default function Settings() {
     const errorReportingStatus = {
       isEnabled: true,
       errorCount: 42,
-      reportEmail: user?.user.email || "example@example.com",
+      reportEmail: user?.user?.email || "example@example.com",
       nextReport: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
     };
 
@@ -227,7 +229,7 @@ export default function Settings() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t('settings.title')}</h1>
           <Badge variant="outline" className="text-xs">
-            User ID: {user?.user.id}
+            User ID: {user?.user?.id}
           </Badge>
         </div>
 
@@ -244,11 +246,11 @@ export default function Settings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">{t('settings.fullName')}</Label>
-                  <Input id="name" value={user?.user.name || ""} disabled />
+                  <Input id="name" value={user?.user?.name || ""} disabled />
                 </div>
                 <div>
                   <Label htmlFor="email">{t('settings.emailAddress')}</Label>
-                  <Input id="email" value={user?.user.email || ""} disabled />
+                  <Input id="email" value={user?.user?.email || ""} disabled />
                 </div>
                 <div>
                   <Label htmlFor="department">{t('settings.department')}</Label>
@@ -414,11 +416,11 @@ export default function Settings() {
                 <div>
                   <p className="font-medium">Microsoft Calendar Sync</p>
                   <p className="text-sm text-gray-500">
-                    Status: {user?.user.microsoftId ? "Connected" : "Not Connected"}
+                    Status: {user?.user?.microsoftId ? "Connected" : "Not Connected"}
                   </p>
                 </div>
-                <Badge variant={user?.user.microsoftId ? "default" : "secondary"}>
-                  {user?.user.microsoftId ? "Active" : "Inactive"}
+                <Badge variant={user?.user?.microsoftId ? "default" : "secondary"}>
+                  {user?.user?.microsoftId ? "Active" : "Inactive"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -426,14 +428,14 @@ export default function Settings() {
                   <p className="font-medium">Auto-sync time blocks</p>
                   <p className="text-sm text-gray-500">Automatically create calendar events for scheduled activities</p>
                 </div>
-                <Switch disabled={!user?.user.microsoftId} />
+                <Switch disabled={!user?.user?.microsoftId} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Conflict detection</p>
                   <p className="text-sm text-gray-500">Check for scheduling conflicts with existing events</p>
                 </div>
-                <Switch disabled={!user?.user.microsoftId} />
+                <Switch disabled={!user?.user?.microsoftId} />
               </div>
             </CardContent>
           </Card>
@@ -490,8 +492,8 @@ export default function Settings() {
                   <p className="font-medium">Current Role</p>
                   <p className="text-sm text-gray-500">Your access level in the system</p>
                 </div>
-                <Badge variant={user?.user.role === "admin" ? "default" : "secondary"}>
-                  {user?.user.role === "admin" ? "Administrator" : "User"}
+                <Badge variant={user?.user?.role === "admin" ? "default" : "secondary"}>
+                  {user?.user?.role === "admin" ? "Administrator" : "User"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -505,12 +507,12 @@ export default function Settings() {
                 <div>
                   <p className="font-medium">Account created</p>
                   <p className="text-sm text-gray-500">
-                    {user?.user.createdAt ? new Date(user.user.createdAt).toLocaleDateString() : "Unknown"}
+                    {user?.user?.createdAt ? new Date(user.user?.createdAt).toLocaleDateString() : "Unknown"}
                   </p>
                 </div>
                 <Badge variant="outline">
-                  {user?.user.createdAt ? 
-                    Math.floor((Date.now() - new Date(user.user.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + " days ago" :
+                  {user?.user?.createdAt ? 
+                    Math.floor((Date.now() - new Date(user.user?.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + " days ago" :
                     "Unknown"
                   }
                 </Badge>

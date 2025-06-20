@@ -52,7 +52,7 @@ export default function Profile() {
               <div>
                 <label className="text-sm font-medium text-gray-700">{t('profile.fullName')}</label>
                 <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50">
-                  {user.user.name}
+                  {user.user?.name}
                 </div>
               </div>
               
@@ -60,7 +60,7 @@ export default function Profile() {
                 <label className="text-sm font-medium text-gray-700">{t('profile.email')}</label>
                 <div className="mt-1 p-3 border border-gray-200 rounded-md bg-gray-50 flex items-center">
                   <Mail className="mr-2 h-4 w-4 text-gray-500" />
-                  {user.user.email}
+                  {user.user?.email}
                 </div>
               </div>
               
