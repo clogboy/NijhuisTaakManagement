@@ -240,16 +240,14 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Productivity Score</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-4">
-              {/* Assuming `stats.productivity.score` exists */}
-              <TrendingUp className="h-8 w-8 text-green-500" />
-              <div>
-                <div className="text-3xl font-bold">{stats?.productivity?.score || 0}%</div>
-                <p className="text-gray-500">Overall performance</p>
-              </div>
-            </div>
-          </CardContent>
+          <CardContent className="pt-6">
+              <div className="text-2xl font-bold">{Math.round((stats?.productivity?.score || 0) * 100)}%</div>
+              <p className="text-xs text-muted-foreground">
+                {(stats?.productivity?.score || 0) >= 0.8 ? "Excellent productivity!" : 
+                 (stats?.productivity?.score || 0) >= 0.6 ? "Good progress" : 
+                 "Room for improvement"}
+              </p>
+            </CardContent>
         </Card>
       )}
     </div>

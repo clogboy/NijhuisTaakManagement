@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
-  users, activities, subtasks, quickWins, roadblocks, contacts, activityLogs,
-  type User, type Activity, type Subtask, type QuickWin, type Roadblock, type Contact, type ActivityLog
+  users, activities, subtasks, quickWins, roadblocks, contacts, activityLogs, flowStrategies,
+  type User, type Activity, type Subtask, type QuickWin, type Roadblock, type Contact, type ActivityLog, type FlowStrategy 
 } from "../shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -230,6 +230,53 @@ export class Storage {
       entryDate: logData.entryDate || new Date(),
     }).returning();
     return log;
+  }
+
+  // Flow strategy methods
+  async getCurrentFlowStrategy(userId: number) {
+    try {
+      const result = await db
+        .select()
+        .from(flowStrategies)
+        .where(eq(flowStrategies.user_id, userId))
+        .orderBy(desc(flowStrategies.createdAt))
+        .limit(1);
+
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error getting current flow strategy:", error);
+      return null;
+    }
+  }
+
+  async applyFlowStrategy(userId: number, preset: any) {
+    try {
+      // Insert new flow strategy
+      const result = await db
+        .insert(flowStrategies)
+        .values({
+          user_id: userId,
+          strategy_name: preset.strategyName,
+          personality_type: preset.personalityType,
+          description: preset.description,
+          working_hours: JSON.stringify(preset.workingHours),
+          max_task_switches: preset.maxTaskSwitches,
+          focus_block_duration: preset.focusBlockDuration,
+          break_duration: preset.breakDuration,
+          preferred_task_types: JSON.stringify(preset.preferredTaskTypes || []),
+          energy_pattern: JSON.stringify(preset.energyPattern),
+          notification_settings: JSON.stringify(preset.notificationSettings),
+          is_active: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error applying flow strategy:", error);
+      return false;
+    }
   }
 
   // Basic stats for dashboard

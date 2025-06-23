@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date, unique, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -95,25 +95,29 @@ export const roadblocks = pgTable("roadblocks", {
 // Comments/logs for activities
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
-  activityId: integer("activity_id").notNull().references(() => activities.id, { onDelete: "cascade" }),
-  entry: text("entry").notNull(),
-  entryDate: timestamp("entry_date").notNull(),
-  createdBy: integer("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  activityId: integer("activity_id").references(() => activities.id, { onDelete: "cascade" }),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  action: varchar("action", { length: 50 }).notNull(), // 'created', 'updated', 'completed', etc.
+  changes: json("changes"), // Store what changed
+  timestamp: timestamp("timestamp").defaultNow(),
 });
 
-// DISABLED FEATURES - Flow presets (waiting for API key)
-export const flowStrategies = pgTable("flow_strategies", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  personalityType: text("personality_type").notNull(),
-  strategyName: text("strategy_name").notNull(),
-  description: text("description"),
-  maxTaskSwitches: integer("max_task_switches").default(3),
-  focusBlockDuration: integer("focus_block_duration").default(120),
-  isActive: boolean("is_active").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const flowStrategies = pgTable('flow_strategies', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  strategy_name: varchar('strategy_name', { length: 100 }).notNull(),
+  personality_type: varchar('personality_type', { length: 50 }).notNull(),
+  description: text('description'),
+  working_hours: json('working_hours'),
+  max_task_switches: integer('max_task_switches'),
+  focus_block_duration: integer('focus_block_duration'),
+  break_duration: integer('break_duration'),
+  preferred_task_types: json('preferred_task_types'),
+  energy_pattern: json('energy_pattern'),
+  notification_settings: json('notification_settings'),
+  is_active: boolean('is_active').default(true),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // Insert schemas
@@ -183,6 +187,7 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 export type FlowStrategy = typeof flowStrategies.$inferSelect;
+export type InsertFlowStrategy = typeof flowStrategies.$inferInsert;
 
 // Oorzaak Analysis Constants
 export const OORZAAK_CATEGORIES = {

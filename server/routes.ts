@@ -310,5 +310,31 @@ export function registerRoutes(app: express.Application) {
     }
   });
 
+  app.post("/api/flow/apply-preset", requireAuth, async (req: any, res) => {
+    try {
+      const { personalityType } = req.body;
+      const { flowProtectionService } = await import("./flow-protection-service");
+      
+      const presets = flowProtectionService.getPersonalityPresets();
+      const preset = presets.find(p => p.personalityType === personalityType);
+      
+      if (!preset) {
+        return res.status(400).json({ message: "Invalid personality type" });
+      }
+
+      // Apply the flow strategy
+      const success = await storage.applyFlowStrategy(req.user.id, preset);
+      
+      if (success) {
+        res.json({ success: true, message: "Flow strategy applied successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to apply flow strategy" });
+      }
+    } catch (error) {
+      console.error("Error applying flow strategy:", error);
+      res.status(500).json({ message: "Failed to apply flow strategy" });
+    }
+  });
+
   return httpServer;
 }
