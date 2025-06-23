@@ -15,7 +15,7 @@ function requireAuth(req: Request, res: Response, next: any) {
       isAdmin: false
     } as any;
   }
-  
+
   if (!req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
@@ -33,7 +33,7 @@ export function registerRoutes(app: Express): Server {
 
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected');
-    
+
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message.toString());
@@ -66,7 +66,7 @@ export function registerRoutes(app: Express): Server {
         { name: "Flow Protection Service", status: "pass", timestamp: new Date().toISOString() },
         { name: "Storage Layer", status: "pass", timestamp: new Date().toISOString() }
       ];
-      
+
       res.json({ 
         status: "healthy", 
         tests,
@@ -91,7 +91,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/auth/login", async (req: any, res) => {
     try {
       const { email, password } = req.body;
-      
+
       // Simple authentication for both development and production
       // In production, you can add proper password validation here
       const user = {
@@ -101,10 +101,10 @@ export function registerRoutes(app: Express): Server {
         role: 'user',
         isAdmin: false
       };
-      
+
       req.session.user = user;
       req.user = user;
-      
+
       res.json({ 
         success: true, 
         user,
@@ -250,17 +250,17 @@ export function registerRoutes(app: Express): Server {
     try {
       const { personalityType } = req.body;
       const { flowProtectionService } = await import("./flow-protection-service");
-      
+
       const presets = flowProtectionService.getPersonalityPresets();
       const preset = presets.find(p => p.personalityType === personalityType);
-      
+
       if (!preset) {
         return res.status(400).json({ message: "Invalid personality type" });
       }
 
       // Apply the flow strategy
       const success = await storage.applyFlowStrategy(req.user.id, preset);
-      
+
       if (success) {
         res.json({ success: true, message: "Flow strategy applied successfully" });
       } else {
@@ -275,10 +275,10 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/flow/recommendations", requireAuth, async (req: any, res) => {
     try {
       const { flowProtectionService } = await import("./flow-protection-service");
-      
+
       // Get current strategy
       const currentStrategy = await storage.getCurrentFlowStrategy(req.user.id);
-      
+
       if (!currentStrategy) {
         return res.json({
           shouldFocus: true,
