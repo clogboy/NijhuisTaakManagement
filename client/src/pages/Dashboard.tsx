@@ -785,7 +785,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {flowRecommendations && (
+                  {flowRecommendations?.energyLevel && (
                     <Badge variant="outline" className="text-xs bg-blue-100 border-blue-300">
                       {Math.round(flowRecommendations.energyLevel * 100)}% energie
                     </Badge>
@@ -793,7 +793,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   <Badge className="bg-blue-600 text-white">Actief</Badge>
                 </div>
               </div>
-              {flowRecommendations && (
+              {flowRecommendations?.recommendation && (
                 <div className="mt-3 pt-3 border-t border-blue-200">
                   <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
                     {flowRecommendations.recommendation}
