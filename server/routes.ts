@@ -196,11 +196,13 @@ export function registerRoutes(app: Express): Server {
   // Quick wins endpoints
   app.get("/api/quickwins", requireAuth, async (req, res) => {
     try {
+      console.log('Fetching quick wins for user:', req.user.id);
       const quickWins = await storage.getQuickWins(req.user.id);
+      console.log('Found quick wins:', quickWins?.length || 0);
       res.json(Array.isArray(quickWins) ? quickWins : []);
     } catch (error) {
       console.error("Error fetching quick wins:", error);
-      res.json([]);
+      res.status(500).json({ message: "Failed to fetch quick wins", error: error.message });
     }
   });
 
@@ -209,6 +211,7 @@ export function registerRoutes(app: Express): Server {
       const quickWin = await storage.createQuickWin({
         ...req.body,
         user_id: req.user.id,
+        createdBy: req.user.id,
       });
       res.json(quickWin);
     } catch (error) {

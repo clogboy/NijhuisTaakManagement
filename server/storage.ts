@@ -465,34 +465,68 @@ export class DatabaseStorage implements IStorage {
 
   async getQuickWins(userId: number): Promise<any[]> {
     try {
-      const { db } = await import('./db');
-      const user = await this.getUser(userId);
-      if (!user) return [];
+      // Get activities that are marked as quick wins or have quick win type
+      const quickWinActivities = await db.select().from(activities)
+        .where(and(
+          eq(activities.createdBy, userId),
+          or(
+            eq(activities.type, 'quick_win'),
+            sql`${activities.metadata}->>'isQuickWin' = 'true'`
+          )
+        ))
+        .orderBy(desc(activities.createdAt));
 
-      const userActivities = await this.getActivities(userId, '', false);
-      const quickWins = [];
-
-      // Filter activities that are quick wins (estimated time <= 30 minutes)
-      for (const activity of userActivities) {
-        if (activity.estimatedMinutes && activity.estimatedMinutes <= 30) {
-          quickWins.push({
-            id: activity.id,
-            title: activity.title,
-            description: activity.description,
-            priority: activity.priority,
-            status: activity.status,
-            estimatedMinutes: activity.estimatedMinutes,
-            linkedActivityId: activity.id,
-            createdAt: activity.createdAt
-          });
-        }
-      }
-
-      return quickWins;
+      // Transform to expected quick win format
+      return quickWinActivities.map(activity => ({
+        id: activity.id,
+        title: activity.title,
+        description: activity.description,
+        impact: activity.metadata?.impact || 'medium',
+        effort: activity.metadata?.effort || 'low',
+        status: activity.status,
+        linkedActivityId: activity.id,
+        createdBy: activity.createdBy,
+        createdAt: activity.createdAt,
+        updatedAt: activity.updatedAt
+      }));
     } catch (error) {
       console.error('Error getting quick wins:', error);
       return [];
     }
+  }
+
+  async createQuickWin(quickWinData: any): Promise<any> {
+    const data = {
+      title: quickWinData.title,
+      description: quickWinData.description,
+      type: 'quick_win' as const,
+      priority: 'normal' as const,
+      status: quickWinData.status || 'pending',
+      metadata: {
+        impact: quickWinData.impact || 'medium',
+        effort: quickWinData.effort || 'low',
+        isQuickWin: true,
+        linkedActivityId: quickWinData.linkedActivityId
+      },
+      parentId: quickWinData.linkedActivityId,
+      createdBy: quickWinData.user_id || quickWinData.createdBy
+    };
+
+    const [newQuickWin] = await db.insert(activities).values(data).returning();
+    
+    // Transform to expected format
+    return {
+      id: newQuickWin.id,
+      title: newQuickWin.title,
+      description: newQuickWin.description,
+      impact: newQuickWin.metadata?.impact || 'medium',
+      effort: newQuickWin.metadata?.effort || 'low',
+      status: newQuickWin.status,
+      linkedActivityId: newQuickWin.metadata?.linkedActivityId || newQuickWin.parentId,
+      createdBy: newQuickWin.createdBy,
+      createdAt: newQuickWin.createdAt,
+      updatedAt: newQuickWin.updatedAt
+    };
   }
 
   async getQuickWinsByActivity(activityId: number): Promise<any[]> {
