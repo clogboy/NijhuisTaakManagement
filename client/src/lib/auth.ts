@@ -95,3 +95,20 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
 }
+
+// Email sending function
+export async function sendEmail(
+  emails: string[],
+  subject: string,
+  body: string
+): Promise<void> {
+  const response = await apiRequest('POST', '/api/email/send', {
+    emails,
+    subject,
+    body
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to send email');
+  }
+}
