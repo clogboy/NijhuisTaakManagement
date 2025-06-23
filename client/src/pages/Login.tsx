@@ -4,8 +4,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FolderOpen } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { mockMicrosoftLogin } from "@/lib/auth";
+import { apiRequest, mockMicrosoftLogin } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/hooks/useTranslations";
 
@@ -23,7 +22,7 @@ export default function Login() {
         // In production, this would use MSAL library
         const microsoftUser = await mockMicrosoftLogin();
 
-        const response = await apiRequest("/api/auth/login", "POST", microsoftUser);
+        const response = await apiRequest("POST", "/api/auth/login", microsoftUser);
         return await response.json();
       } finally {
         setIsLoading(false);

@@ -74,3 +74,24 @@ export async function checkAuthStatus(): Promise<User | null> {
   
   return null;
 }
+
+// Mock Microsoft login for development
+export async function mockMicrosoftLogin(): Promise<{
+  email: string;
+  name: string;
+  microsoftId: string;
+}> {
+  // Return mock data for development
+  return {
+    email: "b.weinreder@nijhuis.nl",
+    name: "Bram Weinreder",
+    microsoftId: "mock-microsoft-id-123",
+  };
+}
+
+// Auth state interface
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  isLoading: boolean;
+}
