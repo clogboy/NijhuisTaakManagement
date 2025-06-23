@@ -1,0 +1,524 @@
+
+> rest-express@1.0.0 dev
+> concurrently "npm run server" "npm run client"
+
+[0] 
+[0] > rest-express@1.0.0 server
+[0] > NODE_ENV=development tsx watch server/index.ts
+[0] 
+[1] 
+[1] > rest-express@1.0.0 client
+[1] > cd client && vite
+[1] 
+[1] 
+[1]   VITE v5.4.15  ready in 160 ms
+[1] 
+[1]   ➜  Local:   http://localhost:5173/
+[1]   ➜  Network: use --host to expose
+[1] Error: The following dependencies are imported but could not be resolved:
+[1] 
+[1]   @/components/ui/toaster (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/contexts/OnboardingContext (imported by /home/runner/workspace/client/src/main.tsx)
+[1]   @/contexts/LowStimulusContext (imported by /home/runner/workspace/client/src/main.tsx)
+[1]   @/utils/errorReporter (imported by /home/runner/workspace/client/src/main.tsx)
+[1]   @/components/ui/tooltip (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/contexts/ThemeContext (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Login (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/DashboardPage (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Activities (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Contacts (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/QuickWins (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Roadblocks (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Subtasks (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Agenda (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/CalendarIntegration (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/CalendarCallback (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Profile (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Settings (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Integrations (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/Analytics (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/pages/not-found (imported by /home/runner/workspace/client/src/App.tsx)
+[1]   @/components/layout/AppLayout (imported by /home/runner/workspace/client/src/App.tsx)
+[1] 
+[1] Are they installed?
+[1]     at file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CevzF2vT.js:50668:15
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[1]     at async file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CevzF2vT.js:50173:26
+[0] [2025-06-23T09:02:13.731Z] INFO: Initializing PostgreSQL database connection
+[0] 9:02:13 AM [express] serving on port 5000
+[0] Daily scheduler started - will run at midnight
+[0] 9:02:13 AM [express] daily scheduler initialized - next sync at midnight
+[0] Error:   Failed to scan for dependencies from entries:
+[0]   /home/runner/workspace/client/index.html
+[0] 
+[0]   ✘ [ERROR] Multiple exports with the same name "Toaster"
+[0] 
+[0]     client/src/components/ui/toaster.tsx:46:16:
+[0]       46 │ export function Toaster() {
+[0]          ╵                 ~~~~~~~
+[0] 
+[0]   The name "Toaster" was originally exported here:
+[0] 
+[0]     client/src/components/ui/toaster.tsx:11:16:
+[0]       11 │ export function Toaster() {
+[0]          ╵                 ~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "Toaster" has already been declared
+[0] 
+[0]     client/src/components/ui/toaster.tsx:46:16:
+[0]       46 │ export function Toaster() {
+[0]          ╵                 ~~~~~~~
+[0] 
+[0]   The symbol "Toaster" was originally declared here:
+[0] 
+[0]     client/src/components/ui/toaster.tsx:11:16:
+[0]       11 │ export function Toaster() {
+[0]          ╵                 ~~~~~~~
+[0] 
+[0]   Duplicate top-level function declarations are not allowed in an ECMAScript module. This file is considered to be an ECMAScript module because of the "export" keyword here:
+[0] 
+[0]     client/src/components/ui/toaster.tsx:46:0:
+[0]       46 │ export function Toaster() {
+[0]          ╵ ~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "TooltipProvider" has already been declared
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:38:6:
+[0]       38 │ const TooltipProvider = TooltipPrimitive.Provider
+[0]          ╵       ~~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "TooltipProvider" was originally declared here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:8:6:
+[0]       8 │ const TooltipProvider = TooltipPrimitive.Provider
+[0]         ╵       ~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "Tooltip" has already been declared
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:40:6:
+[0]       40 │ const Tooltip = TooltipPrimitive.Root
+[0]          ╵       ~~~~~~~
+[0] 
+[0]   The symbol "Tooltip" was originally declared here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:10:6:
+[0]       10 │ const Tooltip = TooltipPrimitive.Root
+[0]          ╵       ~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "TooltipTrigger" has already been declared
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:42:6:
+[0]       42 │ const TooltipTrigger = TooltipPrimitive.Trigger
+[0]          ╵       ~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "TooltipTrigger" was originally declared here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:12:6:
+[0]       12 │ const TooltipTrigger = TooltipPrimitive.Trigger
+[0]          ╵       ~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "TooltipContent" has already been declared
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:44:6:
+[0]       44 │ const TooltipContent = React.forwardRef<
+[0]          ╵       ~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "TooltipContent" was originally declared here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:14:6:
+[0]       14 │ const TooltipContent = React.forwardRef<
+[0]          ╵       ~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "Tooltip"
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:60:9:
+[0]       60 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵          ~~~~~~~
+[0] 
+[0]   The name "Tooltip" was originally exported here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:30:9:
+[0]       30 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵          ~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "TooltipTrigger"
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:60:18:
+[0]       60 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵                   ~~~~~~~~~~~~~~
+[0] 
+[0]   The name "TooltipTrigger" was originally exported here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:30:18:
+[0]       30 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵                   ~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "TooltipContent"
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:60:34:
+[0]       60 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵                                   ~~~~~~~~~~~~~~
+[0] 
+[0]   The name "TooltipContent" was originally exported here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:30:34:
+[0]       30 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵                                   ~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "TooltipProvider"
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:60:50:
+[0]       60 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵                                                   ~~~~~~~~~~~~~~~
+[0] 
+[0]   The name "TooltipProvider" was originally exported here:
+[0] 
+[0]     client/src/components/ui/tooltip.tsx:30:50:
+[0]       30 │ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+[0]          ╵                                                   ~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "LowStimulusContext" has already been declared
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:51:6:
+[0]       51 │ const LowStimulusContext = createContext<LowStimulusContextType | ...
+[0]          ╵       ~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "LowStimulusContext" was originally declared here:
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:9:6:
+[0]       9 │ const LowStimulusContext = createContext<LowStimulusContextType | u...
+[0]         ╵       ~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "LowStimulusProvider"
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:53:13:
+[0]       53 │ export const LowStimulusProvider: React.FC<{ children: ReactNode }...
+[0]          ╵              ~~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The name "LowStimulusProvider" was originally exported here:
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:11:16:
+[0]       11 │ export function LowStimulusProvider({ children }: { children: Reac...
+[0]          ╵                 ~~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "LowStimulusProvider" has already been declared
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:53:13:
+[0]       53 │ export const LowStimulusProvider: React.FC<{ children: ReactNode }...
+[0]          ╵              ~~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "LowStimulusProvider" was originally declared here:
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:11:16:
+[0]       11 │ export function LowStimulusProvider({ children }: { children: Reac...
+[0]          ╵                 ~~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "useLowStimulus"
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:66:13:
+[0]       66 │ export const useLowStimulus = () => {
+[0]          ╵              ~~~~~~~~~~~~~~
+[0] 
+[0]   The name "useLowStimulus" was originally exported here:
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:37:16:
+[0]       37 │ export function useLowStimulus() {
+[0]          ╵                 ~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "useLowStimulus" has already been declared
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:66:13:
+[0]       66 │ export const useLowStimulus = () => {
+[0]          ╵              ~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "useLowStimulus" was originally declared here:
+[0] 
+[0]     client/src/contexts/LowStimulusContext.tsx:37:16:
+[0]       37 │ export function useLowStimulus() {
+[0]          ╵                 ~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "OnboardingContext" has already been declared
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:163:6:
+[0]       163 │ const OnboardingContext = createContext<OnboardingContextType | u...
+[0]           ╵       ~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "OnboardingContext" was originally declared here:
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:25:6:
+[0]       25 │ const OnboardingContext = createContext<OnboardingContextType | un...
+[0]          ╵       ~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "OnboardingProvider"
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:165:13:
+[0]       165 │ export const OnboardingProvider: React.FC<{ children: ReactNode }...
+[0]           ╵              ~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The name "OnboardingProvider" was originally exported here:
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:39:16:
+[0]       39 │ export function OnboardingProvider({ children }: { children: React...
+[0]          ╵                 ~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "OnboardingProvider" has already been declared
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:165:13:
+[0]       165 │ export const OnboardingProvider: React.FC<{ children: ReactNode }...
+[0]           ╵              ~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "OnboardingProvider" was originally declared here:
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:39:16:
+[0]       39 │ export function OnboardingProvider({ children }: { children: React...
+[0]          ╵                 ~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "useOnboarding"
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:181:13:
+[0]       181 │ export const useOnboarding = () => {
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0]   The name "useOnboarding" was originally exported here:
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:147:16:
+[0]       147 │ export function useOnboarding() {
+[0]           ╵                 ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "useOnboarding" has already been declared
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:181:13:
+[0]       181 │ export const useOnboarding = () => {
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "useOnboarding" was originally declared here:
+[0] 
+[0]     client/src/contexts/OnboardingContext.tsx:147:16:
+[0]       147 │ export function useOnboarding() {
+[0]           ╵                 ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "ThemeContext" has already been declared
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:121:6:
+[0]       121 │ const ThemeContext = createContext<ThemeContextType | undefined>(...
+[0]           ╵       ~~~~~~~~~~~~
+[0] 
+[0]   The symbol "ThemeContext" was originally declared here:
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:11:6:
+[0]       11 │ const ThemeContext = createContext<ThemeContextType | undefined>(u...
+[0]          ╵       ~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "ThemeProvider"
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:123:13:
+[0]       123 │ export const ThemeProvider: React.FC<{ children: ReactNode }> = (...
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0]   The name "ThemeProvider" was originally exported here:
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:25:16:
+[0]       25 │ export function ThemeProvider({ children }: ThemeProviderProps) {
+[0]          ╵                 ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "ThemeProvider" has already been declared
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:123:13:
+[0]       123 │ export const ThemeProvider: React.FC<{ children: ReactNode }> = (...
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "ThemeProvider" was originally declared here:
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:25:16:
+[0]       25 │ export function ThemeProvider({ children }: ThemeProviderProps) {
+[0]          ╵                 ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "useTheme"
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:143:13:
+[0]       143 │ export const useTheme = () => {
+[0]           ╵              ~~~~~~~~
+[0] 
+[0]   The name "useTheme" was originally exported here:
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:13:16:
+[0]       13 │ export function useTheme() {
+[0]          ╵                 ~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "useTheme" has already been declared
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:143:13:
+[0]       143 │ export const useTheme = () => {
+[0]           ╵              ~~~~~~~~
+[0] 
+[0]   The symbol "useTheme" was originally declared here:
+[0] 
+[0]     client/src/contexts/ThemeContext.tsx:13:16:
+[0]       13 │ export function useTheme() {
+[0]          ╵                 ~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "apiRequest"
+[0] 
+[0]     client/src/lib/auth.ts:115:13:
+[0]       115 │ export const apiRequest = async (url: string, options?: RequestIn...
+[0]           ╵              ~~~~~~~~~~
+[0] 
+[0]   The name "apiRequest" was originally exported here:
+[0] 
+[0]     client/src/lib/auth.ts:18:22:
+[0]       18 │ export async function apiRequest(method: string, url: string, data...
+[0]          ╵                       ~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "apiRequest" has already been declared
+[0] 
+[0]     client/src/lib/auth.ts:115:13:
+[0]       115 │ export const apiRequest = async (url: string, options?: RequestIn...
+[0]           ╵              ~~~~~~~~~~
+[0] 
+[0]   The symbol "apiRequest" was originally declared here:
+[0] 
+[0]     client/src/lib/auth.ts:18:22:
+[0]       18 │ export async function apiRequest(method: string, url: string, data...
+[0]          ╵                       ~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "mockMicrosoftLogin"
+[0] 
+[0]     client/src/lib/auth.ts:119:13:
+[0]       119 │ export const mockMicrosoftLogin = async () => {
+[0]           ╵              ~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The name "mockMicrosoftLogin" was originally exported here:
+[0] 
+[0]     client/src/lib/auth.ts:69:22:
+[0]       69 │ export async function mockMicrosoftLogin() {
+[0]          ╵                       ~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "mockMicrosoftLogin" has already been declared
+[0] 
+[0]     client/src/lib/auth.ts:119:13:
+[0]       119 │ export const mockMicrosoftLogin = async () => {
+[0]           ╵              ~~~~~~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "mockMicrosoftLogin" was originally declared here:
+[0] 
+[0]     client/src/lib/auth.ts:69:22:
+[0]       69 │ export async function mockMicrosoftLogin() {
+[0]          ╵                       ~~~~~~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "sendEmail"
+[0] 
+[0]     client/src/lib/auth.ts:123:13:
+[0]       123 │ export const sendEmail = async (data: any) => {
+[0]           ╵              ~~~~~~~~~
+[0] 
+[0]   The name "sendEmail" was originally exported here:
+[0] 
+[0]     client/src/lib/auth.ts:90:22:
+[0]       90 │ export async function sendEmail(
+[0]          ╵                       ~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "sendEmail" has already been declared
+[0] 
+[0]     client/src/lib/auth.ts:123:13:
+[0]       123 │ export const sendEmail = async (data: any) => {
+[0]           ╵              ~~~~~~~~~
+[0] 
+[0]   The symbol "sendEmail" was originally declared here:
+[0] 
+[0]     client/src/lib/auth.ts:90:22:
+[0]       90 │ export async function sendEmail(
+[0]          ╵                       ~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "activities" has already been declared
+[0] 
+[0]     client/src/pages/Agenda.tsx:89:8:
+[0]       89 │   const { data: activities } = useQuery<Activity[]>({
+[0]          ╵         ^
+[0] 
+[0]   The symbol "activities" was originally declared here:
+[0] 
+[0]     client/src/pages/Agenda.tsx:57:8:
+[0]       57 │   const [activities, setActivities] = useState<Activity[]>([]);
+[0]          ╵         ^
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "ErrorReporter" has already been declared
+[0] 
+[0]     client/src/utils/errorReporter.ts:101:6:
+[0]       101 │ class ErrorReporter {
+[0]           ╵       ~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "ErrorReporter" was originally declared here:
+[0] 
+[0]     client/src/utils/errorReporter.ts:3:6:
+[0]       3 │ class ErrorReporter {
+[0]         ╵       ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] Multiple exports with the same name "errorReporter"
+[0] 
+[0]     client/src/utils/errorReporter.ts:121:13:
+[0]       121 │ export const errorReporter = ErrorReporter.getInstance();
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0]   The name "errorReporter" was originally exported here:
+[0] 
+[0]     client/src/utils/errorReporter.ts:100:13:
+[0]       100 │ export const errorReporter = ErrorReporter.getInstance();
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0] ✘ [ERROR] The symbol "errorReporter" has already been declared
+[0] 
+[0]     client/src/utils/errorReporter.ts:121:13:
+[0]       121 │ export const errorReporter = ErrorReporter.getInstance();
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0]   The symbol "errorReporter" was originally declared here:
+[0] 
+[0]     client/src/utils/errorReporter.ts:100:13:
+[0]       100 │ export const errorReporter = ErrorReporter.getInstance();
+[0]           ╵              ~~~~~~~~~~~~~
+[0] 
+[0] 
+[0]     at failureErrorWithLog (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15)
+[0]     at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:945:25
+[0]     at runOnEndCallbacks (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1315:45)
+[0]     at buildResponseToResult (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:943:7)
+[0]     at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:955:9
+[0]     at new Promise (<anonymous>)
+[0]     at requestCallbacks.on-end (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:954:54)
+[0]     at handleRequest (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:647:17)
+[0]     at handleIncomingPacket (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:672:7)
+[0]     at Socket.readFromStdout (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:600:7)
