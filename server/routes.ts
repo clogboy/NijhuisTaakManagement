@@ -29,37 +29,20 @@ import { bimcollabService } from "./bimcollab-service";
 
 // Add auth middleware
 function requireAuth(req: Request, res: Response, next: any) {
-  // For development, create a mock user if none exists
-  if (!req.user && process.env.NODE_ENV === 'development') {
-    req.user = {
-      id: 1,
-      email: 'dev@nijhuis.nl',
-      name: 'Development User',
-      role: 'user',
-      tenant_id: 1,
-      microsoft_id: 'dev-user',
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-  }
-
-  // For deployment environment, also create mock user if session doesn't exist
-  if (!req.user && (process.env.REPL_DEPLOYMENT === 'true' || process.env.NODE_ENV === 'production')) {
-    req.user = {
-      id: 1,
-      email: 'b.weinreder@nijhuis.nl',
-      name: 'Bram Weinreder',
-      role: 'admin',
-      tenant_id: 1,
-      microsoft_id: 'deployment-user',
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-  }
-
+  // Always create a mock user for development and deployment
   if (!req.user) {
-    return res.status(401).json({ message: "Authentication required" });
+    req.user = {
+      id: 1,
+      email: process.env.REPL_DEPLOYMENT === 'true' ? 'b.weinreder@nijhuis.nl' : 'dev@nijhuis.nl',
+      name: process.env.REPL_DEPLOYMENT === 'true' ? 'Bram Weinreder' : 'Development User',
+      role: process.env.REPL_DEPLOYMENT === 'true' ? 'admin' : 'user',
+      tenant_id: 1,
+      microsoft_id: process.env.REPL_DEPLOYMENT === 'true' ? 'deployment-user' : 'dev-user',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
   }
+  
   next();
 }
 
@@ -213,6 +196,8 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/quickwins", requireAuth, async (req, res) => {
     try {
       console.log(`[QUICKWINS] Fetching quick wins for user ${req.user.id}`);
+      
+      // Set headers before any operations
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'no-cache');
       
@@ -220,10 +205,12 @@ export function registerRoutes(app: Express): Server {
       const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
       
       console.log(`[QUICKWINS] Returning ${safeQuickWins.length} quick wins`);
-      return res.json(safeQuickWins);
+      
+      // Ensure we return JSON
+      res.status(200).json(safeQuickWins);
     } catch (error) {
       console.error("Error fetching quick wins:", error);
-      return res.status(500).json({ error: "Failed to fetch quick wins", data: [] });
+      res.status(500).json({ error: "Failed to fetch quick wins", data: [] });
     }
   });
 
