@@ -242,14 +242,9 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {productivityHealth?.score ?? 0}%
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">Productivity tracking coming soon</p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {productivityHealth?.status ?? 'Calculating...'}
-              </p>
-            </div>
             </CardContent>
           </Card>
         )}
