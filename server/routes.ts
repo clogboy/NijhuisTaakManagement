@@ -46,6 +46,13 @@ function requireAuth(req: Request, res: Response, next: any) {
   next();
 }
 
+// Async error handler wrapper
+const asyncHandler = (fn: (req: Request, res: Response, next: any) => Promise<any>) => {
+  return (req: Request, res: Response, next: any) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
@@ -106,18 +113,13 @@ export function registerRoutes(app: Express): Server {
     res.status(501).json({ message: "Production auth not implemented" });
   });
 
-  app.get("/api/auth/me", requireAuth, async (req, res) => {
-    try {
-      const user = await storage.getUserById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json({ user });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user data" });
+  app.get("/api/auth/me", requireAuth, asyncHandler(async (req, res) => {
+    const user = await storage.getUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  });
+    res.json({ user });
+  }));
 
   // Activities endpoints
   app.get("/api/activities", requireAuth, async (req, res) => {

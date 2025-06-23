@@ -17,6 +17,11 @@ process.on('uncaughtException', (error) => {
   // Don't exit the process, just log the error
 });
 
+// Graceful error handling for async operations
+process.on('warning', (warning) => {
+  console.warn('Process warning:', warning.name, warning.message);
+});
+
 // Extend Express Request type to include user
 declare global {
   namespace Express {
@@ -88,8 +93,12 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    console.error('Express error handler caught:', err);
+    
+    // Ensure response is sent and don't re-throw to prevent unhandled rejections
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
   });
 
   // importantly only setup vite in development and after
