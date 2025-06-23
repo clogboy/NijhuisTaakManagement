@@ -677,7 +677,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 <Card className="border-gray-100">
                   <CardContent className="p-6">
                     <Button
-                      onClick={()={() => setIsDeepFocusModalOpen(true)}
+                      onClick={() => setIsDeepFocusModalOpen(true)}
                       variant="outline"
                       className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                     >
