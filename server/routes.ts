@@ -29,8 +29,8 @@ import { bimcollabService } from "./bimcollab-service";
 
 // Add auth middleware
 function requireAuth(req: Request, res: Response, next: any) {
-  // For development, create a mock user if none exists
-  if (!req.user && process.env.NODE_ENV === 'development') {
+  // Create a mock user if none exists (for both dev and deployment until proper auth is implemented)
+  if (!req.user) {
     req.user = {
       id: 1,
       email: 'dev@nijhuis.nl',
@@ -43,9 +43,6 @@ function requireAuth(req: Request, res: Response, next: any) {
     };
   }
 
-  if (!req.user) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
   next();
 }
 
@@ -91,22 +88,23 @@ export function registerRoutes(app: Express): Server {
 
   // Auth endpoints
   app.post("/api/auth/login", async (req, res) => {
-    // For development, create a session
-    if (process.env.NODE_ENV === 'development') {
-      req.session.user = {
-        id: 1,
-        email: 'dev@nijhuis.nl',
-        name: 'Development User',
-        role: 'user',
-        tenant_id: 1,
-        microsoft_id: 'dev-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      };
-      req.user = req.session.user;
-      return res.json({ success: true, user: req.user });
+    // Create a session for both dev and deployment
+    const user = {
+      id: 1,
+      email: 'dev@nijhuis.nl',
+      name: 'Development User',
+      role: 'user',
+      tenant_id: 1,
+      microsoft_id: 'dev-user',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    
+    if (req.session) {
+      req.session.user = user;
     }
-    res.status(501).json({ message: "Production auth not implemented" });
+    req.user = user;
+    return res.json({ success: true, user: req.user });
   });
 
   app.get("/api/auth/me", requireAuth, async (req, res) => {
