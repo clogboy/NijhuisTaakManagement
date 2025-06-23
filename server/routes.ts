@@ -477,5 +477,41 @@ export function registerRoutes(app: express.Application) {
     }
   });
 
+  // Analytics endpoint
+  app.get('/api/analytics', requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Return safe analytics data without productivity score
+      const analytics = {
+        completedToday: 0,
+        totalActivities: 0,
+        overdueActivities: 0,
+        upcomingActivities: 0,
+        completionRate: 0,
+        averageCompletionTime: 0,
+        topCategories: [],
+        weeklyTrend: []
+      };
+
+      try {
+        const { analyticsService } = await import("./analytics-service");
+        const analyticsData = await analyticsService.getAnalytics(userId);
+        Object.assign(analytics, analyticsData);
+      } catch (error) {
+        console.error('Analytics service error:', error);
+        // Return safe defaults if analytics fails
+      }
+
+      res.json(analytics);
+    } catch (error) {
+      console.error('Analytics error:', error);
+      res.status(500).json({ message: 'Error fetching analytics' });
+    }
+  });
+
   return httpServer;
 }

@@ -27,14 +27,13 @@ import {
   RefreshCw,
   User,
   Users,
-  Activity as ActivityIcon,
+  ActivityIcon,
   Plus,
   Brain
 } from "lucide-react";
 import { Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from "@/hooks/useTranslations";
 import AppLayout from "@/components/layout/AppLayout";
 import { Shield } from "lucide-react";
 

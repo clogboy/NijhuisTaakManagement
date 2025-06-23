@@ -246,3 +246,19 @@ export const OORZAAK_FACTORS = {
   },
   unclear: {}
 } as const;
+
+export const FLOW_PROTECTION_STRATEGIES = [
+  'focusmode',
+  'timeblocking', 
+  'notification_blocking',
+  'distraction_elimination'
+] as const;
+
+export const OORZAAK_FACTORS = [
+  'deadline_pressure',
+  'resource_shortage',
+  'technical_difficulty',
+  'communication_issues',
+  'scope_creep',
+  'external_dependencies'
+] as const;

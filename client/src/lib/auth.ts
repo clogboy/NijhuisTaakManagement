@@ -14,31 +14,22 @@ export function clearCurrentUser() {
   currentUser = null;
 }
 
-export async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
-  const options: RequestInit = {
+// API request helper
+export async function apiRequest(method: string, url: string, data?: any) {
+  const response = await fetch(url, {
     method,
     headers: {
       'Content-Type': 'application/json',
     },
+    body: data ? JSON.stringify(data) : undefined,
     credentials: 'include',
-  };
+  });
 
-  if (data && method !== 'GET') {
-    options.body = JSON.stringify(data);
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`);
   }
 
-  try {
-    const response = await fetch(url, options);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  } catch (error) {
-    console.error('API request failed:', error);
-    throw error;
-  }
+  return response;
 }
 
 export async function loginUser(credentials?: any): Promise<User> {
@@ -75,17 +66,17 @@ export async function checkAuthStatus(): Promise<User | null> {
 }
 
 // Mock Microsoft login for development
-export async function mockMicrosoftLogin(): Promise<{
-  email: string;
-  name: string;
-  microsoftId: string;
-}> {
-  // Return mock data for development
-  return {
-    email: "b.weinreder@nijhuis.nl",
-    name: "Bram Weinreder",
-    microsoftId: "mock-microsoft-id-123",
+export async function mockMicrosoftLogin() {
+  const mockUser = {
+    id: '1',
+    email: 'demo@example.com',
+    name: 'Demo User',
+    picture: null,
   };
+
+  // Store mock user in session
+  localStorage.setItem('user', JSON.stringify(mockUser));
+  window.location.href = '/dashboard';
 }
 
 // Auth state interface
@@ -101,18 +92,13 @@ export async function sendEmail(
   subject: string,
   body: string
 ): Promise<void> {
-  try {
-    const response = await apiRequest('POST', '/api/email/send', {
-      emails,
-      subject,
-      body
-    });
+  const response = await apiRequest('POST', '/api/email/send', {
+    emails,
+    subject,
+    body
+  });
 
-    if (!response.ok) {
-      throw new Error('Failed to send email');
-    }
-  } catch (error) {
-    console.error('Send email error:', error);
+  if (!response.ok) {
     throw new Error('Failed to send email');
   }
 }
