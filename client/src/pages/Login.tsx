@@ -20,27 +20,51 @@ export default function Login() {
     mutationFn: async () => {
       setIsLoading(true);
       try {
-        // In production, this would use MSAL library
-        const microsoftUser = await mockMicrosoftLogin();
-
-        const response = await apiRequest("/api/auth/login", "POST", microsoftUser);
-        return await response.json();
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email: 'dev@nijhuis.nl',
+            name: 'Development User' 
+          }),
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Login failed: ${response.status} ${errorText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.message || 'Login failed');
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Login mutation error:', error);
+        throw error;
       } finally {
         setIsLoading(false);
       }
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/auth/me"], data);
+      console.log('Login successful:', data);
+      queryClient.setQueryData(["/api/auth/me"], { user: data.user });
       toast({
         title: "Welcome!",
-        description: `Successfully signed in as ${data.user.name}`,
+        description: `Successfully signed in as ${data.user?.name || 'User'}`,
       });
-      setLocation("/");
+      setTimeout(() => setLocation("/"), 100);
     },
     onError: (error: any) => {
+      console.error('Login error:', error);
       toast({
         title: "Sign In Failed",
-        description: error.message || "Failed to sign in with Microsoft",
+        description: error.message || "Failed to sign in",
         variant: "destructive",
       });
     },
@@ -84,7 +108,7 @@ export default function Login() {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Bezig met inloggen...
+                  Signing in...
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
@@ -94,34 +118,9 @@ export default function Login() {
                     <rect x="1" y="12" width="9" height="9" fill="#ffb900"/>
                     <rect x="12" y="12" width="9" height="9" fill="#7fba00"/>
                   </svg>
-                  {t("login.microsoftSignIn")}
+                  Sign in with Microsoft
                 </div>
               )}
-            </Button>
-
-            <Button 
-              type="button" 
-              className="w-full" 
-              disabled={isLoading}
-              onClick={async () => {
-                setIsLoading(true);
-                try {
-                  const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dev: true })
-                  });
-                  if (response.ok) {
-                    window.location.href = '/';
-                  }
-                } catch (error) {
-                  console.error('Login error:', error);
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
-            >
-              {isLoading ? "Signing in..." : "Sign in (Development)"}
             </Button>
 
             <div className="text-center">

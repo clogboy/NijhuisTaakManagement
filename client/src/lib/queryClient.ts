@@ -44,26 +44,50 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      queryFn: async ({ queryKey }) => {
+        const url = Array.isArray(queryKey) ? queryKey[0] as string : queryKey as string;
+        try {
+          const response = await fetch(url, {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              // Handle unauthorized - redirect to login
+              window.location.href = '/login';
+              throw new Error('Unauthorized');
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          return await response.json();
+        } catch (error) {
+          console.error(`Query error for ${url}:`, error);
+          throw error;
+        }
+      },
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors (client errors)
-        if (error?.status >= 400 && error?.status < 500) {
+        if (error?.message?.includes('HTTP 4')) {
           return false;
         }
-        // Retry up to 3 times for other errors
-        return failureCount < 3;
+        // Don't retry on auth errors
+        if (error?.message?.includes('Unauthorized')) {
+          return false;
+        }
+        // Retry up to 2 times for other errors
+        return failureCount < 2;
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-      // Add error handling
-      onError: (error: any) => {
-        console.error('Query error:', error);
-      },
+      refetchOnReconnect: false,
     },
     mutations: {
       retry: false,
-      onError: (error: any) => {
-        console.error('Mutation error:', error);
-      },
     },
   },
 });
