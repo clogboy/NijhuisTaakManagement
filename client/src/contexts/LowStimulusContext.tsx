@@ -1,41 +1,34 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface LowStimulusContextType {
   isLowStimulusMode: boolean;
-  toggleLowStimulusMode: () => void;
+  activateLowStimulus: () => void;
+  deactivateLowStimulus: () => void;
 }
 
 const LowStimulusContext = createContext<LowStimulusContextType | undefined>(undefined);
 
 export function LowStimulusProvider({ children }: { children: ReactNode }) {
-  const [isLowStimulusMode, setIsLowStimulusMode] = useState(() => {
-    try {
-      const saved = localStorage.getItem('lowStimulusMode');
-      return saved ? JSON.parse(saved) : false;
-    } catch {
-      return false;
-    }
-  });
+  const [isLowStimulusMode, setIsLowStimulusMode] = useState(false);
 
-  const toggleLowStimulusMode = () => {
-    setIsLowStimulusMode((prev: boolean) => {
-      const newValue = !prev;
-      try {
-        localStorage.setItem('lowStimulusMode', JSON.stringify(newValue));
-      } catch (error) {
-        console.warn('Failed to save low stimulus mode preference:', error);
-      }
-      return newValue;
-    });
+  const activateLowStimulus = () => {
+    setIsLowStimulusMode(true);
+    // Apply low stimulus styling to body
+    document.body.classList.add('low-stimulus-mode');
+  };
+
+  const deactivateLowStimulus = () => {
+    setIsLowStimulusMode(false);
+    // Remove low stimulus styling from body
+    document.body.classList.remove('low-stimulus-mode');
   };
 
   return (
-    <LowStimulusContext.Provider 
-      value={{ 
-        isLowStimulusMode, 
-        toggleLowStimulusMode 
-      }}
-    >
+    <LowStimulusContext.Provider value={{
+      isLowStimulusMode,
+      activateLowStimulus,
+      deactivateLowStimulus,
+    }}>
       {children}
     </LowStimulusContext.Provider>
   );

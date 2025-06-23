@@ -1,151 +1,54 @@
-import { toast } from '@/hooks/use-toast';
+import { User } from "@shared/schema";
 
-// Mock user for development
-const MOCK_USER = {
-  id: '1',
-  name: 'Test User',
-  email: 'test@example.com',
-  role: 'user'
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  isLoading: boolean;
+}
+
+export const mockMSALConfig = {
+  auth: {
+    clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID || "mock-client-id",
+    authority: "https://login.microsoftonline.com/common",
+    redirectUri: window.location.origin,
+  },
+  cache: {
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: false,
+  },
 };
 
-export async function apiRequest(method: string, url: string, data?: any) {
-  const isServer = typeof window === 'undefined';
-  const baseUrl = isServer ? process.env.API_URL || 'http://localhost:5000' : '';
+export const mockLoginRequest = {
+  scopes: ["openid", "profile", "email", "User.Read"],
+};
 
-  try {
-    const config: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
+// Mock Microsoft Graph integration for demo purposes
+export const mockMicrosoftLogin = async (): Promise<{
+  email: string;
+  name: string;
+  microsoftId: string;
+}> => {
+  // In production, this would use MSAL library
+  // For now, return mock data for b.weinreder@nijhuis.nl
+  return {
+    email: "b.weinreder@nijhuis.nl",
+    name: "Bram Weinreder",
+    microsoftId: "mock-microsoft-id-123",
+  };
+};
 
-    if (data) {
-      config.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(`${baseUrl}/api${url}`, config);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    }
-
-    return await response.text();
-  } catch (error) {
-    console.error('API request failed:', error);
-
-    if (error instanceof Error) {
-      toast({
-        title: 'API Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-
-    throw error;
-  }
-}
-
-export function getCurrentUser() {
-  return MOCK_USER;
-}
-
-export function isAuthenticated(): boolean {
-  return true; // Always return true for development
-}
-
-export async function mockMicrosoftLogin() {
-  try {
-    localStorage.setItem('user', JSON.stringify(MOCK_USER));
-    toast({
-      title: 'Success',
-      description: 'Successfully logged in with mock user',
-    });
-    return MOCK_USER;
-  } catch (error) {
-    console.error('Mock login failed:', error);
-    toast({
-      title: 'Login Error',
-      description: 'Failed to log in',
-      variant: 'destructive',
-    });
-    throw error;
-  }
-}
-
-export async function sendEmail(
-  to: string,
-  subject: string,
-  body: string,
-  activityId?: string
-) {
-  try {
-    const emailData = {
-      to,
-      subject,
-      body,
-      activityId
-    };
-
-    const result = await apiRequest('POST', '/send-email', emailData);
-
-    toast({
-      title: 'Email Sent',
-      description: `Email sent successfully to ${to}`,
-    });
-
-    return result;
-  } catch (error) {
-    console.error('Send email failed:', error);
-    toast({
-      title: 'Email Error',
-      description: 'Failed to send email',
-      variant: 'destructive',
-    });
-    throw error;
-  }
-}
-// API request helper function
-export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`/api${endpoint}`, {
+export const sendEmail = async (to: string[], subject: string, body: string): Promise<void> => {
+  // In production, this would use Microsoft Graph API
+  const response = await fetch("/api/send-email", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
+      "Content-Type": "application/json",
     },
-    ...options,
+    credentials: "include",
+    body: JSON.stringify({ to, subject, body }),
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`);
+    throw new Error("Failed to send email");
   }
-
-  return response.json();
-};
-
-// Mock Microsoft login for development
-export const mockMicrosoftLogin = async () => {
-  return apiRequest('/auth/mock-microsoft-login', {
-    method: 'POST',
-  });
-};
-
-// Send email function
-export const sendEmail = async (emailData: any) => {
-  return apiRequest('/email/send', {
-    method: 'POST',
-    body: JSON.stringify(emailData),
-  });
-};
-
-export const auth = {
-  login,
-  logout,
-  getCurrentUser,
-  isAuthenticated
 };

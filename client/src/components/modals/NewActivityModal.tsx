@@ -37,7 +37,6 @@ import { insertActivitySchema } from "@shared/schema";
 import { Contact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/hooks/useTranslations";
-import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = insertActivitySchema.extend({
   dueDate: z.string().optional(),
@@ -59,10 +58,6 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
 
   const { data: contacts } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/contacts");
-      return response.json();
-    },
   });
 
   const [selectedMsContacts, setSelectedMsContacts] = useState<any[]>([]);
@@ -105,14 +100,13 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
   };
 
   const createActivityMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof formSchema>) => {
+    mutationFn: (data: z.infer<typeof formSchema>) => {
       const activityData = {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         statusTags: statusTags,
       };
-      const response = await apiRequest("POST", "/api/activities", activityData);
-      return response.json();
+      return apiRequest("/api/activities", "POST", activityData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
@@ -213,7 +207,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
               <label className="block text-sm font-medium text-neutral-dark">
 {t('activities.formStatusTags')}
               </label>
-
+              
               {/* Current Tags */}
               {statusTags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -231,7 +225,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
                   ))}
                 </div>
               )}
-
+              
               {/* Add New Tag */}
               <div className="flex gap-2">
                 <Input
@@ -320,7 +314,7 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
             {/* Collaboration Settings */}
             <div className="space-y-4 pt-4 border-t border-gray-200">
               <h3 className="text-lg font-medium text-neutral-dark">Collaboration Settings</h3>
-
+              
               <FormField
                 control={form.control}
                 name="isPublic"

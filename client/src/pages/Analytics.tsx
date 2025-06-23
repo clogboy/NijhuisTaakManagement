@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, Users, Clock, Target, Zap } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { apiRequest } from "@/lib/queryClient";
 
 interface ProductivityMetrics {
   completionRate: number;
@@ -38,26 +37,14 @@ interface ROIMetrics {
 export default function Analytics() {
   const { data: productivity } = useQuery<ProductivityMetrics>({
     queryKey: ["/api/analytics/productivity"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/analytics/productivity");
-      return response.json();
-    },
   });
 
   const { data: team } = useQuery<TeamMetrics>({
     queryKey: ["/api/analytics/team"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/analytics/team");
-      return response.json();
-    },
   });
 
   const { data: roi } = useQuery<ROIMetrics>({
     queryKey: ["/api/analytics/roi"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/analytics/roi");
-      return response.json();
-    },
   });
 
   const formatCurrency = (hours: number) => {
@@ -196,21 +183,6 @@ export default function Analytics() {
                 <Badge variant="secondary">{productivity?.completionRate || 0}%</Badge>
               </div>
               <Progress value={productivity?.completionRate || 0} className="h-2" />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Weekly Trend</span>
-                <Badge variant={
-                  (productivity?.trendData?.length || 0) > 0 && 
-                  productivity?.trendData[productivity.trendData.length - 1]?.completed > 
-                  productivity?.trendData[0]?.completed ? "default" : "outline"
-                }>
-                  {(productivity?.trendData?.length || 0) > 0 && 
-                   productivity?.trendData[productivity.trendData.length - 1]?.completed > 
-                   productivity?.trendData[0]?.completed ? "Improving" : "Stable"}
-                </Badge>
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

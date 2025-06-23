@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -678,8 +678,3 @@ export default function Settings() {
     </div>
   );
 }
-```
-
-**Analysis:**
-
-The changes requested the addition of the `useTranslations` hook to the functional component `Settings`. After the edits, the code imports the hook, and uses it to initialize a `t` variable that can be used for translations.

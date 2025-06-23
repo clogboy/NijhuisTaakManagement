@@ -32,13 +32,6 @@ export interface ScheduleResult {
 }
 
 export class TimeBlockingService {
-  private timeBlocks: Map<number, any[]> = new Map();
-
-  constructor() {
-    // Initialize with some default time blocks for testing
-    this.timeBlocks.set(1, []); // User ID 1
-  }
-
   private defaultOptions: SmartScheduleOptions = {
     workingHours: { start: "09:00", end: "17:00" },
     breakDuration: 15,
@@ -62,24 +55,24 @@ export class TimeBlockingService {
     options?: Partial<SmartScheduleOptions>
   ): Promise<ScheduleResult> {
     const opts = { ...this.defaultOptions, ...options };
-
+    
     // Get existing time blocks for the day
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
-
+    
     const existingBlocks = await storage.getTimeBlocks(userId, startOfDay, endOfDay);
-
+    
     // Generate available time slots
     const availableSlots = this.generateAvailableSlots(date, existingBlocks, opts);
-
+    
     // Sort activities by priority and deadline
     const prioritizedActivities = this.prioritizeActivities(activities, opts);
-
+    
     // Schedule activities into available slots (preview mode)
     const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId, false);
-
+    
     return result;
   }
 
@@ -94,18 +87,18 @@ export class TimeBlockingService {
     const slots: TimeSlot[] = [];
     const workStart = this.parseTime(date, options.workingHours.start);
     const workEnd = this.parseTime(date, options.workingHours.end);
-
+    
     // Sort existing blocks by start time
     const sortedBlocks = existingBlocks.sort((a, b) => 
       new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
     );
-
+    
     let currentTime = workStart;
-
+    
     for (const block of sortedBlocks) {
       const blockStart = new Date(block.startTime);
       const blockEnd = new Date(block.endTime);
-
+      
       // Add slot before this block if there's enough time
       if (currentTime < blockStart) {
         const duration = Math.floor((blockStart.getTime() - currentTime.getTime()) / (1000 * 60));
@@ -118,10 +111,10 @@ export class TimeBlockingService {
           });
         }
       }
-
+      
       currentTime = new Date(Math.max(currentTime.getTime(), blockEnd.getTime()));
     }
-
+    
     // Add final slot if there's time remaining
     if (currentTime < workEnd) {
       const duration = Math.floor((workEnd.getTime() - currentTime.getTime()) / (1000 * 60));
@@ -134,7 +127,7 @@ export class TimeBlockingService {
         });
       }
     }
-
+    
     return slots;
   }
 
@@ -148,7 +141,7 @@ export class TimeBlockingService {
         // Calculate priority scores with weights
         const scoreA = this.calculateActivityScore(a, options);
         const scoreB = this.calculateActivityScore(b, options);
-
+        
         return scoreB - scoreA; // Higher scores first
       });
   }
@@ -158,11 +151,11 @@ export class TimeBlockingService {
    */
   private calculateActivityScore(activity: Activity, options: SmartScheduleOptions): number {
     let score = 0;
-
+    
     // Base priority weight (40% of total score)
     const priorityWeights = { urgent: 40, normal: 20, low: 10 };
     score += priorityWeights[activity.priority as keyof typeof priorityWeights] || 10;
-
+    
     // Deadline urgency (30% of total score)
     if (options.deadlineAware && activity.dueDate) {
       const daysUntilDue = Math.ceil((new Date(activity.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -170,13 +163,13 @@ export class TimeBlockingService {
       else if (daysUntilDue <= 3) score += 20; // Due within 3 days
       else if (daysUntilDue <= 7) score += 10; // Due within a week
     }
-
+    
     // Estimated duration factor (20% of total score) - shorter tasks get slight boost for momentum
     const duration = activity.estimatedDuration || this.estimateDuration(activity);
     if (duration <= 30) score += 20; // Quick wins
     else if (duration <= 60) score += 15;
     else if (duration <= 120) score += 10;
-
+    
     // Context switching penalty (10% of total score)
     if (options.contextSwitchingMinimized) {
       // This would be enhanced with ML to detect similar task types
@@ -184,7 +177,7 @@ export class TimeBlockingService {
       const category = this.getTaskCategory(activity);
       // Implementation would group similar categories together
     }
-
+    
     return score;
   }
 
@@ -194,7 +187,7 @@ export class TimeBlockingService {
   private getTaskCategory(activity: Activity): string {
     const title = activity.title.toLowerCase();
     const description = activity.description?.toLowerCase() || '';
-
+    
     if (title.includes('meeting') || title.includes('call') || title.includes('vergadering')) {
       return 'communication';
     } else if (title.includes('email') || title.includes('mail') || title.includes('contact')) {
@@ -208,7 +201,7 @@ export class TimeBlockingService {
     } else if (title.includes('plan') || title.includes('strategy') || title.includes('design')) {
       return 'planning';
     }
-
+    
     return 'general';
   }
 
@@ -226,25 +219,25 @@ export class TimeBlockingService {
     const unscheduledActivities: Activity[] = [];
     const conflicts: string[] = [];
     const suggestions: string[] = [];
-
+    
     let remainingSlots = [...availableSlots];
     let tasksScheduledToday = 0;
-
+    
     for (const activity of activities) {
       if (tasksScheduledToday >= options.maxTasksPerDay) {
         unscheduledActivities.push(activity);
         suggestions.push(`Consider scheduling "${activity.title}" for tomorrow to avoid overloading today`);
         continue;
       }
-
+      
       const estimatedDuration = activity.estimatedDuration || this.estimateDuration(activity);
       const requiredDuration = estimatedDuration + (options.focusTimePreferred ? options.breakDuration : 0);
-
+      
       // Find a suitable slot
       const suitableSlotIndex = remainingSlots.findIndex(slot => 
         slot.duration >= requiredDuration && slot.isAvailable
       );
-
+      
       if (suitableSlotIndex === -1) {
         unscheduledActivities.push(activity);
         if (estimatedDuration > Math.max(...remainingSlots.map(s => s.duration))) {
@@ -252,13 +245,13 @@ export class TimeBlockingService {
         }
         continue;
       }
-
+      
       const slot = remainingSlots[suitableSlotIndex];
-
+      
       // Create time block
       const endTime = new Date(slot.start.getTime() + estimatedDuration * 60 * 1000);
       const color = this.getColorForPriority(activity.priority);
-
+      
       const timeBlock: Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'> = {
         activityId: activity.id,
         title: activity.title,
@@ -273,10 +266,10 @@ export class TimeBlockingService {
         color: color,
         createdBy: userId
       };
-
+      
       scheduledBlocks.push(timeBlock as TimeBlock);
       tasksScheduledToday++;
-
+      
       // Update remaining slots
       if (slot.duration === requiredDuration) {
         // Remove the slot entirely
@@ -285,7 +278,7 @@ export class TimeBlockingService {
         // Split the slot
         const newStart = new Date(slot.start.getTime() + requiredDuration * 60 * 1000);
         const newDuration = slot.duration - requiredDuration;
-
+        
         remainingSlots[suitableSlotIndex] = {
           start: newStart,
           end: slot.end,
@@ -293,12 +286,12 @@ export class TimeBlockingService {
           isAvailable: true
         };
       }
-
+      
       // Add break block if focus time is preferred
       if (options.focusTimePreferred && options.breakDuration > 0) {
         const breakStart = new Date(endTime);
         const breakEnd = new Date(endTime.getTime() + options.breakDuration * 60 * 1000);
-
+        
         const breakBlock: Omit<TimeBlock, 'id' | 'createdAt' | 'updatedAt'> = {
           activityId: null,
           title: "Break",
@@ -313,20 +306,20 @@ export class TimeBlockingService {
           color: '#e5e7eb',
           createdBy: userId
         };
-
+        
         scheduledBlocks.push(breakBlock as TimeBlock);
       }
     }
-
+    
     // Generate productivity suggestions
     if (scheduledBlocks.length > 0) {
       suggestions.push(`Scheduled ${scheduledBlocks.filter(b => b.blockType === 'task').length} tasks with optimal spacing`);
     }
-
+    
     if (unscheduledActivities.length > 0) {
       suggestions.push(`${unscheduledActivities.length} tasks need rescheduling - consider extending work hours or moving to another day`);
     }
-
+    
     return {
       scheduledBlocks,
       unscheduledActivities,
@@ -341,7 +334,7 @@ export class TimeBlockingService {
   private estimateDuration(activity: Activity): number {
     // Default estimation based on priority and complexity
     const baseDuration = 60; // 1 hour default
-
+    
     switch (activity.priority) {
       case 'urgent':
         return Math.min(baseDuration * 1.5, 120); // Max 2 hours for urgent tasks
@@ -386,28 +379,28 @@ export class TimeBlockingService {
     options?: Partial<SmartScheduleOptions>
   ): Promise<ScheduleResult> {
     const opts = { ...this.defaultOptions, ...options };
-
+    
     // Get activities by IDs
     const allActivities = await storage.getActivities(userId, false);
     const activities = allActivities.filter(activity => activityIds.includes(activity.id));
-
+    
     // Get existing time blocks for the day
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
-
+    
     const existingBlocks = await storage.getTimeBlocks(userId, startOfDay, endOfDay);
-
+    
     // Generate available time slots
     const availableSlots = this.generateAvailableSlots(date, existingBlocks, opts);
-
+    
     // Sort activities by priority and deadline
     const prioritizedActivities = this.prioritizeActivities(activities, opts);
-
+    
     // Schedule activities into available slots and save to database
     const result = this.scheduleActivities(prioritizedActivities, availableSlots, opts, userId, true);
-
+    
     // Save scheduled blocks to database
     for (const block of result.scheduledBlocks) {
       await storage.createTimeBlock({
@@ -427,61 +420,6 @@ export class TimeBlockingService {
     }
 
     return result;
-  }
-
-  async createTimeBlock(userId: number, blockData: any): Promise<any> {
-    const timeBlock = {
-      id: Date.now(), // Simple ID generation
-      userId,
-      title: blockData.title,
-      description: blockData.description,
-      startTime: blockData.startTime,
-      endTime: blockData.endTime,
-      date: blockData.date,
-      activityId: blockData.activityId,
-      status: 'scheduled',
-      createdAt: new Date(),
-    };
-
-    // Store in memory for now (in production, save to database)
-    if (!this.timeBlocks.has(userId)) {
-      this.timeBlocks.set(userId, []);
-    }
-    this.timeBlocks.get(userId)!.push(timeBlock);
-
-    return timeBlock;
-  }
-
-  async getUserTimeBlocks(userId: number, date?: string): Promise<any[]> {
-    const userBlocks = this.timeBlocks.get(userId) || [];
-
-    if (date) {
-      return userBlocks.filter(block => block.date === date);
-    }
-
-    return userBlocks;
-  }
-
-  async updateTimeBlock(blockId: number, updates: any): Promise<any> {
-    for (const [userId, blocks] of this.timeBlocks.entries()) {
-      const blockIndex = blocks.findIndex(b => b.id === blockId);
-      if (blockIndex !== -1) {
-        blocks[blockIndex] = { ...blocks[blockIndex], ...updates };
-        return blocks[blockIndex];
-      }
-    }
-    throw new Error('Time block not found');
-  }
-
-  async deleteTimeBlock(blockId: number): Promise<void> {
-    for (const [userId, blocks] of this.timeBlocks.entries()) {
-      const blockIndex = blocks.findIndex(b => b.id === blockId);
-      if (blockIndex !== -1) {
-        blocks.splice(blockIndex, 1);
-        return;
-      }
-    }
-    throw new Error('Time block not found');
   }
 }
 
