@@ -18,49 +18,74 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          email: 'dev@nijhuis.nl',
-          name: 'Development User' 
-        }),
-        credentials: 'include'
-      });
+      console.log('[LOGIN] Starting login attempt...');
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Login failed: ${response.status} ${errorText}`);
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email: 'dev@nijhuis.nl',
+            name: 'Development User' 
+          }),
+          credentials: 'include'
+        });
+        
+        console.log('[LOGIN] Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[LOGIN] Server error response:', errorText);
+          throw new Error(`Login failed: ${response.status} ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('[LOGIN] Response data:', data);
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Login failed');
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('[LOGIN] Request failed:', error);
+        throw error;
       }
-      
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || 'Login failed');
-      }
-      
-      return data;
     },
     onSuccess: (data) => {
-      // Clear any existing queries before setting new user data
-      queryClient.clear();
-      queryClient.setQueryData(["/api/auth/me"], { user: data.user });
+      console.log('[LOGIN] Login successful, updating client state...');
       
-      toast({
-        title: "Welcome!",
-        description: `Successfully signed in as ${data.user?.name || 'User'}`,
-      });
-      
-      // Navigate immediately without delay
-      setLocation("/");
+      try {
+        // Clear any existing queries before setting new user data
+        queryClient.clear();
+        queryClient.setQueryData(["/api/auth/me"], { user: data.user });
+        
+        toast({
+          title: "Welcome!",
+          description: `Successfully signed in as ${data.user?.name || 'User'}`,
+        });
+        
+        console.log('[LOGIN] Navigating to dashboard...');
+        // Navigate immediately without delay
+        setLocation("/");
+      } catch (error) {
+        console.error('[LOGIN] Post-login processing error:', error);
+        toast({
+          title: "Login Warning", 
+          description: "Logged in but with some issues. Try refreshing if needed.",
+          variant: "default",
+        });
+        setLocation("/");
+      }
     },
     onError: (error: any) => {
-      console.error('Login error:', error);
+      console.error('[LOGIN] Login mutation error:', error);
       toast({
         title: "Sign In Failed", 
-        description: error.message || "Failed to sign in",
+        description: error.message || "Failed to sign in. Please try again.",
         variant: "destructive",
       });
     },

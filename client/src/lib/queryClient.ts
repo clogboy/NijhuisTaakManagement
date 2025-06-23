@@ -1,78 +1,58 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
-async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
-  }
-}
-
-export async function apiRequest(
-  url: string,
-  method: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
-}
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+// Global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  event.preventDefault(); // Prevent browser error logging
+});
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: async ({ queryKey }) => {
-        const url = Array.isArray(queryKey) ? queryKey[0] as string : queryKey as string;
-        
-        const response = await fetch(url, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Don't redirect here, let components handle it
-            throw new Error('Unauthorized');
-          }
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401/403 errors
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
         }
-        
-        return await response.json();
+        // Retry up to 2 times for other errors
+        return failureCount < 2;
       },
-      retry: false, // Disable retry to prevent cascading errors
-      staleTime: 1 * 60 * 1000, // 1 minute
+      staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      refetchOnMount: true,
+      onError: (error: any) => {
+        console.error('Query error:', error);
+      },
     },
     mutations: {
       retry: false,
+      onError: (error: any) => {
+        console.error('Mutation error:', error);
+      },
     },
   },
 });
+
+export async function apiRequest(endpoint: string, init?: RequestInit) {
+  try {
+    const response = await fetch(endpoint, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...init?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`API request failed for ${endpoint}:`, error);
+    throw error;
+  }
+}

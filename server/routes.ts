@@ -96,6 +96,8 @@ export function registerRoutes(app: Express): Server {
   // Auth endpoints
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log('[AUTH] Login request received:', req.body);
+      
       // Always create a session for development and deployment
       const user = {
         id: 1,
@@ -111,13 +113,18 @@ export function registerRoutes(app: Express): Server {
       // Store in session if available
       if (req.session) {
         req.session.user = user;
+        console.log('[AUTH] User stored in session');
       }
       req.user = user;
       
-      res.json({ success: true, user });
+      console.log('[AUTH] Login successful for user:', user.email);
+      res.status(200).json({ success: true, user });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ success: false, message: 'Login failed' });
+      console.error('[AUTH] Login error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Login failed' 
+      });
     }
   });
 
