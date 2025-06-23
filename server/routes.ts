@@ -8,7 +8,7 @@ import { eq, and, sql, desc, ne, count, or, gte, lte, isNull, inArray } from "dr
 
 // Schema imports
 import { insertActivitySchema, insertActivityEntrySchema, insertTimeBlockSchema, insertUserMetricSchema } from "@shared/simplified-schema";
-import { contacts, users as schemaUsers, activities as schemaActivities, activity_entries } from "@shared/simplified-schema";
+import { contacts, users as schemaUsers, activities, activity_entries } from "@shared/simplified-schema";
 import { insertRoadblockSchema, insertSubtaskSchema, insertTaskCommentSchema, quickWins, tenants, flowStrategies } from "@shared/schema";
 
 const insertContactSchema = createInsertSchema(contacts).omit({
@@ -123,7 +123,7 @@ export function registerRoutes(app: Express): Server {
   // Activities endpoints
   app.get("/api/activities", requireAuth, async (req, res) => {
     try {
-      const activities = await storage.getActivities(req.user.id);
+      const activities = await storage.getActivities(req.user.id, req.user.email, req.user.role === 'admin');
       res.json(activities || []);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -380,7 +380,7 @@ export function registerRoutes(app: Express): Server {
         testResults.testSummary.passedTests = 4;
         testResults.testSummary.success = false;
         testResults.hasErrors = true;
-        testResults.errors.push('Database connection failed');
+        testResults.errors.push(error instanceof Error ? error.message : 'Database connection failed');
         testResults.testFiles[0].status = 'failed';
         testResults.testFiles[0].numFailed = 1;
         testResults.testFiles[0].numPassed = 0;

@@ -15,7 +15,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
-  Brain, 
   Calendar, 
   Clock, 
   Target, 
@@ -29,7 +28,8 @@ import {
   User,
   Users,
   Activity as ActivityIcon,
-  Plus
+  Plus,
+  Brain
 } from "lucide-react";
 import { Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -200,7 +200,7 @@ export default function Agenda() {
           setLastTriggerTime(null);
         }
       }, 60000); // Check every minute
-      
+
       return () => clearInterval(interval);
     }
   }, [isOnCooldown, lastTriggerTime]);
@@ -321,7 +321,7 @@ export default function Agenda() {
                       </Button>
                     </div>
                   </div>
-                  
+
                   {schedulerStatus?.nextMidnight && (
                     <div className="mt-2 text-xs text-gray-500">
                       Next automatic sync: {new Date(schedulerStatus.nextMidnight).toLocaleDateString()} at midnight
@@ -345,7 +345,7 @@ export default function Agenda() {
                     <h4 className="font-medium text-green-900 mb-2">Daily Focus Strategy</h4>
                     <p className="text-sm text-green-800">{agendaSuggestion.suggestions || "No suggestions available"}</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium text-green-900 mb-2">Task Switch Optimization</h4>
                     <p className="text-sm text-green-800">{agendaSuggestion.taskSwitchOptimization || "No optimization suggestions available"}</p>
@@ -445,7 +445,7 @@ export default function Agenda() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {personalityPresets?.map((preset) => {
                     const isActive = currentStrategy?.personalityType === preset.personalityType;
-                    
+
                     const getPersonalityIcon = (type: string) => {
                       switch (type) {
                         case "early_bird": return <Clock className="text-yellow-600" size={20} />;
@@ -494,7 +494,7 @@ export default function Agenda() {
                         <CardContent>
                           <div className="space-y-3">
                             <p className="text-sm text-gray-700 dark:text-gray-300">{preset.description}</p>
-                            
+
                             <div className="space-y-2">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-gray-600 dark:text-gray-400">Werkuren:</span>
@@ -572,7 +572,7 @@ export default function Agenda() {
               Plan gefocuste werktijd voor maximale productiviteit.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
 
             <div>

@@ -305,8 +305,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(contacts).where(eq(contacts.id, id));
   }
 
-  // Activity operations
-  async getActivities(userId: number, userEmail: string, isAdmin: boolean): Promise<Activity[]> {
+  // Activity operations - simplified to use just userId
+  async getActivities(userId: number, userEmail?: string, isAdmin?: boolean): Promise<Activity[]> {
     if (isAdmin) {
       return await db.select().from(activities).orderBy(desc(activities.createdAt));
     } else {
