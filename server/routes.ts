@@ -28,7 +28,7 @@ export function registerRoutes(app: express.Application) {
       created_at: new Date(),
       updated_at: new Date()
     };
-    
+
     if (req.session) {
       req.session.user = user;
     }
@@ -285,6 +285,28 @@ export function registerRoutes(app: express.Application) {
     } catch (error) {
       console.error("Error creating activity log:", error);
       res.status(500).json({ message: "Failed to create activity log" });
+    }
+  });
+
+  // Flow Protection Routes
+  app.get("/api/flow/current-strategy", requireAuth, async (req: any, res) => {
+    try {
+      const currentStrategy = await storage.getCurrentFlowStrategy(req.user.id);
+      res.json(currentStrategy);
+    } catch (error) {
+      console.error("Error fetching current flow strategy:", error);
+      res.status(500).json({ message: "Failed to fetch current flow strategy" });
+    }
+  });
+
+  app.get("/api/flow/personality-presets", requireAuth, async (req: any, res) => {
+    try {
+      const { flowProtectionService } = await import("./flow-protection-service");
+      const presets = flowProtectionService.getPersonalityPresets();
+      res.json(presets);
+    } catch (error) {
+      console.error("Error fetching personality presets:", error);
+      res.status(500).json({ message: "Failed to fetch personality presets" });
     }
   });
 

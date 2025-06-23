@@ -65,8 +65,10 @@ export default function Agenda() {
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([]);
 
   // Flow strategy queries
-  const { data: personalityPresets } = useQuery<any[]>({
+  const { data: personalityPresets, isLoading: presetsLoading, error: presetsError } = useQuery<any[]>({
     queryKey: ["/api/flow/personality-presets"],
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: currentStrategy } = useQuery<any>({
@@ -473,8 +475,31 @@ export default function Agenda() {
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {personalityPresets?.map((preset) => {
+                {presetsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm text-gray-500">Loading flow strategies...</p>
+                    </div>
+                  </div>
+                ) : presetsError ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-red-500" />
+                      <p className="text-sm text-gray-500">Error loading flow strategies</p>
+                      <p className="text-xs text-gray-400 mt-1">{presetsError.message}</p>
+                    </div>
+                  </div>
+                ) : !personalityPresets || personalityPresets.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                      <p className="text-sm text-gray-500">No flow strategies available</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {personalityPresets.map((preset) => {
                     const isActive = currentStrategy?.personalityType === preset.personalityType;
 
                     const getPersonalityIcon = (type: string) => {
@@ -575,8 +600,9 @@ export default function Agenda() {
                         </CardContent>
                       </Card>
                     );
-                  })}
-                </div>
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
