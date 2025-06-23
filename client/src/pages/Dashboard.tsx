@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Activity, CheckCircle, Clock, AlertTriangle, Plus, Target, TrendingUp } from "lucide-react";
-import { apiRequest } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({

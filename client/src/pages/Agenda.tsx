@@ -34,6 +34,7 @@ import {
 import { Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/hooks/useTranslations";
 import AppLayout from "@/components/layout/AppLayout";
 import { Shield } from "lucide-react";
 
@@ -53,6 +54,7 @@ interface AgendaSuggestion {
 }
 
 export default function Agenda() {
+  const { t } = useTranslations();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
@@ -63,6 +65,9 @@ export default function Agenda() {
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([]);
 
   // Flow strategy queries
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: personalityPresets, isLoading: presetsLoading, error: presetsError } = useQuery<any[]>({
     queryKey: ["/api/flow/personality-presets"],
     retry: 3,

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, Users, Clock, Target, Zap } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ProductivityMetrics {
   completionRate: number;
@@ -37,14 +38,26 @@ interface ROIMetrics {
 export default function Analytics() {
   const { data: productivity } = useQuery<ProductivityMetrics>({
     queryKey: ["/api/analytics/productivity"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/analytics/productivity");
+      return response.json();
+    },
   });
 
   const { data: team } = useQuery<TeamMetrics>({
     queryKey: ["/api/analytics/team"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/analytics/team");
+      return response.json();
+    },
   });
 
   const { data: roi } = useQuery<ROIMetrics>({
     queryKey: ["/api/analytics/roi"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/analytics/roi");
+      return response.json();
+    },
   });
 
   const formatCurrency = (hours: number) => {

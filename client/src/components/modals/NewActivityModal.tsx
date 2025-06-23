@@ -37,6 +37,7 @@ import { insertActivitySchema } from "@shared/schema";
 import { Contact } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = insertActivitySchema.extend({
   dueDate: z.string().optional(),
@@ -58,6 +59,10 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
 
   const { data: contacts } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/contacts");
+      return response.json();
+    },
   });
 
   const [selectedMsContacts, setSelectedMsContacts] = useState<any[]>([]);
@@ -100,13 +105,14 @@ export default function NewActivityModal({ open, onOpenChange }: NewActivityModa
   };
 
   const createActivityMutation = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) => {
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
       const activityData = {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         statusTags: statusTags,
       };
-      return apiRequest("/api/activities", "POST", activityData);
+      const response = await apiRequest("POST", "/api/activities", activityData);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });

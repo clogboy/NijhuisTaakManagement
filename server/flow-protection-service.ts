@@ -27,7 +27,7 @@ interface PersonalityPreset {
 }
 
 export class FlowProtectionService {
-  
+
   /**
    * Get predefined personality-based flow strategies
    */
@@ -58,7 +58,7 @@ export class FlowProtectionService {
           quietHours: { start: "07:00", end: "11:00" }
         }
       },
-      
+
       {
         personalityType: "night_owl",
         strategyName: "Nachtbraker",
@@ -84,7 +84,7 @@ export class FlowProtectionService {
           quietHours: { start: "14:00", end: "19:00" }
         }
       },
-      
+
       {
         personalityType: "steady_pacer",
         strategyName: "Stabiele Pacer",
@@ -110,7 +110,7 @@ export class FlowProtectionService {
           quietHours: { start: "09:00", end: "12:00" }
         }
       },
-      
+
       {
         personalityType: "sprint_recover",
         strategyName: "Sprint Herstel",
@@ -136,7 +136,7 @@ export class FlowProtectionService {
           quietHours: { start: "09:00", end: "12:00" }
         }
       },
-      
+
       {
         personalityType: "collaborative",
         strategyName: "Team Gerichte Flow",
@@ -162,7 +162,7 @@ export class FlowProtectionService {
           quietHours: { start: "10:00", end: "11:30" }
         }
       },
-      
+
       {
         personalityType: "adaptive",
         strategyName: "Adaptieve Flexibiliteit",
@@ -204,15 +204,15 @@ export class FlowProtectionService {
   } {
     const hour = currentTime.getHours();
     const timeString = `${hour.toString().padStart(2, '0')}:00`;
-    
+
     const workingHours = strategy.workingHours as any;
     const energyPattern = strategy.energyPattern as any;
     const notificationSettings = strategy.notificationSettings as any;
-    
+
     // Determine if current time is in peak hours
     const isPeakTime = this.isTimeInRange(timeString, workingHours.peakStart, workingHours.peakEnd);
     const isQuietHours = this.isTimeInRange(timeString, notificationSettings.quietHours.start, notificationSettings.quietHours.end);
-    
+
     // Calculate energy level based on time of day
     let energyLevel = 0.5;
     if (hour >= 6 && hour < 12) {
@@ -222,7 +222,7 @@ export class FlowProtectionService {
     } else if (hour >= 18 && hour < 22) {
       energyLevel = energyPattern.evening;
     }
-    
+
     // Determine time slot type
     let timeSlotType: 'peak' | 'productive' | 'low-energy';
     if (isPeakTime && energyLevel > 0.8) {
@@ -232,14 +232,14 @@ export class FlowProtectionService {
     } else {
       timeSlotType = 'low-energy';
     }
-    
+
     // Generate recommendations
     const shouldFocus = isPeakTime || (energyLevel > 0.7);
     const allowInterruptions = !isQuietHours && (notificationSettings.allowInterruptions || !shouldFocus);
-    
+
     let suggestedTaskTypes = strategy.preferredTaskTypes || [];
     let recommendation = '';
-    
+
     if (timeSlotType === 'peak') {
       suggestedTaskTypes = ['deep_work', 'analysis', 'planning'];
       recommendation = 'Peak performance time - focus on your most challenging tasks';
@@ -250,7 +250,7 @@ export class FlowProtectionService {
       suggestedTaskTypes = ['admin', 'email', 'planning'];
       recommendation = 'Lower energy period - handle lighter administrative tasks';
     }
-    
+
     return {
       shouldFocus,
       suggestedTaskTypes,
@@ -292,32 +292,32 @@ export class FlowProtectionService {
     const avgProductiveHour = workPatterns.mostProductiveHours
       .map(time => parseInt(time.split(':')[0]))
       .reduce((a, b) => a + b, 0) / workPatterns.mostProductiveHours.length;
-    
+
     // Early bird detection
     if (startHour <= 7 && avgProductiveHour <= 10) {
       return 'early_bird';
     }
-    
+
     // Night owl detection
     if (startHour >= 10 && avgProductiveHour >= 14) {
       return 'night_owl';
     }
-    
+
     // Sprint/recover pattern
     if (workPatterns.energyFluctuations === 'high' && workPatterns.taskSwitchTolerance <= 2) {
       return 'sprint_recover';
     }
-    
+
     // Collaborative type
     if (workPatterns.collaborationPreference >= 4 && workPatterns.taskSwitchTolerance >= 4) {
       return 'collaborative';
     }
-    
+
     // Steady pacer (default for balanced patterns)
     if (workPatterns.energyFluctuations === 'low' || workPatterns.energyFluctuations === 'medium') {
       return 'steady_pacer';
     }
-    
+
     return 'adaptive';
   }
 
@@ -325,7 +325,7 @@ export class FlowProtectionService {
     const current = this.timeToMinutes(currentTime);
     const start = this.timeToMinutes(startTime);
     const end = this.timeToMinutes(endTime);
-    
+
     if (start <= end) {
       return current >= start && current <= end;
     } else {
@@ -338,140 +338,77 @@ export class FlowProtectionService {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + (minutes || 0);
   }
-}
 
-export const flowProtectionService = new FlowProtectionService();
-export interface FlowPreset {
-  personalityType: string;
-  strategyName: string;
-  description: string;
-  workingHours: {
-    start: string;
-    end: string;
-    timezone: string;
-  };
-  maxTaskSwitches: number;
-  focusBlockDuration: number; // minutes
-  breakDuration: number; // minutes
-  preferredTaskTypes: string[];
-  energyPattern: {
-    peak: string[];
-    low: string[];
-  };
-  notificationSettings: {
-    enabled: boolean;
-    quietHours: {
-      start: string;
-      end: string;
+  async getUserConfig(userId: number) {
+    return {
+      currentStrategy: "Deep Focus Strategy",
+      isActive: true
     };
-  };
-}
-
-class FlowProtectionService {
-  getPersonalityPresets(): FlowPreset[] {
-    return [
-      {
-        personalityType: "Deep Thinker",
-        strategyName: "Extended Focus Blocks",
-        description: "Long uninterrupted work sessions with minimal context switching",
-        workingHours: {
-          start: "09:00",
-          end: "17:00",
-          timezone: "Europe/Amsterdam"
-        },
-        maxTaskSwitches: 2,
-        focusBlockDuration: 120,
-        breakDuration: 15,
-        preferredTaskTypes: ["analysis", "research", "planning"],
-        energyPattern: {
-          peak: ["09:00-12:00", "14:00-16:00"],
-          low: ["12:00-13:00", "16:00-17:00"]
-        },
-        notificationSettings: {
-          enabled: true,
-          quietHours: {
-            start: "09:00",
-            end: "12:00"
-          }
-        }
-      },
-      {
-        personalityType: "Quick Executor",
-        strategyName: "Rapid Task Switching",
-        description: "Short focused bursts with frequent task rotation",
-        workingHours: {
-          start: "08:00",
-          end: "18:00",
-          timezone: "Europe/Amsterdam"
-        },
-        maxTaskSwitches: 6,
-        focusBlockDuration: 45,
-        breakDuration: 10,
-        preferredTaskTypes: ["communication", "quick_tasks", "meetings"],
-        energyPattern: {
-          peak: ["08:00-10:00", "13:00-15:00"],
-          low: ["10:00-11:00", "15:00-16:00"]
-        },
-        notificationSettings: {
-          enabled: true,
-          quietHours: {
-            start: "17:00",
-            end: "18:00"
-          }
-        }
-      },
-      {
-        personalityType: "Collaborative Leader",
-        strategyName: "Meeting-Optimized Schedule",
-        description: "Balanced focus time with protected collaboration windows",
-        workingHours: {
-          start: "08:30",
-          end: "17:30",
-          timezone: "Europe/Amsterdam"
-        },
-        maxTaskSwitches: 4,
-        focusBlockDuration: 90,
-        breakDuration: 15,
-        preferredTaskTypes: ["leadership", "meetings", "strategy"],
-        energyPattern: {
-          peak: ["09:00-11:00", "14:00-16:00"],
-          low: ["11:00-12:00", "16:00-17:00"]
-        },
-        notificationSettings: {
-          enabled: true,
-          quietHours: {
-            start: "16:00",
-            end: "17:30"
-          }
-        }
-      },
-      {
-        personalityType: "Creative Innovator",
-        strategyName: "Inspiration-Based Flow",
-        description: "Flexible scheduling that adapts to creative energy cycles",
-        workingHours: {
-          start: "10:00",
-          end: "18:00",
-          timezone: "Europe/Amsterdam"
-        },
-        maxTaskSwitches: 3,
-        focusBlockDuration: 75,
-        breakDuration: 20,
-        preferredTaskTypes: ["creative", "innovation", "design"],
-        energyPattern: {
-          peak: ["10:00-12:00", "15:00-17:00"],
-          low: ["12:00-13:00", "17:00-18:00"]
-        },
-        notificationSettings: {
-          enabled: false,
-          quietHours: {
-            start: "10:00",
-            end: "12:00"
-          }
-        }
-      }
-    ];
   }
 }
 
 export const flowProtectionService = new FlowProtectionService();
+
+export class TimeBlockingService {
+  private timeBlocks: Map<number, any[]> = new Map();
+
+  constructor() {
+    this.timeBlocks.set(1, []);
+  }
+
+  async createTimeBlock(userId: number, blockData: any): Promise<any> {
+    const timeBlock = {
+      id: Date.now(),
+      userId,
+      title: blockData.title,
+      description: blockData.description,
+      startTime: blockData.startTime,
+      endTime: blockData.endTime,
+      date: blockData.date,
+      activityId: blockData.activityId,
+      status: 'scheduled',
+      createdAt: new Date(),
+    };
+
+    if (!this.timeBlocks.has(userId)) {
+      this.timeBlocks.set(userId, []);
+    }
+    this.timeBlocks.get(userId)!.push(timeBlock);
+
+    return timeBlock;
+  }
+
+  async getUserTimeBlocks(userId: number, date?: string): Promise<any[]> {
+    const userBlocks = this.timeBlocks.get(userId) || [];
+
+    if (date) {
+      return userBlocks.filter(block => block.date === date);
+    }
+
+    return userBlocks;
+  }
+
+  async updateTimeBlock(blockId: number, updates: any): Promise<any> {
+    for (const [userId, blocks] of this.timeBlocks.entries()) {
+      const blockIndex = blocks.findIndex(b => b.id === blockId);
+      if (blockIndex !== -1) {
+        blocks[blockIndex] = { ...blocks[blockIndex], ...updates };
+        return blocks[blockIndex];
+      }
+    }
+    throw new Error('Time block not found');
+  }
+
+  async deleteTimeBlock(blockId: number): Promise<void> {
+    for (const [userId, blocks] of this.timeBlocks.entries()) {
+      const blockIndex = blocks.findIndex(b => b.id === blockId);
+      if (blockIndex !== -1) {
+        blocks.splice(blockIndex, 1);
+        return;
+      }
+    }
+    throw new Error('Time block not found');
+  }
+}
+
+export const timeBlockingService = new TimeBlockingService();

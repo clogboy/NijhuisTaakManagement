@@ -412,6 +412,37 @@ export function registerRoutes(app: express.Application) {
     }
   });
 
+  // Analytics endpoints
+  app.get("/api/analytics/productivity", requireAuth, async (req, res) => {
+    try {
+      const analytics = await storage.getProductivityAnalytics(req.user.id);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching productivity analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch productivity analytics' });
+    }
+  });
+
+  app.get("/api/analytics/team", requireAuth, async (req, res) => {
+    try {
+      const teamAnalytics = await storage.getTeamAnalytics(req.user.id);
+      res.json(teamAnalytics);
+    } catch (error) {
+      console.error('Error fetching team analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch team analytics' });
+    }
+  });
+
+  app.get("/api/analytics/roi", requireAuth, async (req, res) => {
+    try {
+      const roiAnalytics = await storage.getROIAnalytics(req.user.id);
+      res.json(roiAnalytics);
+    } catch (error) {
+      console.error('Error fetching ROI analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch ROI analytics' });
+    }
+  });
+
   // Rescue workflow endpoints
   app.post("/api/rescue-workflow", requireAuth, async (req, res) => {
     try {
