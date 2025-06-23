@@ -67,7 +67,7 @@ interface DashboardProps {
   setLowStimulusMode?: (value: boolean) => void;
 }
 
-export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLowStimulusMode: setLowStimulus }: DashboardProps = {}) {
+function DashboardContent() {
   const { t } = useTranslations();
   const { state: onboardingState, completeTutorial, showGuide, hideGuide } = useOnboarding();
   const { activateLowStimulus, deactivateLowStimulus } = useLowStimulus();
@@ -775,7 +775,9 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 line analysis: The code applies the requested changes to wrap the Dashboard component with an error boundary.
+```
+2">
                   {flowRecommendations?.energyLevel && (
                     <Badge variant="outline" className="text-xs bg-blue-100 border-blue-300">
                       {Math.round(flowRecommendations.energyLevel * 100)}% energie
@@ -1684,4 +1686,26 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       </Dialog>
     </div>
   );
+}
+
+export default function Dashboard() {
+  try {
+    return <DashboardContent />;
+  } catch (error) {
+    console.error('Dashboard render error:', error);
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Dashboard Error</h2>
+          <p className="text-red-600">There was an issue loading the dashboard. Please refresh the page.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
