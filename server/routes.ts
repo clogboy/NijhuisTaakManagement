@@ -118,7 +118,14 @@ export function registerRoutes(app: Express): Server {
       req.user = user;
       
       console.log('[AUTH] Login successful for user:', user.email);
-      res.status(200).json({ success: true, user });
+      
+      // Set proper headers for JSON response
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json({ 
+        success: true, 
+        user,
+        message: 'Login successful'
+      });
     } catch (error) {
       console.error('[AUTH] Login error:', error);
       res.status(500).json({ 

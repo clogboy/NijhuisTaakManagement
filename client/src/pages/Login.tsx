@@ -20,66 +20,37 @@ export default function Login() {
     mutationFn: async () => {
       console.log('[LOGIN] Starting login attempt...');
       
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            email: 'dev@nijhuis.nl',
-            name: 'Development User' 
-          }),
-          credentials: 'include'
-        });
-        
-        console.log('[LOGIN] Response status:', response.status);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[LOGIN] Server error response:', errorText);
-          throw new Error(`Login failed: ${response.status} ${errorText}`);
-        }
-        
-        const data = await response.json();
-        console.log('[LOGIN] Response data:', data);
-        
-        if (!data.success) {
-          throw new Error(data.message || 'Login failed');
-        }
-        
-        return data;
-      } catch (error) {
-        console.error('[LOGIN] Request failed:', error);
-        throw error;
+      const response = await apiRequest('/api/auth/login', 'POST', {
+        email: 'dev@nijhuis.nl',
+        name: 'Development User'
+      });
+      
+      console.log('[LOGIN] Response data:', response);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed');
       }
+      
+      return response;
     },
     onSuccess: (data) => {
       console.log('[LOGIN] Login successful, updating client state...');
       
-      try {
-        // Clear any existing queries before setting new user data
-        queryClient.clear();
-        queryClient.setQueryData(["/api/auth/me"], { user: data.user });
-        
-        toast({
-          title: "Welcome!",
-          description: `Successfully signed in as ${data.user?.name || 'User'}`,
-        });
-        
-        console.log('[LOGIN] Navigating to dashboard...');
-        // Navigate immediately without delay
+      // Clear any existing queries and set new user data
+      queryClient.clear();
+      queryClient.setQueryData(["/api/auth/me"], { user: data.user });
+      
+      toast({
+        title: "Welcome!",
+        description: `Successfully signed in as ${data.user?.name || 'User'}`,
+      });
+      
+      console.log('[LOGIN] Navigating to dashboard...');
+      
+      // Use setTimeout to ensure state is updated before navigation
+      setTimeout(() => {
         setLocation("/");
-      } catch (error) {
-        console.error('[LOGIN] Post-login processing error:', error);
-        toast({
-          title: "Login Warning", 
-          description: "Logged in but with some issues. Try refreshing if needed.",
-          variant: "default",
-        });
-        setLocation("/");
-      }
+      }, 100);
     },
     onError: (error: any) => {
       console.error('[LOGIN] Login mutation error:', error);
@@ -92,9 +63,13 @@ export default function Login() {
   });
 
   const handleMicrosoftLogin = () => {
-    if (!loginMutation.isPending) {
-      loginMutation.mutate();
+    if (loginMutation.isPending) {
+      console.log('[LOGIN] Login already in progress, ignoring click');
+      return;
     }
+    
+    console.log('[LOGIN] Starting new login attempt');
+    loginMutation.mutate();
   };
 
   return (

@@ -1689,6 +1689,24 @@ function DashboardContent() {
 }
 
 export default function Dashboard() {
+  const { data: user, isLoading: userLoading } = useQuery<any>({
+    queryKey: ["/api/auth/me"],
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return <DashboardLoadingScreen />;
+  }
+
+  // If no user data, redirect to login
+  if (!user?.user) {
+    console.log('[DASHBOARD] No user data found, redirecting to login');
+    window.location.href = '/login';
+    return <DashboardLoadingScreen />;
+  }
+
   try {
     return <DashboardContent />;
   } catch (error) {
