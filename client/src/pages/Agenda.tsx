@@ -53,7 +53,18 @@ interface AgendaSuggestion {
 }
 
 export default function Agenda() {
-  const { t } = useTranslations();
+  const { toast } = useToast();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [loading, setLoading] = useState(true);
+  const [showNewActivityModal, setShowNewActivityModal] = useState(false);
+  const [expandedActivity, setExpandedActivity] = useState<number | null>(null);
+  const [rescueModalOpen, setRescueModalOpen] = useState(false);
+  const [rescuingActivity, setRescuingActivity] = useState<Activity | null>(null);
+
+  // Simple fallback for translation
+  const t = (key: string) => key;
+  const { t: realT } = useTranslations(); // Using the alias 'realT' to avoid conflict with the fallback 't'
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
@@ -64,7 +75,6 @@ export default function Agenda() {
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([]);
 
   // Flow strategy queries
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: personalityPresets, isLoading: presetsLoading, error: presetsError } = useQuery<any[]>({

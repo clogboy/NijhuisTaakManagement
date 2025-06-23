@@ -232,6 +232,22 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+      {/* Productivity Health Card - Temporarily disabled */}
+        {false && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Productivity Health
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">Productivity tracking coming soon</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
     </div>
   );

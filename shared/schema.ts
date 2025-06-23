@@ -253,12 +253,3 @@ export const FLOW_PROTECTION_STRATEGIES = [
   'notification_blocking',
   'distraction_elimination'
 ] as const;
-
-export const OORZAAK_FACTORS = [
-  'deadline_pressure',
-  'resource_shortage',
-  'technical_difficulty',
-  'communication_issues',
-  'scope_creep',
-  'external_dependencies'
-] as const;
