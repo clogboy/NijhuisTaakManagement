@@ -230,6 +230,22 @@ export default function Agenda() {
     }
   };
 
+  const { data: flowConfig } = useQuery({
+    queryKey: ["/api/flow-protection/config"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/flow-protection/config");
+      return response.json();
+    },
+  });
+
+  const { data: flowStrategies } = useQuery({
+    queryKey: ["/api/flow-protection/strategies"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/flow-protection/strategies");
+      return response.json();
+    },
+  });
+
   return (
     <AppLayout title="AI Agenda" subtitle="Intelligent time management with priority-based planning">
       <div className="flex-1 overflow-y-auto">
@@ -474,55 +490,58 @@ export default function Agenda() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Current Strategy Display */}
-                  {currentStrategy ? (
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <span>
-                          Active Strategy: <strong>{currentStrategy.strategyName}</strong>
-                          {currentStrategy.personalityType && (
-                            <span className="text-muted-foreground"> ({currentStrategy.personalityType})</span>
-                          )}
-                        </span>
-                      </div>
-                      {currentStrategy.description && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {currentStrategy.description}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-sm text-muted-foreground">No flow strategy selected</p>
-                    </div>
-                  )}
+                  {/* Flow Strategy Selection */}
+      <Card className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
+            <Zap className="h-5 w-5" />
+            Flow Protection Strategy
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {flowConfig?.currentStrategy ? (
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <p className="font-medium text-blue-900 dark:text-blue-100">
+                  Active: {flowConfig.currentStrategy}
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Your focus time is being optimized for deep work
+                </p>
+              </div>
 
-                  {/* Available Presets */}
-                  {personalityPresets && personalityPresets.length > 0 ? (
-                    <div>
-                      <h4 className="text-sm font-medium mb-3">Available Flow Presets:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {personalityPresets.map((preset) => (
-                          <div key={preset.personalityType} className="p-3 border rounded-lg">
-                            <h5 className="font-medium text-sm">{preset.strategyName}</h5>
-                            <p className="text-xs text-muted-foreground mb-2">{preset.personalityType}</p>
-                            <p className="text-xs">{preset.description}</p>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="mt-2"
-                              onClick={() => applyPresetMutation.mutate(preset.personalityType)}
-                            >
-                              Apply
-                            </Button>
-                          </div>
-                        ))}
+              {flowStrategies && flowStrategies.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                    Available Strategies:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {flowStrategies.map((strategy: any) => (
+                      <div
+                        key={strategy.name}
+                        className={`p-2 rounded border text-sm ${
+                          strategy.name === flowConfig.currentStrategy
+                            ? 'bg-blue-200 dark:bg-blue-800 border-blue-400'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        <div className="font-medium">{strategy.name}</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          {strategy.description}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <p>Loading presets...</p>
-                  )}
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-blue-700 dark:text-blue-300">
+              No flow strategy currently active. Focus mode is available for deep work sessions.
+            </p>
+          )}
+        </CardContent>
+      </Card>
                 </CardContent>
               </Card>
           </TabsContent>

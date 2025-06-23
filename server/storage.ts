@@ -323,6 +323,31 @@ export class Storage {
       };
     }
   }
+
+  // Rescue workflow methods
+  async createRescueWorkflow(userId: number, workflowData: any): Promise<any> {
+    const workflow = {
+      id: Date.now(),
+      userId,
+      roadblockId: workflowData.roadblockId,
+      steps: workflowData.steps,
+      status: 'in_progress',
+      createdAt: new Date(),
+    };
+
+    // Store in memory for now
+    return workflow;
+  }
+
+  async updateRescueWorkflowStep(workflowId: number, stepData: any): Promise<any> {
+    // Implementation for updating workflow step
+    return { id: workflowId, ...stepData };
+  }
+
+  async escalateRescueWorkflow(workflowId: number): Promise<any> {
+    // Implementation for escalating workflow
+    return { id: workflowId, status: 'escalated' };
+  }
 }
 
 export const storage = new Storage();

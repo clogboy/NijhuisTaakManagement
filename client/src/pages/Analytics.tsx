@@ -184,6 +184,21 @@ export default function Analytics() {
               </div>
               <Progress value={productivity?.completionRate || 0} className="h-2" />
             </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Weekly Trend</span>
+                <Badge variant={
+                  (productivity?.trendData?.length || 0) > 0 && 
+                  productivity?.trendData[productivity.trendData.length - 1]?.completed > 
+                  productivity?.trendData[0]?.completed ? "default" : "outline"
+                }>
+                  {(productivity?.trendData?.length || 0) > 0 && 
+                   productivity?.trendData[productivity.trendData.length - 1]?.completed > 
+                   productivity?.trendData[0]?.completed ? "Improving" : "Stable"}
+                </Badge>
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">

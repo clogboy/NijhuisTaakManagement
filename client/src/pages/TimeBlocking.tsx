@@ -1,420 +1,380 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, Plus, X, AlertTriangle } from "lucide-react";
+import { apiRequest } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import AppLayout from "@/components/layout/AppLayout";
-import { Calendar, Clock, Focus, Plus, Edit, Trash2, Play, Pause } from "lucide-react";
-import { format, addDays, startOfWeek, isToday, isSameDay, parseISO } from "date-fns";
-import type { DeepFocusBlock, Activity } from "@shared/schema";
+
+interface TimeBlock {
+  id: number;
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  date: string;
+  activityId?: number;
+  activityTitle?: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'missed';
+}
 
 export default function TimeBlocking() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isNewBlockModalOpen, setIsNewBlockModalOpen] = useState(false);
-  const [newBlockData, setNewBlockData] = useState({
-    title: "",
-    scheduledStart: "",
-    scheduledEnd: "",
-    focusType: "deep",
-    lowStimulusMode: true,
-  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get week range for calendar view
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday start
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const [newBlock, setNewBlock] = useState({
+    title: '',
+    description: '',
+    startTime: '',
+    endTime: '',
+    activityId: '',
+  });
 
-  // Get focus blocks for the selected week
-  const { data: focusBlocks = [] } = useQuery<DeepFocusBlock[]>({
-    queryKey: ["/api/deep-focus", weekStart.toISOString()],
+  const { data: timeBlocks = [], isLoading } = useQuery({
+    queryKey: ["/api/time-blocks", selectedDate],
     queryFn: async () => {
-      const weekEnd = addDays(weekStart, 7);
-      const response = await apiRequest(`/api/deep-focus?startDate=${weekStart.toISOString()}&endDate=${weekEnd.toISOString()}`, "GET");
-      return await response.json();
+      const response = await apiRequest("GET", `/api/time-blocks?date=${selectedDate}`);
+      return response.json();
     },
   });
 
-  // Get activities for task linking
-  const { data: activities = [] } = useQuery<Activity[]>({
+  const { data: activities = [] } = useQuery({
     queryKey: ["/api/activities"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/activities");
+      return response.json();
+    },
   });
 
-  // Create new focus block
-  const createBlockMutation = useMutation({
+  const createTimeBlock = useMutation({
     mutationFn: async (blockData: any) => {
-      const response = await apiRequest("POST", "/api/deep-focus", blockData);
-      return await response.json();
+      const response = await apiRequest("POST", "/api/time-blocks", {
+        ...blockData,
+        date: selectedDate,
+        activityId: blockData.activityId || null,
+      });
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deep-focus"] });
-      setIsNewBlockModalOpen(false);
-      setNewBlockData({
-        title: "",
-        scheduledStart: "",
-        scheduledEnd: "",
-        focusType: "deep",
-        lowStimulusMode: true,
+      queryClient.invalidateQueries({ queryKey: ["/api/time-blocks"] });
+      setIsCreating(false);
+      setNewBlock({
+        title: '',
+        description: '',
+        startTime: '',
+        endTime: '',
+        activityId: '',
       });
-      toast({
-        title: "Focus blok aangemaakt",
-        description: "Je nieuwe deep focus sessie is ingepland.",
-      });
+      toast({ title: "Time block created successfully" });
     },
-    onError: () => {
-      toast({
-        title: "Fout bij aanmaken",
-        description: "Kon focus blok niet aanmaken.",
-        variant: "destructive",
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to create time block", 
+        description: error.message,
+        variant: "destructive" 
       });
     },
   });
 
-  // Delete focus block
-  const deleteBlockMutation = useMutation({
+  const deleteTimeBlock = useMutation({
     mutationFn: async (blockId: number) => {
-      await apiRequest("DELETE", `/api/deep-focus/${blockId}`);
+      const response = await apiRequest("DELETE", `/api/time-blocks/${blockId}`);
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deep-focus"] });
-      toast({
-        title: "Focus blok verwijderd",
-        description: "Het focus blok is succesvol verwijderd.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Fout bij verwijderen",
-        description: "Kon focus blok niet verwijderen.",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/time-blocks"] });
+      toast({ title: "Time block deleted" });
     },
   });
 
-  const handleCreateBlock = () => {
-    if (!newBlockData.title || !newBlockData.scheduledStart || !newBlockData.scheduledEnd) {
-      toast({
-        title: "Ontbrekende gegevens",
-        description: "Vul alle vereiste velden in.",
-        variant: "destructive",
+  const updateBlockStatus = useMutation({
+    mutationFn: async ({ blockId, status }: { blockId: number; status: string }) => {
+      const response = await apiRequest("PATCH", `/api/time-blocks/${blockId}`, { status });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/time-blocks"] });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newBlock.title || !newBlock.startTime || !newBlock.endTime) {
+      toast({ 
+        title: "Missing fields", 
+        description: "Please fill in title, start time, and end time",
+        variant: "destructive" 
       });
       return;
     }
 
-    createBlockMutation.mutate({
-      ...newBlockData,
-      scheduledStart: new Date(newBlockData.scheduledStart),
-      scheduledEnd: new Date(newBlockData.scheduledEnd),
+    if (newBlock.startTime >= newBlock.endTime) {
+      toast({ 
+        title: "Invalid time range", 
+        description: "End time must be after start time",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    createTimeBlock.mutate(newBlock);
+  };
+
+  // Check for conflicts
+  const hasConflicts = (startTime: string, endTime: string, excludeId?: number) => {
+    return timeBlocks.some((block: TimeBlock) => {
+      if (excludeId && block.id === excludeId) return false;
+      return (
+        (startTime >= block.startTime && startTime < block.endTime) ||
+        (endTime > block.startTime && endTime <= block.endTime) ||
+        (startTime <= block.startTime && endTime >= block.endTime)
+      );
     });
   };
 
-  const getBlocksForDate = (date: Date) => {
-    return focusBlocks.filter(block => 
-      isSameDay(new Date(block.scheduledStart), date)
-    ).sort((a, b) => 
-      new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
-    );
+  const formatTime = (time: string) => {
+    return new Date(`1970-01-01T${time}`).toLocaleTimeString('nl-NL', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-blue-500';
-      case 'completed': return 'bg-green-500';
-      case 'cancelled': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'missed': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Actief';
-      case 'completed': return 'Voltooid';
-      case 'cancelled': return 'Geannuleerd';
-      default: return 'Gepland';
-    }
-  };
-
-  const quickFocusPresets = [
-    { title: "Quick Focus", duration: 25, type: "shallow" },
-    { title: "Deep Work", duration: 90, type: "deep" },
-    { title: "Creative Session", duration: 120, type: "creative" },
-  ];
-
-  const handleQuickCreate = (preset: any) => {
-    const now = new Date();
-    const endTime = new Date(now.getTime() + preset.duration * 60000);
-    
-    createBlockMutation.mutate({
-      title: preset.title,
-      scheduledStart: now,
-      scheduledEnd: endTime,
-      focusType: preset.type,
-      lowStimulusMode: true,
-    });
   };
 
   return (
-    <AppLayout title="Time Blocking" subtitle="Plan en beheer je deep focus sessies">
-      <div className="space-y-6">
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Focus size={20} />
-              Quick Focus
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {quickFocusPresets.map((preset, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickCreate(preset)}
-                  disabled={createBlockMutation.isPending}
-                  className="flex items-center gap-2"
-                >
-                  <Play size={14} />
-                  {preset.title} ({preset.duration}m)
-                </Button>
-              ))}
-              <Dialog open={isNewBlockModalOpen} onOpenChange={setIsNewBlockModalOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="flex items-center gap-2">
-                    <Plus size={14} />
-                    Custom Block
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Nieuw Focus Blok</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Titel</Label>
-                      <Input
-                        id="title"
-                        value={newBlockData.title}
-                        onChange={(e) => setNewBlockData({ ...newBlockData, title: e.target.value })}
-                        placeholder="Bijv. Backend API development"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="start">Start tijd</Label>
-                        <Input
-                          id="start"
-                          type="datetime-local"
-                          value={newBlockData.scheduledStart}
-                          onChange={(e) => setNewBlockData({ ...newBlockData, scheduledStart: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="end">Eind tijd</Label>
-                        <Input
-                          id="end"
-                          type="datetime-local"
-                          value={newBlockData.scheduledEnd}
-                          onChange={(e) => setNewBlockData({ ...newBlockData, scheduledEnd: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="type">Focus Type</Label>
-                      <Select
-                        value={newBlockData.focusType}
-                        onValueChange={(value) => setNewBlockData({ ...newBlockData, focusType: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="deep">Deep Work</SelectItem>
-                          <SelectItem value="shallow">Shallow Tasks</SelectItem>
-                          <SelectItem value="creative">Creative Work</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleCreateBlock}
-                        disabled={createBlockMutation.isPending}
-                        className="flex-1"
-                      >
-                        Aanmaken
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsNewBlockModalOpen(false)}
-                        className="flex-1"
-                      >
-                        Annuleren
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Time Blocking</h1>
+        <div className="flex gap-2 items-center">
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-auto"
+          />
+          <Button onClick={() => setIsCreating(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Block
+          </Button>
+        </div>
+      </div>
 
-        {/* Weekly Calendar View */}
+      {/* Create New Time Block */}
+      {isCreating && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar size={20} />
-                Week van {format(weekStart, "d MMM")} - {format(addDays(weekStart, 6), "d MMM")}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(addDays(selectedDate, -7))}
-                >
-                  Vorige
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(new Date())}
-                >
-                  Vandaag
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(addDays(selectedDate, 7))}
-                >
-                  Volgende
-                </Button>
-              </div>
+            <CardTitle className="flex justify-between items-center">
+              Create Time Block
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCreating(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-1 mb-4">
-              {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
-                  {day}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title">Title*</Label>
+                  <Input
+                    id="title"
+                    value={newBlock.title}
+                    onChange={(e) => setNewBlock({ ...newBlock, title: e.target.value })}
+                    placeholder="Focus session, Meeting, etc."
+                  />
                 </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {weekDays.map((date) => {
-                const dayBlocks = getBlocksForDate(date);
-                const isCurrentDay = isToday(date);
-                
-                return (
-                  <div
-                    key={date.toISOString()}
-                    className={`min-h-32 p-2 border rounded-lg ${
-                      isCurrentDay ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
-                    }`}
+                <div>
+                  <Label htmlFor="activity">Link to Activity (optional)</Label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={newBlock.activityId}
+                    onChange={(e) => setNewBlock({ ...newBlock, activityId: e.target.value })}
                   >
-                    <div className={`text-sm font-medium mb-2 ${
-                      isCurrentDay ? 'text-blue-900' : 'text-gray-700'
-                    }`}>
-                      {format(date, 'd')}
-                    </div>
-                    <div className="space-y-1">
-                      {dayBlocks.map((block) => (
-                        <div
-                          key={block.id}
-                          className={`text-xs p-1 rounded border-l-2 ${getStatusColor(block.status)} bg-white hover:bg-gray-100 cursor-pointer`}
-                          onClick={() => {
-                            // Could open edit modal here
-                          }}
-                        >
-                          <div className="font-medium truncate">{block.title}</div>
-                          <div className="text-gray-500">
-                            {format(new Date(block.scheduledStart), 'HH:mm')} - 
-                            {format(new Date(block.scheduledEnd), 'HH:mm')}
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {getStatusText(block.status)}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    <option value="">No activity</option>
+                    {activities.map((activity: any) => (
+                      <option key={activity.id} value={activity.id}>
+                        {activity.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={newBlock.description}
+                  onChange={(e) => setNewBlock({ ...newBlock, description: e.target.value })}
+                  placeholder="What will you work on during this time?"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startTime">Start Time*</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={newBlock.startTime}
+                    onChange={(e) => setNewBlock({ ...newBlock, startTime: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endTime">End Time*</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={newBlock.endTime}
+                    onChange={(e) => setNewBlock({ ...newBlock, endTime: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {newBlock.startTime && newBlock.endTime && 
+               hasConflicts(newBlock.startTime, newBlock.endTime) && (
+                <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm text-yellow-800">
+                    This time slot conflicts with an existing block
+                  </span>
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreating(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createTimeBlock.isPending}>
+                  {createTimeBlock.isPending ? "Creating..." : "Create Block"}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
+      )}
 
-        {/* Today's Focus Blocks */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock size={20} />
-              Vandaag's Focus Blokken
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {getBlocksForDate(new Date()).length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                Geen focus blokken gepland voor vandaag.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {getBlocksForDate(new Date()).map((block) => (
-                  <div
-                    key={block.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
-                  >
+      {/* Time Blocks List */}
+      <div className="space-y-4">
+        {isLoading ? (
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        ) : timeBlocks.length > 0 ? (
+          timeBlocks
+            .sort((a: TimeBlock, b: TimeBlock) => a.startTime.localeCompare(b.startTime))
+            .map((block: TimeBlock) => (
+              <Card key={block.id}>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{block.title}</h4>
-                        <Badge variant="secondary" className={`text-white ${getStatusColor(block.status)}`}>
-                          {getStatusText(block.status)}
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-lg">{block.title}</h3>
+                        <Badge className={getStatusColor(block.status)}>
+                          {block.status.replace('_', ' ')}
                         </Badge>
-                      </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-4">
-                        <span>
-                          {format(new Date(block.scheduledStart), 'HH:mm')} - 
-                          {format(new Date(block.scheduledEnd), 'HH:mm')}
-                        </span>
-                        <span className="capitalize">{block.focusType}</span>
-                        {block.selectedActivityId && (
-                          <span>
-                            Taak: {activities.find(a => a.id === block.selectedActivityId)?.title || 'Onbekend'}
-                          </span>
+                        {block.activityTitle && (
+                          <Badge variant="outline" className="text-xs">
+                            {block.activityTitle}
+                          </Badge>
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {block.status === 'scheduled' && (
-                        <>
-                          <Button variant="outline" size="sm">
-                            <Edit size={14} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteBlockMutation.mutate(block.id)}
-                            disabled={deleteBlockMutation.isPending}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {formatTime(block.startTime)} - {formatTime(block.endTime)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(block.date).toLocaleDateString('nl-NL')}
+                        </div>
+                      </div>
+                      
+                      {block.description && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                          {block.description}
+                        </p>
                       )}
                     </div>
+                    
+                    <div className="flex gap-2">
+                      {block.status === 'scheduled' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateBlockStatus.mutate({ 
+                            blockId: block.id, 
+                            status: 'in_progress' 
+                          })}
+                        >
+                          Start
+                        </Button>
+                      )}
+                      {block.status === 'in_progress' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateBlockStatus.mutate({ 
+                            blockId: block.id, 
+                            status: 'completed' 
+                          })}
+                        >
+                          Complete
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteTimeBlock.mutate(block.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            ))
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No time blocks for this date
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Start organizing your day by creating time blocks for focused work.
+              </p>
+              <Button onClick={() => setIsCreating(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Block
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </AppLayout>
+    </div>
   );
 }

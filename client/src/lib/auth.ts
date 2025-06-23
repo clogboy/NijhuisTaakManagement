@@ -101,13 +101,18 @@ export async function sendEmail(
   subject: string,
   body: string
 ): Promise<void> {
-  const response = await apiRequest('POST', '/api/email/send', {
-    emails,
-    subject,
-    body
-  });
+  try {
+    const response = await apiRequest('POST', '/api/email/send', {
+      emails,
+      subject,
+      body
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      throw new Error('Failed to send email');
+    }
+  } catch (error) {
+    console.error('Send email error:', error);
     throw new Error('Failed to send email');
   }
 }

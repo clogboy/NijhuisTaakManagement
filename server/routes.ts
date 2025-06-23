@@ -314,17 +314,17 @@ export function registerRoutes(app: express.Application) {
     try {
       const { personalityType } = req.body;
       const { flowProtectionService } = await import("./flow-protection-service");
-      
+
       const presets = flowProtectionService.getPersonalityPresets();
       const preset = presets.find(p => p.personalityType === personalityType);
-      
+
       if (!preset) {
         return res.status(400).json({ message: "Invalid personality type" });
       }
 
       // Apply the flow strategy
       const success = await storage.applyFlowStrategy(req.user.id, preset);
-      
+
       if (success) {
         res.json({ success: true, message: "Flow strategy applied successfully" });
       } else {
@@ -333,6 +333,116 @@ export function registerRoutes(app: express.Application) {
     } catch (error) {
       console.error("Error applying flow strategy:", error);
       res.status(500).json({ message: "Failed to apply flow strategy" });
+    }
+  });
+
+  // Flow protection endpoints
+  app.get("/api/flow-protection/config", requireAuth, async (req, res) => {
+    try {
+      const { flowProtectionService, timeBlockingService } = await import("./flow-protection-service");
+      const config = await flowProtectionService.getUserConfig(req.user.id);
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching flow config:', error);
+      res.status(500).json({ error: 'Failed to fetch flow configuration' });
+    }
+  });
+
+  app.get("/api/flow-protection/strategies", requireAuth, async (req, res) => {
+    try {
+      const { flowProtectionService } = await import("./flow-protection-service");
+      const strategies = [
+        { name: "Deep Focus", description: "2-4 hour blocks for complex work" },
+        { name: "Sprint Mode", description: "25-50 minute focused bursts" },
+        { name: "Hybrid Flow", description: "Mixed deep work and quick tasks" },
+        { name: "Meeting Buffer", description: "Protected time around meetings" }
+      ];
+      res.json(strategies);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch strategies' });
+    }
+  });
+
+  // Time blocking endpoints
+  app.get("/api/time-blocks", requireAuth, async (req, res) => {
+    try {
+      const { timeBlockingService } = await import("./flow-protection-service");
+      const { date } = req.query;
+      const timeBlocks = await timeBlockingService.getUserTimeBlocks(req.user.id, date as string);
+      res.json(timeBlocks);
+    } catch (error) {
+      console.error('Error fetching time blocks:', error);
+      res.status(500).json({ error: 'Failed to fetch time blocks' });
+    }
+  });
+
+  app.post("/api/time-blocks", requireAuth, async (req, res) => {
+    try {
+      const { timeBlockingService } = await import("./flow-protection-service");
+      const timeBlock = await timeBlockingService.createTimeBlock(req.user.id, req.body);
+      res.json(timeBlock);
+    } catch (error) {
+      console.error('Error creating time block:', error);
+      res.status(500).json({ error: 'Failed to create time block' });
+    }
+  });
+
+  app.patch("/api/time-blocks/:id", requireAuth, async (req, res) => {
+    try {
+      const { timeBlockingService } = await import("./flow-protection-service");
+      const timeBlock = await timeBlockingService.updateTimeBlock(
+        parseInt(req.params.id), 
+        req.body
+      );
+      res.json(timeBlock);
+    } catch (error) {
+      console.error('Error updating time block:', error);
+      res.status(500).json({ error: 'Failed to update time block' });
+    }
+  });
+
+  app.delete("/api/time-blocks/:id", requireAuth, async (req, res) => {
+    try {
+      const { timeBlockingService } = await import("./flow-protection-service");
+      await timeBlockingService.deleteTimeBlock(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting time block:', error);
+      res.status(500).json({ error: 'Failed to delete time block' });
+    }
+  });
+
+  // Rescue workflow endpoints
+  app.post("/api/rescue-workflow", requireAuth, async (req, res) => {
+    try {
+      const workflow = await storage.createRescueWorkflow(req.user.id, req.body);
+      res.json(workflow);
+    } catch (error) {
+      console.error('Error creating rescue workflow:', error);
+      res.status(500).json({ error: 'Failed to create rescue workflow' });
+    }
+  });
+
+  app.patch("/api/rescue-workflow/:id/step", requireAuth, async (req, res) => {
+    try {
+      const workflow = await storage.updateRescueWorkflowStep(
+        parseInt(req.params.id),
+        req.body
+      );
+      res.json(workflow);
+    } catch (error) {
+      console.error('Error updating rescue workflow step:', error);
+      res.status(500).json({ error: 'Failed to update workflow step' });
+    }
+  });
+
+  app.patch("/api/rescue-workflow/:id/escalate", requireAuth, async (req, res) => {
+    try {
+      const workflow = await storage.escalateRescueWorkflow(parseInt(req.params.id));
+      res.json(workflow);
+    } catch (error) {
+      console.error('Error escalating rescue workflow:', error);
+      res.status(500).json({ error: 'Failed to escalate workflow' });
     }
   });
 

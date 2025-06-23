@@ -59,7 +59,6 @@ export default function Dashboard() {
     completedActivities: stats?.completedActivities || 0,
     totalSubtasks: stats?.totalSubtasks || 0,
     totalRoadblocks: stats?.totalRoadblocks || 0,
-    productivityScore: stats?.productivityScore || 0,
   };
 
   const recentActivities = activities.slice(0, 5);
@@ -120,10 +119,10 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Productivity Score</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{safeStats.productivityScore}%</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Roadblocks</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{safeStats.totalRoadblocks}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>

@@ -1,109 +1,143 @@
-import { useState, useCallback } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
-interface RescueWorkflowData {
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/auth';
+import { useToast } from './use-toast';
+
+interface RescueStep {
+  id: string;
   title: string;
   description: string;
-  oorzaakCategory: string;
-  oorzaakFactor?: string;
-  resolution: string;
-  newDeadline: string;
-  linkedActivityId: number;
-  departmentImpact: string[];
+  action?: string;
+  completed: boolean;
 }
 
-interface RescueWorkflowResult {
-  roadblock: any;
-  rescueSubtask: any;
+interface RescueWorkflow {
+  roadblockId: number;
+  currentStep: number;
+  steps: RescueStep[];
+  status: 'not_started' | 'in_progress' | 'completed' | 'escalated';
 }
 
-export const useRescueWorkflow = () => {
-  const [isRescueMode, setIsRescueMode] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const queryClient = useQueryClient();
+const DEFAULT_RESCUE_STEPS: Omit<RescueStep, 'completed'>[] = [
+  {
+    id: 'identify',
+    title: 'Identify Root Cause',
+    description: 'Break down the roadblock into specific, actionable components',
+    action: 'List the exact blockers preventing progress'
+  },
+  {
+    id: 'resources',
+    title: 'Gather Resources',
+    description: 'Identify what information, tools, or people you need',
+    action: 'Document required resources and how to access them'
+  },
+  {
+    id: 'alternatives',
+    title: 'Find Alternatives',
+    description: 'Brainstorm workarounds or alternative approaches',
+    action: 'List at least 2-3 different ways to move forward'
+  },
+  {
+    id: 'action',
+    title: 'Take Action',
+    description: 'Execute the chosen solution or workaround',
+    action: 'Implement the most feasible alternative'
+  },
+  {
+    id: 'validate',
+    title: 'Validate Solution',
+    description: 'Confirm the roadblock is resolved or progress is made',
+    action: 'Test the solution and document results'
+  }
+];
+
+export function useRescueWorkflow() {
+  const [activeWorkflow, setActiveWorkflow] = useState<RescueWorkflow | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const rescueMutation = useMutation<RescueWorkflowResult, Error, RescueWorkflowData>({
-    mutationFn: async (data) => {
-      const response = await apiRequest("POST", "/api/roadblocks", {
-        ...data,
-        isRescueMode: true,
-        linkedTaskId: selectedTask?.id,
-        severity: "medium",
-        assignedTo: "",
-        reportedDate: new Date().toISOString(),
+  const startRescue = useMutation({
+    mutationFn: async (roadblockId: number) => {
+      const response = await apiRequest('POST', '/api/rescue-workflow', {
+        roadblockId,
+        steps: DEFAULT_RESCUE_STEPS.map(step => ({ ...step, completed: false }))
       });
       return response.json();
     },
-    onSuccess: (result) => {
-      // Invalidate relevant queries efficiently
-      const queryKeys = [
-        ["/api/roadblocks"],
-        ["/api/subtasks"],
-        ["/api/stats"],
-        ["/api/activities"]
-      ];
-      
-      queryKeys.forEach(key => {
-        queryClient.invalidateQueries({ queryKey: key });
+    onSuccess: (workflow) => {
+      setActiveWorkflow(workflow);
+      toast({ 
+        title: "Rescue workflow started", 
+        description: "Follow the steps to systematically resolve this roadblock" 
       });
-      
-      // Force immediate refetch of stats to update dashboard metrics
-      queryClient.refetchQueries({ queryKey: ["/api/stats"] });
-
-      toast({
-        title: "Rescue Succesvol",
-        description: "Wegversperring aangemaakt en nieuwe taak ingepland",
-      });
-
-      // Reset state
-      setIsRescueMode(false);
-      setSelectedTask(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Rescue Failed",
-        description: error.message || "Failed to rescue task. Please try again.",
-        variant: "destructive",
-      });
-    },
+    }
   });
 
-  const startRescue = useCallback((task: any) => {
-    setSelectedTask(task);
-    setIsRescueMode(true);
-  }, []);
-
-  const cancelRescue = useCallback(() => {
-    setIsRescueMode(false);
-    setSelectedTask(null);
-  }, []);
-
-  const executeRescue = useCallback((data: Omit<RescueWorkflowData, 'linkedActivityId'>) => {
-    if (!selectedTask) {
-      toast({
-        title: "Error",
-        description: "No task selected for rescue",
-        variant: "destructive",
+  const completeStep = useMutation({
+    mutationFn: async ({ workflowId, stepId, notes }: { 
+      workflowId: number; 
+      stepId: string; 
+      notes?: string; 
+    }) => {
+      const response = await apiRequest('PATCH', `/api/rescue-workflow/${workflowId}/step`, {
+        stepId,
+        completed: true,
+        notes
       });
-      return;
+      return response.json();
+    },
+    onSuccess: (updatedWorkflow) => {
+      setActiveWorkflow(updatedWorkflow);
+      const completedSteps = updatedWorkflow.steps.filter((s: RescueStep) => s.completed).length;
+      const totalSteps = updatedWorkflow.steps.length;
+      
+      if (completedSteps === totalSteps) {
+        toast({ 
+          title: "Rescue workflow completed! 🎉", 
+          description: "Great job resolving this roadblock systematically" 
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/roadblocks"] });
+      } else {
+        toast({ title: `Step completed (${completedSteps}/${totalSteps})` });
+      }
     }
+  });
 
-    rescueMutation.mutate({
-      ...data,
-      linkedActivityId: selectedTask.linkedActivityId,
-    });
-  }, [selectedTask, rescueMutation, toast]);
+  const escalateWorkflow = useMutation({
+    mutationFn: async (workflowId: number) => {
+      const response = await apiRequest('PATCH', `/api/rescue-workflow/${workflowId}/escalate`, {
+        status: 'escalated'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setActiveWorkflow(null);
+      toast({ 
+        title: "Roadblock escalated", 
+        description: "This will be reviewed for additional support" 
+      });
+    }
+  });
+
+  const getCurrentStep = () => {
+    if (!activeWorkflow) return null;
+    return activeWorkflow.steps.find(step => !step.completed) || null;
+  };
+
+  const getProgress = () => {
+    if (!activeWorkflow) return 0;
+    const completed = activeWorkflow.steps.filter(step => step.completed).length;
+    return (completed / activeWorkflow.steps.length) * 100;
+  };
 
   return {
-    isRescueMode,
-    selectedTask,
+    activeWorkflow,
     startRescue,
-    cancelRescue,
-    executeRescue,
-    isExecuting: rescueMutation.isPending,
-    error: rescueMutation.error,
+    completeStep,
+    escalateWorkflow,
+    getCurrentStep,
+    getProgress,
+    setActiveWorkflow
   };
-};
+}
