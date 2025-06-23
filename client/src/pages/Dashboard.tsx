@@ -168,9 +168,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     queryKey: ["/api/user/preferences"],
   });
 
-  const { data: smartInsights } = useQuery<any>({
-    queryKey: ["/api/smart-insights"],
-  });
+  // DISABLED: Smart insights temporarily disabled due to scoring system crashes
+  // const { data: smartInsights } = useQuery<any>({
+  //   queryKey: ["/api/smart-insights"],
+  // });
+  const smartInsights = null;
 
   const { data: activeDeepFocus } = useQuery<any>({
     queryKey: ["/api/deep-focus/active"],
@@ -452,37 +454,10 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     return true;
   }).sort((a, b) => {
     if (sortBy === "priority") {
-      // TODO: Re-enable smart prioritization once scoring system is fixed
-      // Smart prioritization temporarily disabled due to undefined score errors
-      /*
-      if (smartInsights) {
-        try {
-          const allPrioritizedActivities = [
-            ...(Array.isArray(smartInsights.topPriority) ? smartInsights.topPriority : []),
-            ...(Array.isArray(smartInsights.quickWins) ? smartInsights.quickWins : []),
-            ...(smartInsights.timeSlotSuggestions ? Object.values(smartInsights.timeSlotSuggestions).flat() : [])
-          ].filter(Boolean);
-
-          const aSmartActivity = allPrioritizedActivities.find((sa: any) => sa && sa.id === a.id);
-          const bSmartActivity = allPrioritizedActivities.find((sa: any) => sa && sa.id === b.id);
-
-          const aScore = aSmartActivity?.smartPriority?.score ?? 0;
-          const bScore = bSmartActivity?.smartPriority?.score ?? 0;
-
-          if (aSmartActivity && bSmartActivity) {
-            return bScore - aScore;
-          } else if (aSmartActivity) {
-            return -1;
-          } else if (bSmartActivity) {
-            return 1;
-          }
-        } catch (error) {
-          console.warn('Error in smart prioritization sorting:', error);
-        }
-      }
-      */
-
-      // Use basic priority sorting
+      // DISABLED: Smart prioritization temporarily disabled due to scoring crashes
+      // The smart prioritization service is causing undefined score errors
+      // Using simple priority-based sorting instead
+      
       const priorityOrder = { urgent: 3, normal: 2, low: 1 };
       return (priorityOrder[b.priority as keyof typeof priorityOrder] || 1) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 1);
     } else if (sortBy === "dueDate") {
