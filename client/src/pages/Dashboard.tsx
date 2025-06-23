@@ -242,8 +242,28 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">Productivity tracking coming soon</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold text-ms-blue">
+                      {productivityData?.score ?? 0}%
+                    </div>
+                    <p className="text-sm text-neutral-medium">
+                      {productivityData?.trend || t('dashboard.noData')}
+                    </p>
+                  </div>
+                  {productivityData?.score !== undefined && productivityData?.score !== null && (
+                    <div className={`text-xs px-2 py-1 rounded-full ${
+                      productivityData.score >= 80 ? 'bg-green-100 text-green-800' :
+                      productivityData.score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {productivityData.score >= 80 ? t('common.excellent') :
+                       productivityData.score >= 60 ? t('common.good') :
+                       t('common.needsImprovement')}
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -252,3 +272,4 @@ export default function Dashboard() {
     </div>
   );
 }
+```This code modifies the Dashboard component to safely access the `score` property of `productivityData`, preventing potential crashes due to undefined values. It also adds null checks before rendering the productivity score badge.

@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 
 // Mock user for development
@@ -12,7 +11,7 @@ const MOCK_USER = {
 export async function apiRequest(method: string, url: string, data?: any) {
   const isServer = typeof window === 'undefined';
   const baseUrl = isServer ? process.env.API_URL || 'http://localhost:5000' : '';
-  
+
   try {
     const config: RequestInit = {
       method,
@@ -26,7 +25,7 @@ export async function apiRequest(method: string, url: string, data?: any) {
     }
 
     const response = await fetch(`${baseUrl}/api${url}`, config);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`HTTP ${response.status}: ${errorText}`);
@@ -36,11 +35,11 @@ export async function apiRequest(method: string, url: string, data?: any) {
     if (contentType && contentType.includes('application/json')) {
       return await response.json();
     }
-    
+
     return await response.text();
   } catch (error) {
     console.error('API request failed:', error);
-    
+
     if (error instanceof Error) {
       toast({
         title: 'API Error',
@@ -48,7 +47,7 @@ export async function apiRequest(method: string, url: string, data?: any) {
         variant: 'destructive',
       });
     }
-    
+
     throw error;
   }
 }
@@ -95,12 +94,12 @@ export async function sendEmail(
     };
 
     const result = await apiRequest('POST', '/send-email', emailData);
-    
+
     toast({
       title: 'Email Sent',
       description: `Email sent successfully to ${to}`,
     });
-    
+
     return result;
   } catch (error) {
     console.error('Send email failed:', error);
@@ -112,3 +111,41 @@ export async function sendEmail(
     throw error;
   }
 }
+// API request helper function
+export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  const response = await fetch(`/api${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
+// Mock Microsoft login for development
+export const mockMicrosoftLogin = async () => {
+  return apiRequest('/auth/mock-microsoft-login', {
+    method: 'POST',
+  });
+};
+
+// Send email function
+export const sendEmail = async (emailData: any) => {
+  return apiRequest('/email/send', {
+    method: 'POST',
+    body: JSON.stringify(emailData),
+  });
+};
+
+export const auth = {
+  login,
+  logout,
+  getCurrentUser,
+  isAuthenticated
+};

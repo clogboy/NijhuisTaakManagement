@@ -30,9 +30,29 @@ class ErrorReporter {
       });
 
       window.addEventListener('unhandledrejection', (event) => {
+        // Prevent the default unhandled rejection behavior
+        event.preventDefault();
+        
+        let message = 'Unhandled Promise Rejection';
+        let stack = undefined;
+        
+        if (event.reason) {
+          if (typeof event.reason === 'string') {
+            message = `Unhandled Promise Rejection: ${event.reason}`;
+          } else if (event.reason instanceof Error) {
+            message = `Unhandled Promise Rejection: ${event.reason.message}`;
+            stack = event.reason.stack;
+          } else if (event.reason.message) {
+            message = `Unhandled Promise Rejection: ${event.reason.message}`;
+            stack = event.reason.stack;
+          } else {
+            message = `Unhandled Promise Rejection: ${JSON.stringify(event.reason)}`;
+          }
+        }
+        
         this.captureError({
-          message: `Unhandled Promise Rejection: ${event.reason}`,
-          stack: event.reason?.stack,
+          message,
+          stack,
         });
       });
     }

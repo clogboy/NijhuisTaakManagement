@@ -180,14 +180,55 @@ export type InsertSubtask = z.infer<typeof insertSubtaskSchema>;
 export type QuickWin = typeof quickWins.$inferSelect;
 export type InsertQuickWin = z.infer<typeof insertQuickWinSchema>;
 
-export type Roadblock = typeof roadblocks.$inferSelect;
+export const insertRoadblockSchema = createInsertSchema(roadblocks);
+export const selectRoadblockSchema = createSelectSchema(roadblocks);
+
 export type InsertRoadblock = z.infer<typeof insertRoadblockSchema>;
+export type Roadblock = z.infer<typeof selectRoadblockSchema>;
 
-export type ActivityLog = typeof activityLogs.$inferSelect;
-export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
-
-export type FlowStrategy = typeof flowStrategies.$inferSelect;
-export type InsertFlowStrategy = typeof flowStrategies.$inferInsert;
+// Roadblock factor definitions
+export const OORZAAK_FACTORS = {
+  process: {
+    label: 'Process Issues',
+    description: 'Problems with workflows or procedures',
+    icon: '⚙️'
+  },
+  resources: {
+    label: 'Resource Constraints', 
+    description: 'Lack of time, money, or materials',
+    icon: '💰'
+  },
+  communication: {
+    label: 'Communication Breakdown',
+    description: 'Poor information flow or unclear instructions',
+    icon: '💬'
+  },
+  external: {
+    label: 'External Dependencies',
+    description: 'Waiting on others or external factors',
+    icon: '🌐'
+  },
+  technical: {
+    label: 'Technical Issues',
+    description: 'Software, hardware, or system problems',
+    icon: '🔧'
+  },
+  planning: {
+    label: 'Planning Deficiencies',
+    description: 'Inadequate preparation or unclear requirements',
+    icon: '📋'
+  },
+  skills: {
+    label: 'Skills Gap',
+    description: 'Missing knowledge or capabilities',
+    icon: '🎓'
+  },
+  unclear: {
+    label: 'Unclear/Other',
+    description: 'Root cause needs investigation',
+    icon: '❓'
+  }
+} as const;
 
 // Oorzaak Analysis Constants
 export const OORZAAK_CATEGORIES = {
@@ -201,7 +242,7 @@ export const OORZAAK_CATEGORIES = {
   UNCLEAR: "unclear"
 } as const;
 
-export const OORZAAK_FACTORS = {
+export const OORZAAK_FACTORS1 = {
   process: {
     WORKFLOW_UNCLEAR: "Workflow Unclear",
     APPROVAL_DELAYS: "Approval Delays",
