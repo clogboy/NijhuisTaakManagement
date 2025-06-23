@@ -62,10 +62,9 @@ export default function Agenda() {
   const [rescueModalOpen, setRescueModalOpen] = useState(false);
   const [rescuingActivity, setRescuingActivity] = useState<Activity | null>(null);
 
-  // Simple fallback for translation
-  const t = (key: string) => key;
-  const { t: realT } = useTranslations(); // Using the alias 'realT' to avoid conflict with the fallback 't'
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // Translation function with fallback
+  const { t } = useTranslations();
+  const [selectedDateString, setSelectedDateString] = useState(new Date().toISOString().split('T')[0]);
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
   const [isDeepFocusModalOpen, setIsDeepFocusModalOpen] = useState(false);
@@ -74,7 +73,7 @@ export default function Agenda() {
   const [focusEndTime, setFocusEndTime] = useState('');
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([]);
 
-  // Flow strategy queries
+  // Flow strategy queries  
   const queryClient = useQueryClient();
 
   const { data: personalityPresets, isLoading: presetsLoading, error: presetsError } = useQuery<any[]>({
