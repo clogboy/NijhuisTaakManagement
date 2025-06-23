@@ -42,6 +42,8 @@ export async function getCurrentUser() {
 
 export async function apiRequest(url: string, method: string = 'GET', data?: any) {
   try {
+    console.log(`[API] Making ${method} request to ${url}`);
+    
     const options: RequestInit = {
       method,
       headers: {
@@ -53,13 +55,15 @@ export async function apiRequest(url: string, method: string = 'GET', data?: any
 
     if (data && method !== 'GET') {
       options.body = JSON.stringify(data);
+      console.log(`[API] Request body:`, data);
     }
 
     const response = await fetch(url, options);
+    console.log(`[API] Response status:`, response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`API request failed for ${url}:`, errorText);
+      console.error(`[API] Request failed for ${url}:`, errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
@@ -67,13 +71,15 @@ export async function apiRequest(url: string, method: string = 'GET', data?: any
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const responseText = await response.text();
-      console.error(`Non-JSON response from ${url}:`, responseText);
+      console.error(`[API] Non-JSON response from ${url}:`, responseText);
       throw new Error('Server returned non-JSON response');
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log(`[API] Response body:`, result);
+    return result;
   } catch (error) {
-    console.error(`API request failed for ${url}:`, error);
+    console.error(`[API] Request failed for ${url}:`, error);
     throw error;
   }
 }

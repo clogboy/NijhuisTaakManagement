@@ -14,24 +14,35 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
 
   const loginMutation = useMutation({
     mutationFn: async () => {
+      if (isLoggingIn) {
+        throw new Error('Login already in progress');
+      }
+      
+      setIsLoggingIn(true);
       console.log('[LOGIN] Starting login attempt...');
 
-      const response = await apiRequest('/api/auth/login', 'POST', {
-        email: 'dev@nijhuis.nl',
-        name: 'Development User'
-      });
+      try {
+        const response = await apiRequest('/api/auth/login', 'POST', {
+          email: 'dev@nijhuis.nl',
+          name: 'Development User'
+        });
 
-      console.log('[LOGIN] Response data:', response);
+        console.log('[LOGIN] Response data:', response);
 
-      if (!response.success) {
-        throw new Error(response.message || 'Login failed');
+        if (!response.success) {
+          throw new Error(response.message || 'Login failed');
+        }
+
+        return response;
+      } catch (error) {
+        setIsLoggingIn(false);
+        throw error;
       }
-
-      return response;
     },
     onSuccess: (data) => {
       console.log('[LOGIN] Login successful, updating client state...');
@@ -46,24 +57,28 @@ export default function Login() {
       });
 
       console.log('[LOGIN] Navigating to dashboard...');
-
-      // Use setTimeout to ensure state is updated before navigation
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
+      
+      // Navigate immediately since login was successful
+      setLocation("/");
+      setIsLoggingIn(false);
     },
     onError: (error: any) => {
       console.error('[LOGIN] Login mutation error:', error);
-      toast({
-        title: "Sign In Failed", 
-        description: error.message || "Failed to sign in. Please try again.",
-        variant: "destructive",
-      });
+      setIsLoggingIn(false);
+      
+      // Only show error toast if it's not a duplicate request
+      if (!error.message?.includes('already in progress')) {
+        toast({
+          title: "Sign In Failed", 
+          description: error.message || "Failed to sign in. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
   const handleMicrosoftLogin = () => {
-    if (loginMutation.isPending) {
+    if (loginMutation.isPending || isLoggingIn) {
       console.log('[LOGIN] Login already in progress, ignoring click');
       return;
     }
@@ -100,10 +115,10 @@ export default function Login() {
 
             <Button
               onClick={handleMicrosoftLogin}
-              disabled={loginMutation.isPending}
+              disabled={loginMutation.isPending || isLoggingIn}
               className="w-full bg-ms-blue hover:bg-ms-blue-dark text-white py-3 font-medium"
             >
-              {loginMutation.isPending ? (
+              {(loginMutation.isPending || isLoggingIn) ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Signing in...
