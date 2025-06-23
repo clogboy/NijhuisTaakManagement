@@ -1,144 +1,145 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-
-interface OnboardingState {
-  hasCompletedTutorial: boolean;
-  currentTutorialStep: number;
-  isFirstVisit: boolean;
-  showCharacterGuide: boolean;
-  guidanceMessage: string;
-  guideCharacter: "productivity" | "helper" | "expert";
-  showTutorial: boolean;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface OnboardingContextType {
-  state: OnboardingState;
+  isFirstTime: boolean;
+  showTutorial: boolean;
+  currentStep: number;
+  completedSteps: Set<string>;
   startTutorial: () => void;
-  completeTutorial: () => void;
   skipTutorial: () => void;
-  showGuide: (character: "productivity" | "helper" | "expert", message: string) => void;
-  hideGuide: () => void;
-  updateTutorialStep: (step: number) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  completeStep: (stepId: string) => void;
   resetOnboarding: () => void;
-  closeTutorial: () => void;
+  setCurrentStep: (step: number) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-const ONBOARDING_STORAGE_KEY = "nijflow-onboarding-state";
+export function OnboardingProvider({ children }: { children: ReactNode }) {
+  const [isFirstTime, setIsFirstTime] = useState(() => {
+    try {
+      const hasVisited = localStorage.getItem('hasVisited');
+      return !hasVisited;
+    } catch {
+      return true;
+    }
+  });
 
-const defaultState: OnboardingState = {
-  hasCompletedTutorial: false,
-  currentTutorialStep: 0,
-  isFirstVisit: true,
-  showCharacterGuide: false,
-  guidanceMessage: "",
-  guideCharacter: "productivity",
-  showTutorial: false
-};
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
 
-export function OnboardingProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<OnboardingState>(defaultState);
-
-  // Load onboarding state from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (saved) {
-        const parsedState = JSON.parse(saved);
-        setState(prevState => ({ ...prevState, ...parsedState }));
+      const tutorialState = localStorage.getItem('tutorialState');
+      if (tutorialState) {
+        const state = JSON.parse(tutorialState);
+        setShowTutorial(state.showTutorial || false);
+        setCurrentStep(state.currentStep || 0);
+        setCompletedSteps(new Set(state.completedSteps || []));
       }
     } catch (error) {
-      console.warn("Failed to load onboarding state:", error);
+      console.warn('Failed to load tutorial state:', error);
     }
   }, []);
 
-  // Save onboarding state to localStorage when it changes
-  useEffect(() => {
+  const saveTutorialState = (updates: Partial<{
+    showTutorial: boolean;
+    currentStep: number;
+    completedSteps: string[];
+  }>) => {
     try {
-      localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(state));
+      const currentState = {
+        showTutorial,
+        currentStep,
+        completedSteps: Array.from(completedSteps),
+        ...updates
+      };
+      localStorage.setItem('tutorialState', JSON.stringify(currentState));
     } catch (error) {
-      console.warn("Failed to save onboarding state:", error);
+      console.warn('Failed to save tutorial state:', error);
     }
-  }, [state]);
-
-  const startTutorial = () => {
-    setState(prev => ({
-      ...prev,
-      currentTutorialStep: 0,
-      isFirstVisit: false,
-      showTutorial: true
-    }));
   };
 
-  const completeTutorial = () => {
-    setState(prev => ({
-      ...prev,
-      hasCompletedTutorial: true,
-      currentTutorialStep: 0,
-      isFirstVisit: false,
-      showCharacterGuide: false
-    }));
+  const startTutorial = () => {
+    setShowTutorial(true);
+    setCurrentStep(0);
+    saveTutorialState({ showTutorial: true, currentStep: 0 });
   };
 
   const skipTutorial = () => {
-    setState(prev => ({
-      ...prev,
-      hasCompletedTutorial: true,
-      isFirstVisit: false,
-      showCharacterGuide: false
-    }));
+    setShowTutorial(false);
+    setIsFirstTime(false);
+    try {
+      localStorage.setItem('hasVisited', 'true');
+      localStorage.setItem('tutorialSkipped', 'true');
+    } catch (error) {
+      console.warn('Failed to save tutorial skip state:', error);
+    }
+    saveTutorialState({ showTutorial: false });
   };
 
-  const showGuide = (character: "productivity" | "helper" | "expert", message: string) => {
-    setState(prev => ({
-      ...prev,
-      showCharacterGuide: true,
-      guideCharacter: character,
-      guidanceMessage: message
-    }));
+  const nextStep = () => {
+    const newStep = currentStep + 1;
+    setCurrentStep(newStep);
+    saveTutorialState({ currentStep: newStep });
   };
 
-  const hideGuide = () => {
-    setState(prev => ({
-      ...prev,
-      showCharacterGuide: false,
-      guidanceMessage: ""
-    }));
+  const prevStep = () => {
+    const newStep = Math.max(0, currentStep - 1);
+    setCurrentStep(newStep);
+    saveTutorialState({ currentStep: newStep });
   };
 
-  const updateTutorialStep = (step: number) => {
-    setState(prev => ({
-      ...prev,
-      currentTutorialStep: step
-    }));
+  const completeStep = (stepId: string) => {
+    const newCompleted = new Set(completedSteps);
+    newCompleted.add(stepId);
+    setCompletedSteps(newCompleted);
+    saveTutorialState({ completedSteps: Array.from(newCompleted) });
   };
 
   const resetOnboarding = () => {
-    setState(defaultState);
-    localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    setIsFirstTime(true);
+    setShowTutorial(false);
+    setCurrentStep(0);
+    setCompletedSteps(new Set());
+    try {
+      localStorage.removeItem('hasVisited');
+      localStorage.removeItem('tutorialState');
+      localStorage.removeItem('tutorialSkipped');
+    } catch (error) {
+      console.warn('Failed to reset onboarding state:', error);
+    }
   };
 
-  const closeTutorial = () => {
-    setState(prev => ({
-      ...prev,
-      showTutorial: false
-    }));
-  };
-
-  const contextValue: OnboardingContextType = {
-    state,
-    startTutorial,
-    completeTutorial,
-    skipTutorial,
-    showGuide,
-    hideGuide,
-    updateTutorialStep,
-    resetOnboarding,
-    closeTutorial
-  };
+  useEffect(() => {
+    if (isFirstTime) {
+      try {
+        localStorage.setItem('hasVisited', 'true');
+      } catch (error) {
+        console.warn('Failed to mark as visited:', error);
+      }
+      setIsFirstTime(false);
+    }
+  }, [isFirstTime]);
 
   return (
-    <OnboardingContext.Provider value={contextValue}>
+    <OnboardingContext.Provider
+      value={{
+        isFirstTime,
+        showTutorial,
+        currentStep,
+        completedSteps,
+        startTutorial,
+        skipTutorial,
+        nextStep,
+        prevStep,
+        completeStep,
+        resetOnboarding,
+        setCurrentStep
+      }}
+    >
       {children}
     </OnboardingContext.Provider>
   );
@@ -147,41 +148,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 export function useOnboarding() {
   const context = useContext(OnboardingContext);
   if (context === undefined) {
-    throw new Error("useOnboarding must be used within an OnboardingProvider");
-  }
-  return context;
-}
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface OnboardingContextType {
-  isOnboardingComplete: boolean;
-  setIsOnboardingComplete: (complete: boolean) => void;
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-}
-
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
-
-export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  return (
-    <OnboardingContext.Provider value={{
-      isOnboardingComplete,
-      setIsOnboardingComplete,
-      currentStep,
-      setCurrentStep
-    }}>
-      {children}
-    </OnboardingContext.Provider>
-  );
-};
-
-export const useOnboarding = () => {
-  const context = useContext(OnboardingContext);
-  if (context === undefined) {
     throw new Error('useOnboarding must be used within an OnboardingProvider');
   }
   return context;
-};
+}

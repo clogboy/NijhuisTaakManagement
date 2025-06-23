@@ -1,8 +1,16 @@
-
-// Client-side error reporting utility
 class ErrorReporter {
   private static instance: ErrorReporter;
-  private isEnabled = true;
+  private errors: Array<{
+    message: string;
+    stack?: string;
+    timestamp: Date;
+    url?: string;
+    userAgent?: string;
+  }> = [];
+
+  private constructor() {
+    this.setupGlobalErrorHandlers();
+  }
 
   static getInstance(): ErrorReporter {
     if (!ErrorReporter.instance) {
@@ -11,110 +19,63 @@ class ErrorReporter {
     return ErrorReporter.instance;
   }
 
-  init() {
-    // Global error handler for unhandled JavaScript errors
-    window.addEventListener('error', (event) => {
-      this.reportError({
-        message: event.message,
-        stack: event.error?.stack,
-        url: event.filename,
-        line: event.lineno,
-        column: event.colno
-      });
-    });
-
-    // Handler for unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      this.reportError({
-        message: `Unhandled Promise Rejection: ${event.reason}`,
-        stack: event.reason?.stack,
-        url: window.location.href
-      });
-    });
-
-    // React error boundary integration (if needed)
-    this.setupReactErrorBoundary();
-  }
-
-  private setupReactErrorBoundary() {
-    // This would integrate with React's error boundary system
-    // For now, we'll just set up console error interception
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      // Call original console.error
-      originalConsoleError.apply(console, args);
-      
-      // Report to our service
-      const message = args.map(arg => 
-        typeof arg === 'string' ? arg : JSON.stringify(arg)
-      ).join(' ');
-      
-      if (message.includes('Error:') || message.includes('TypeError:')) {
-        this.reportError({
-          message,
-          url: window.location.href,
-          level: 'error'
+  private setupGlobalErrorHandlers() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('error', (event) => {
+        this.captureError({
+          message: event.message,
+          stack: event.error?.stack,
+          url: event.filename,
         });
-      }
-    };
+      });
+
+      window.addEventListener('unhandledrejection', (event) => {
+        this.captureError({
+          message: `Unhandled Promise Rejection: ${event.reason}`,
+          stack: event.reason?.stack,
+        });
+      });
+    }
   }
 
-  async reportError(errorData: {
+  captureError(error: {
     message: string;
     stack?: string;
     url?: string;
-    line?: number;
-    column?: number;
-    level?: 'error' | 'warn' | 'info';
   }) {
-    if (!this.isEnabled) return;
+    const errorReport = {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date(),
+      url: error.url || (typeof window !== 'undefined' ? window.location.href : undefined),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+    };
 
-    try {
-      await fetch('/api/errors/report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...errorData,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString(),
-          url: errorData.url || window.location.href
-        }),
-      });
-    } catch (error) {
-      // Silently fail to avoid infinite loops
-      console.warn('Failed to report error:', error);
+    this.errors.push(errorReport);
+    console.error('Error captured:', errorReport);
+
+    // Keep only the last 100 errors
+    if (this.errors.length > 100) {
+      this.errors = this.errors.slice(-100);
     }
   }
 
-  disable() {
-    this.isEnabled = false;
+  getErrors() {
+    return [...this.errors];
   }
 
-  enable() {
-    this.isEnabled = true;
-  }
-}
-
-export const errorReporter = ErrorReporter.getInstance();
-class ErrorReporter {
-  private static instance: ErrorReporter;
-
-  static getInstance(): ErrorReporter {
-    if (!ErrorReporter.instance) {
-      ErrorReporter.instance = new ErrorReporter();
-    }
-    return ErrorReporter.instance;
+  clearErrors() {
+    this.errors = [];
   }
 
-  reportError(error: Error, context?: any) {
-    console.error('Error reported:', error, context);
-    // In a real app, this would send to an error tracking service
-  }
+  async reportError(error: Error, context?: any) {
+    this.captureError({
+      message: error.message,
+      stack: error.stack,
+    });
 
-  reportWarning(message: string, context?: any) {
-    console.warn('Warning reported:', message, context);
+    // In a real application, you would send this to an error reporting service
+    console.log('Error reported:', error, context);
   }
 }
 

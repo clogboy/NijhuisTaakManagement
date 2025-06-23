@@ -678,3 +678,81 @@ export default function Settings() {
     </div>
   );
 }
+import React from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "@/hooks/useTranslations";
+
+export default function Settings() {
+  const translations = useTranslations();
+
+  return (
+    <AppLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">{translations.settings?.title || "Settings"}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Manage your application preferences and account settings.
+          </p>
+        </div>
+
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>General Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Label htmlFor="language">Language</Label>
+                <Select defaultValue="nl">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nl">Nederlands</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch id="notifications" />
+                <Label htmlFor="notifications">Enable notifications</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch id="dark-mode" />
+                <Label htmlFor="dark-mode">Dark mode</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input type="email" id="email" placeholder="your@email.com" />
+              </div>
+
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Label htmlFor="name">Display Name</Label>
+                <Input type="text" id="name" placeholder="Your Name" />
+              </div>
+
+              <Button>Save Changes</Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}

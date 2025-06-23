@@ -1,149 +1,72 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface ThemeContextType {
-  theme: 'light' | 'dark';
-  language: 'en' | 'nl';
-  setTheme: (theme: 'light' | 'dark') => void;
-  setLanguage: (language: 'en' | 'nl') => void;
-  resetToSystem: () => void;
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
 }
 
 interface ThemeProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
+  defaultTheme?: 'light' | 'dark' | 'system';
+  storageKey?: string;
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<'light' | 'dark'>('light');
-  const [language, setLanguageState] = useState<'en' | 'nl'>('en');
-
-  // Initialize from system preferences and localStorage
-  useEffect(() => {
-    const savedPreferences = localStorage.getItem('userPreferences');
-    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const systemLanguage = navigator.language.startsWith('nl') ? 'nl' : 'en';
-
-    if (savedPreferences) {
-      const parsed = JSON.parse(savedPreferences);
-      setThemeState(parsed.darkMode ? 'dark' : 'light');
-      setLanguageState(parsed.language);
-    } else {
-      // Use system defaults
-      setThemeState(systemDarkMode ? 'dark' : 'light');
-      setLanguageState(systemLanguage);
+export function ThemeProvider({
+  children,
+  defaultTheme = 'system',
+  storageKey = 'vite-ui-theme',
+}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
+    try {
+      return (localStorage.getItem(storageKey) as 'light' | 'dark' | 'system') || defaultTheme;
+    } catch {
+      return defaultTheme;
     }
-  }, []);
-
-  // Apply theme changes to document
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [theme]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      const savedPreferences = localStorage.getItem('userPreferences');
-      if (!savedPreferences) {
-        setThemeState(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  const setTheme = (newTheme: 'light' | 'dark') => {
-    setThemeState(newTheme);
-    const savedPreferences = localStorage.getItem('userPreferences');
-    const preferences = savedPreferences ? JSON.parse(savedPreferences) : {};
-    const updatedPreferences = { ...preferences, darkMode: newTheme === 'dark' };
-    localStorage.setItem('userPreferences', JSON.stringify(updatedPreferences));
-  };
-
-  const setLanguage = (newLanguage: 'en' | 'nl') => {
-    setLanguageState(newLanguage);
-    const savedPreferences = localStorage.getItem('userPreferences');
-    const preferences = savedPreferences ? JSON.parse(savedPreferences) : {};
-    const updatedPreferences = { ...preferences, language: newLanguage };
-    localStorage.setItem('userPreferences', JSON.stringify(updatedPreferences));
-  };
-
-  const resetToSystem = () => {
-    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const systemLanguage = navigator.language.startsWith('nl') ? 'nl' : 'en';
-    
-    setThemeState(systemDarkMode ? 'dark' : 'light');
-    setLanguageState(systemLanguage);
-    
-    const preferences = {
-      darkMode: systemDarkMode,
-      language: systemLanguage,
-    };
-    localStorage.setItem('userPreferences', JSON.stringify(preferences));
-  };
-
-  return (
-    <ThemeContext.Provider value={{ 
-      theme, 
-      language, 
-      setTheme, 
-      setLanguage, 
-      resetToSystem 
-    }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-type Theme = 'dark' | 'light' | 'system';
-
-interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('system');
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
-    
-    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+        ? 'dark'
+        : 'light';
+
+      root.classList.add(systemTheme);
+      return;
     }
+
+    root.classList.add(theme);
   }, [theme]);
 
+  const value = {
+    theme,
+    setTheme: (theme: 'light' | 'dark' | 'system') => {
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch (error) {
+        console.warn('Failed to save theme preference:', error);
+      }
+      setTheme(theme);
+    },
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
-};
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
+}

@@ -1,126 +1,114 @@
-import { User } from "@shared/schema";
 
-let currentUser: User | null = null;
+import { toast } from '@/hooks/use-toast';
 
-export function setCurrentUser(user: User | null) {
-  currentUser = user;
-}
+// Mock user for development
+const MOCK_USER = {
+  id: '1',
+  name: 'Test User',
+  email: 'test@example.com',
+  role: 'user'
+};
 
-export function getCurrentUser(): User | null {
-  return currentUser;
-}
-
-export function clearCurrentUser() {
-  currentUser = null;
-}
-
-// API request helper
 export async function apiRequest(method: string, url: string, data?: any) {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`);
-  }
-
-  return response;
-}
-
-export async function loginUser(credentials?: any): Promise<User> {
-  const response = await apiRequest('POST', '/api/auth/login', credentials);
-  const data = await response.json();
-
-  if (data.success && data.user) {
-    setCurrentUser(data.user);
-    return data.user;
-  }
-
-  throw new Error('Login failed');
-}
-
-export async function logoutUser(): Promise<void> {
-  await apiRequest('POST', '/api/auth/logout');
-  clearCurrentUser();
-}
-
-export async function checkAuthStatus(): Promise<User | null> {
+  const isServer = typeof window === 'undefined';
+  const baseUrl = isServer ? process.env.API_URL || 'http://localhost:5000' : '';
+  
   try {
-    const response = await apiRequest('GET', '/api/auth/me');
-    const data = await response.json();
+    const config: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
 
-    if (data.user) {
-      setCurrentUser(data.user);
-      return data.user;
+    if (data) {
+      config.body = JSON.stringify(data);
     }
-  } catch (error) {
-    console.error('Auth check failed:', error);
-  }
 
-  return null;
+    const response = await fetch(`${baseUrl}/api${url}`, config);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    }
+    
+    return await response.text();
+  } catch (error) {
+    console.error('API request failed:', error);
+    
+    if (error instanceof Error) {
+      toast({
+        title: 'API Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+    
+    throw error;
+  }
 }
 
-// Mock Microsoft login for development
+export function getCurrentUser() {
+  return MOCK_USER;
+}
+
+export function isAuthenticated(): boolean {
+  return true; // Always return true for development
+}
+
 export async function mockMicrosoftLogin() {
-  const mockUser = {
-    id: '1',
-    email: 'demo@example.com',
-    name: 'Demo User',
-    picture: null,
-  };
-
-  // Store mock user in session
-  localStorage.setItem('user', JSON.stringify(mockUser));
-  window.location.href = '/dashboard';
-}
-
-// Auth state interface
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-  isLoading: boolean;
-}
-
-// Email sending function
-export async function sendEmail(
-  emails: string[],
-  subject: string,
-  body: string
-): Promise<void> {
-  const response = await apiRequest('POST', '/api/email/send', {
-    emails,
-    subject,
-    body
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to send email');
-  }
-}
-
-export const logout = async (): Promise<void> => {
   try {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    localStorage.setItem('user', JSON.stringify(MOCK_USER));
+    toast({
+      title: 'Success',
+      description: 'Successfully logged in with mock user',
+    });
+    return MOCK_USER;
   } catch (error) {
-    console.error('Logout failed:', error);
+    console.error('Mock login failed:', error);
+    toast({
+      title: 'Login Error',
+      description: 'Failed to log in',
+      variant: 'destructive',
+    });
+    throw error;
   }
-};
+}
 
-// Placeholder functions to prevent import errors
-export const apiRequest = async (url: string, options?: RequestInit) => {
-  return fetch(url, options);
-};
+export async function sendEmail(
+  to: string,
+  subject: string,
+  body: string,
+  activityId?: string
+) {
+  try {
+    const emailData = {
+      to,
+      subject,
+      body,
+      activityId
+    };
 
-export const mockMicrosoftLogin = async () => {
-  return { success: true };
-};
-
-export const sendEmail = async (data: any) => {
-  console.log('Email sending not implemented:', data);
-  return { success: true };
-};
+    const result = await apiRequest('POST', '/send-email', emailData);
+    
+    toast({
+      title: 'Email Sent',
+      description: `Email sent successfully to ${to}`,
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Send email failed:', error);
+    toast({
+      title: 'Email Error',
+      description: 'Failed to send email',
+      variant: 'destructive',
+    });
+    throw error;
+  }
+}
