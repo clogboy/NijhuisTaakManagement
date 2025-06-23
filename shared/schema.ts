@@ -84,6 +84,9 @@ export const roadblocks = pgTable("roadblocks", {
   resolvedDate: timestamp("resolved_date"),
   resolution: text("resolution"),
   newDeadline: timestamp("new_deadline"), // For rescue workflow
+  oorzaakCategory: text("oorzaak_category"), // Root cause category
+  oorzaakFactor: text("oorzaak_factor"), // Specific root cause factor
+  departmentImpact: text("department_impact").array().default([]), // Affected departments
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -180,3 +183,61 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 export type FlowStrategy = typeof flowStrategies.$inferSelect;
+
+// Oorzaak Analysis Constants
+export const OORZAAK_CATEGORIES = {
+  PROCESS: "process",
+  RESOURCES: "resources", 
+  COMMUNICATION: "communication",
+  EXTERNAL: "external",
+  TECHNICAL: "technical",
+  PLANNING: "planning",
+  SKILLS: "skills",
+  UNCLEAR: "unclear"
+} as const;
+
+export const OORZAAK_FACTORS = {
+  process: {
+    WORKFLOW_UNCLEAR: "Workflow Unclear",
+    APPROVAL_DELAYS: "Approval Delays",
+    DOCUMENTATION_MISSING: "Documentation Missing",
+    STANDARDS_INCONSISTENT: "Standards Inconsistent"
+  },
+  resources: {
+    BUDGET_INSUFFICIENT: "Budget Insufficient",
+    TOOLS_UNAVAILABLE: "Tools Unavailable",
+    TIME_CONSTRAINTS: "Time Constraints",
+    PERSONNEL_SHORTAGE: "Personnel Shortage"
+  },
+  communication: {
+    UNCLEAR_REQUIREMENTS: "Unclear Requirements",
+    STAKEHOLDER_UNAVAILABLE: "Stakeholder Unavailable",
+    FEEDBACK_DELAYED: "Feedback Delayed",
+    LANGUAGE_BARRIERS: "Language Barriers"
+  },
+  external: {
+    VENDOR_DELAYS: "Vendor Delays",
+    CLIENT_CHANGES: "Client Changes",
+    REGULATORY_CHANGES: "Regulatory Changes",
+    THIRD_PARTY_ISSUES: "Third Party Issues"
+  },
+  technical: {
+    SYSTEM_LIMITATIONS: "System Limitations",
+    INTEGRATION_ISSUES: "Integration Issues",
+    PERFORMANCE_PROBLEMS: "Performance Problems",
+    COMPATIBILITY_ISSUES: "Compatibility Issues"
+  },
+  planning: {
+    UNREALISTIC_DEADLINES: "Unrealistic Deadlines",
+    SCOPE_CREEP: "Scope Creep",
+    DEPENDENCIES_UNCLEAR: "Dependencies Unclear",
+    RISK_UNDERESTIMATED: "Risk Underestimated"
+  },
+  skills: {
+    TRAINING_NEEDED: "Training Needed",
+    EXPERTISE_MISSING: "Expertise Missing",
+    KNOWLEDGE_TRANSFER: "Knowledge Transfer",
+    LEARNING_CURVE: "Learning Curve"
+  },
+  unclear: {}
+} as const;

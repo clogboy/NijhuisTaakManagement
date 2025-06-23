@@ -1,4 +1,3 @@
-
 import { User } from "@shared/schema";
 
 let currentUser: User | null = null;
@@ -30,11 +29,11 @@ export async function apiRequest(method: string, url: string, data?: any): Promi
 
   try {
     const response = await fetch(url, options);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     return response;
   } catch (error) {
     console.error('API request failed:', error);
@@ -45,12 +44,12 @@ export async function apiRequest(method: string, url: string, data?: any): Promi
 export async function loginUser(credentials?: any): Promise<User> {
   const response = await apiRequest('POST', '/api/auth/login', credentials);
   const data = await response.json();
-  
+
   if (data.success && data.user) {
     setCurrentUser(data.user);
     return data.user;
   }
-  
+
   throw new Error('Login failed');
 }
 
@@ -63,7 +62,7 @@ export async function checkAuthStatus(): Promise<User | null> {
   try {
     const response = await apiRequest('GET', '/api/auth/me');
     const data = await response.json();
-    
+
     if (data.user) {
       setCurrentUser(data.user);
       return data.user;
@@ -71,7 +70,7 @@ export async function checkAuthStatus(): Promise<User | null> {
   } catch (error) {
     console.error('Auth check failed:', error);
   }
-  
+
   return null;
 }
 
@@ -107,7 +106,7 @@ export async function sendEmail(
     subject,
     body
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to send email');
   }

@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,12 +14,12 @@ export default function Dashboard() {
     },
   });
 
-  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
+  const {
+    data: activities = [],
+    isLoading: activitiesLoading,
+  } = useQuery({
     queryKey: ["/api/activities"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/activities");
-      return response.json();
-    },
+    queryFn: () => apiRequest("GET", "/api/activities").then((res) => res.json()),
   });
 
   const { data: subtasks = [], isLoading: subtasksLoading } = useQuery({
