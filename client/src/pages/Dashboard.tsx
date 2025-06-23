@@ -168,10 +168,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     queryKey: ["/api/user/preferences"],
   });
 
-  // DISABLED: Smart insights temporarily disabled due to scoring system crashes
-  // const { data: smartInsights } = useQuery<any>({
-  //   queryKey: ["/api/smart-insights"],
-  // });
+  // Smart insights completely disabled to prevent crashes
   const smartInsights = null;
 
   const { data: activeDeepFocus } = useQuery<any>({
@@ -454,10 +451,6 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     return true;
   }).sort((a, b) => {
     if (sortBy === "priority") {
-      // DISABLED: Smart prioritization temporarily disabled due to scoring crashes
-      // The smart prioritization service is causing undefined score errors
-      // Using simple priority-based sorting instead
-      
       const priorityOrder = { urgent: 3, normal: 2, low: 1 };
       return (priorityOrder[b.priority as keyof typeof priorityOrder] || 1) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 1);
     } else if (sortBy === "dueDate") {
