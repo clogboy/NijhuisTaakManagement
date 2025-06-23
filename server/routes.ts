@@ -42,7 +42,7 @@ function requireAuth(req: Request, res: Response, next: any) {
       updated_at: new Date()
     };
   }
-  
+
   next();
 }
 
@@ -96,52 +96,93 @@ export function registerRoutes(app: Express): Server {
   // Auth endpoints
   app.post("/api/auth/login", async (req, res) => {
     try {
-      console.log('[AUTH] Login request received:', req.body);
-      
-      // Always create a session for development and deployment
-      const user = {
-        id: 1,
-        email: 'dev@nijhuis.nl',
-        name: 'Development User',
-        role: 'user',
-        tenant_id: 1,
-        microsoft_id: 'dev-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      };
-      
-      // Store in session if available
-      if (req.session) {
-        req.session.user = user;
-        console.log('[AUTH] User stored in session');
-      }
-      req.user = user;
-      
-      console.log('[AUTH] Login successful for user:', user.email);
-      
-      // Set proper headers for JSON response
+      // Ensure we always return JSON
       res.setHeader('Content-Type', 'application/json');
-      res.status(200).json({ 
-        success: true, 
-        user,
-        message: 'Login successful'
+
+      const { email, name } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email is required" 
+        });
+      }
+
+      // Create or get user
+      let user = await storage.getUserByEmail(email);
+      if (!user) {
+        user = await storage.createUser({
+          email,
+          name: name || "Development User",
+          role: "user"
+        });
+      }
+
+      // Set session
+      (req.session as any).userId = user.id;
+      (req.session as any).user = user;
+
+      console.log('[AUTH] Login successful for user:', user.email);
+
+      return res.status(200).json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isAdmin: user.role === 'admin'
+        },
+        message: "Login successful"
       });
     } catch (error) {
       console.error('[AUTH] Login error:', error);
-      res.status(500).json({ 
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ 
         success: false, 
-        message: error instanceof Error ? error.message : 'Login failed' 
+        message: "Internal server error" 
       });
     }
   });
 
   app.get("/api/auth/me", requireAuth, asyncHandler(async (req, res) => {
-    const user = await storage.getUserById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    try {
+      res.setHeader('Content-Type', 'application/json');
+
+      const user = await storage.getUserById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ user });
+    } catch (error) {
+      console.error('[AUTH] Get user error:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error"
+      });
     }
-    res.json({ user });
   }));
+
+  app.post("/api/auth/logout", (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('[AUTH] Logout error:', err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Logout failed" 
+        });
+      }
+
+      res.clearCookie('connect.sid');
+      return res.status(200).json({ 
+        success: true, 
+        message: "Logged out successfully" 
+      });
+    });
+  });
 
   // Activities endpoints
   app.get("/api/activities", requireAuth, async (req, res) => {
@@ -220,16 +261,16 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/quickwins", requireAuth, async (req, res) => {
     try {
       console.log(`[QUICKWINS] Fetching quick wins for user ${req.user.id}`);
-      
+
       // Set headers before any operations
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'no-cache');
-      
+
       const quickWins = await storage.getQuickWins(req.user.id);
       const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
-      
+
       console.log(`[QUICKWINS] Returning ${safeQuickWins.length} quick wins`);
-      
+
       // Ensure we return JSON
       res.status(200).json(safeQuickWins);
     } catch (error) {
@@ -304,10 +345,10 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/daily-reflections", requireAuth, async (req, res) => {
     try {
       res.setHeader('Content-Type', 'application/json');
-      
+
       // Get today's stats for reflection
       const stats = await storage.getActivityStats(req.user.id, false);
-      
+
       const reflection = {
         date: new Date().toISOString().split('T')[0],
         completedToday: stats.completedCount || 0,
@@ -321,7 +362,7 @@ export function registerRoutes(app: Express): Server {
             : "Steady progress is the key. Small consistent actions lead to big results."
         ]
       };
-      
+
       res.json(reflection);
     } catch (error) {
       console.error("Error fetching daily reflections:", error);
@@ -501,7 +542,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/flow/recommendations", requireAuth, async (req, res) => {
     try {
       const { flowProtectionService } = await import("./flow-protection-service");
-      
+
       // Get current strategy
       const currentStrategy = await db.select()
         .from(flowStrategies)
@@ -534,10 +575,10 @@ export function registerRoutes(app: Express): Server {
     try {
       const { personalityType } = req.body;
       const { flowProtectionService } = await import("./flow-protection-service");
-      
+
       const presets = flowProtectionService.getPersonalityPresets();
       const preset = presets.find(p => p.personalityType === personalityType);
-      
+
       if (!preset) {
         return res.status(400).json({ message: "Invalid personality type" });
       }
@@ -573,11 +614,11 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/flow/low-stimulus", requireAuth, async (req, res) => {
     try {
       const { enabled } = req.body;
-      
+
       if (enabled) {
         const { flowProtectionService } = await import("./flow-protection-service");
         const lowStimulusSettings = flowProtectionService.getLowStimulusMode();
-        
+
         // Update current strategy with low stimulus settings
         await db.update(flowStrategies)
           .set({
