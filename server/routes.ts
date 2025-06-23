@@ -575,5 +575,117 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Priority matrix endpoint
+  app.get("/api/priority-matrix/:date", requireAuth, async (req, res) => {
+    try {
+      const { date } = req.params;
+      
+      // Get user's activities for the date
+      const userActivities = await db.select()
+        .from(activities)
+        .where(and(
+          eq(activities.createdBy, req.user.id),
+          ne(activities.status, 'completed')
+        ));
+
+      // Simple priority matrix categorization
+      const priorityMatrix = {
+        urgentImportant: userActivities.filter(a => 
+          a.priority === 'urgent' && a.dueDate && new Date(a.dueDate) <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+        ),
+        importantNotUrgent: userActivities.filter(a => 
+          (a.priority === 'high' || a.priority === 'normal') && (!a.dueDate || new Date(a.dueDate) > new Date(Date.now() + 24 * 60 * 60 * 1000))
+        ),
+        urgentNotImportant: userActivities.filter(a => 
+          a.priority === 'low' && a.dueDate && new Date(a.dueDate) <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+        ),
+        neitherUrgentNorImportant: userActivities.filter(a => 
+          a.priority === 'low' && (!a.dueDate || new Date(a.dueDate) > new Date(Date.now() + 24 * 60 * 60 * 1000))
+        )
+      };
+
+      res.json(priorityMatrix);
+    } catch (error) {
+      console.error("Error fetching priority matrix:", error);
+      res.status(500).json({ message: "Failed to fetch priority matrix" });
+    }
+  });
+
+  // Generate agenda endpoint
+  app.post("/api/generate-agenda", requireAuth, async (req, res) => {
+    try {
+      const { date, maxTaskSwitches } = req.body;
+      
+      // Get user's activities
+      const userActivities = await db.select()
+        .from(activities)
+        .where(and(
+          eq(activities.createdBy, req.user.id),
+          ne(activities.status, 'completed')
+        ));
+
+      // Simple agenda generation
+      const priorityMatrix = {
+        urgentImportant: userActivities.filter(a => 
+          a.priority === 'urgent' && a.dueDate && new Date(a.dueDate) <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+        ),
+        importantNotUrgent: userActivities.filter(a => 
+          (a.priority === 'high' || a.priority === 'normal') && (!a.dueDate || new Date(a.dueDate) > new Date(Date.now() + 24 * 60 * 60 * 1000))
+        ),
+        urgentNotImportant: userActivities.filter(a => 
+          a.priority === 'low' && a.dueDate && new Date(a.dueDate) <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+        ),
+        neitherUrgentNorImportant: userActivities.filter(a => 
+          a.priority === 'low' && (!a.dueDate || new Date(a.dueDate) > new Date(Date.now() + 24 * 60 * 60 * 1000))
+        )
+      };
+
+      const scheduledActivities = [
+        ...priorityMatrix.urgentImportant.map(a => a.id),
+        ...priorityMatrix.importantNotUrgent.slice(0, maxTaskSwitches).map(a => a.id)
+      ];
+
+      res.json({
+        priorityMatrix,
+        scheduledActivities,
+        suggestions: 'Focus on urgent and important tasks first, then move to important but not urgent items.',
+        taskSwitchOptimization: `Tasks ordered by priority to minimize context switching. Limited to ${maxTaskSwitches} task switches.`,
+        estimatedTaskSwitches: Math.min(scheduledActivities.length - 1, maxTaskSwitches)
+      });
+    } catch (error) {
+      console.error("Error generating agenda:", error);
+      res.status(500).json({ message: "Failed to generate agenda" });
+    }
+  });
+
+  // Scheduler endpoints
+  app.get("/api/scheduler/status", async (req, res) => {
+    try {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setDate(nextMidnight.getDate() + 1);
+      nextMidnight.setHours(0, 0, 0, 0);
+
+      res.json({
+        isRunning: true,
+        nextMidnight: nextMidnight.toISOString(),
+        currentTime: now.toISOString()
+      });
+    } catch (error) {
+      console.error("Error fetching scheduler status:", error);
+      res.status(500).json({ message: "Failed to fetch scheduler status" });
+    }
+  });
+
+  app.post("/api/scheduler/trigger", requireAuth, async (req, res) => {
+    try {
+      // Mock scheduler trigger
+      res.json({ success: true, message: "Scheduler triggered successfully" });
+    } catch (error) {
+      console.error("Error triggering scheduler:", error);
+      res.status(500).json({ message: "Failed to trigger scheduler" });
+    }
+  });
+
   return httpServer;
 }

@@ -216,6 +216,29 @@ export default function Agenda() {
             </TabsList>
 
             <TabsContent value="today" className="space-y-4 md:space-y-6">
+              {/* Current Strategy Indicator */}
+              {currentStrategy && (
+                <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Brain className="text-blue-600" size={20} />
+                        <div>
+                          <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                            Actieve Flow Strategie: {currentStrategy.strategyName}
+                          </h4>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            {currentStrategy.personalityType} • Max {currentStrategy.maxTaskSwitches} task switches • 
+                            Focus blokken van {currentStrategy.focusBlockDuration}min
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className="bg-blue-600 text-white">Actief</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Date and Controls */}
             <Card>
               <CardHeader>
