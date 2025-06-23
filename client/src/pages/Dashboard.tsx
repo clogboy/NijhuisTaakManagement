@@ -449,7 +449,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     }
 
     return true;
-  }).sort((a, b) => {
+  })?.sort((a, b) => {
     if (sortBy === "priority") {
       const priorityOrder = { urgent: 3, normal: 2, low: 1 };
       return (priorityOrder[b.priority as keyof typeof priorityOrder] || 1) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 1);
@@ -460,7 +460,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     }
     return 0;
-  });
+  }) || [];
 
   const handleEditActivity = (activity: Activity) => {
     setSelectedActivity(activity);
