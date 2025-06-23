@@ -35,6 +35,7 @@ import { Activity } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/AppLayout";
+import { Shield } from "lucide-react";
 
 interface PriorityMatrix {
   urgentImportant: Activity[];
@@ -52,9 +53,6 @@ interface AgendaSuggestion {
 }
 
 export default function Agenda() {
-  const { t } = useTranslations();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [maxTaskSwitches, setMaxTaskSwitches] = useState(3);
   const [lastTriggerTime, setLastTriggerTime] = useState<number | null>(null);
@@ -206,6 +204,31 @@ export default function Agenda() {
       return () => clearInterval(interval);
     }
   }, [isOnCooldown, lastTriggerTime]);
+
+  const applyPreset = async (personalityType: string) => {
+    try {
+      const response = await apiRequest("POST", "/api/flow/apply-preset", {
+        personalityType
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Flow Strategy Applied",
+          description: "Your flow protection strategy has been updated.",
+        });
+        // Refetch current strategy
+        queryClient.invalidateQueries({ queryKey: ["/api/flow/current-strategy"] });
+      } else {
+        throw new Error('Failed to apply preset');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply flow strategy preset.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <AppLayout title="AI Agenda" subtitle="Intelligent time management with priority-based planning">
@@ -442,169 +465,66 @@ export default function Agenda() {
           </TabsContent>
 
             <TabsContent value="flow" className="space-y-4 md:space-y-6">
-            {/* Current Strategy Display */}
-            {currentStrategy && (
-              <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+            {/* Flow Protection Section */}
+              <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                    <Brain size={20} />
-                    Actieve Flow Strategie
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Flow Protection
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-blue-900 dark:text-blue-100">{currentStrategy.strategyName}</h3>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">Type: {currentStrategy.personalityType}</p>
+                  {/* Current Strategy Display */}
+                  {currentStrategy ? (
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Shield className="h-4 w-4 text-blue-600" />
+                        <span>
+                          Active Strategy: <strong>{currentStrategy.strategyName}</strong>
+                          {currentStrategy.personalityType && (
+                            <span className="text-muted-foreground"> ({currentStrategy.personalityType})</span>
+                          )}
+                        </span>
+                      </div>
+                      {currentStrategy.description && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {currentStrategy.description}
+                        </p>
+                      )}
                     </div>
-                    <Badge variant="default" className="bg-blue-600">Actief</Badge>
-                  </div>
+                  ) : (
+                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-muted-foreground">No flow strategy selected</p>
+                    </div>
+                  )}
+
+                  {/* Available Presets */}
+                  {personalityPresets && personalityPresets.length > 0 ? (
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Available Flow Presets:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {personalityPresets.map((preset) => (
+                          <div key={preset.personalityType} className="p-3 border rounded-lg">
+                            <h5 className="font-medium text-sm">{preset.strategyName}</h5>
+                            <p className="text-xs text-muted-foreground mb-2">{preset.personalityType}</p>
+                            <p className="text-xs">{preset.description}</p>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="mt-2"
+                              onClick={() => applyPresetMutation.mutate(preset.personalityType)}
+                            >
+                              Apply
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p>Loading presets...</p>
+                  )}
                 </CardContent>
               </Card>
-            )}
-
-            {/* Personality-Based Flow Strategies */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User size={20} />
-                  Persoonlijkheid-Gebaseerde Flow Strategieën
-                </CardTitle>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  Kies een cognitieve strategie geoptimaliseerd voor jouw werkpatronen en energieniveaus. Elke strategie is gebaseerd op chronobiologie onderzoek en productiviteitswetenschap.
-                </p>
-              </CardHeader>
-              <CardContent>
-                {presetsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-500">Loading flow strategies...</p>
-                    </div>
-                  </div>
-                ) : presetsError ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-red-500" />
-                      <p className="text-sm text-gray-500">Error loading flow strategies</p>
-                      <p className="text-xs text-gray-400 mt-1">{presetsError.message}</p>
-                    </div>
-                  </div>
-                ) : !personalityPresets || personalityPresets.length === 0 ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-                      <p className="text-sm text-gray-500">No flow strategies available</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {personalityPresets.map((preset) => {
-                    const isActive = currentStrategy?.personalityType === preset.personalityType;
-
-                    const getPersonalityIcon = (type: string) => {
-                      switch (type) {
-                        case "early_bird": return <Clock className="text-yellow-600" size={20} />;
-                        case "night_owl": return <Brain className="text-purple-600" size={20} />;
-                        case "steady_pacer": return <Target className="text-green-600" size={20} />;
-                        case "sprint_recover": return <Zap className="text-orange-600" size={20} />;
-                        case "collaborative": return <Users className="text-blue-600" size={20} />;
-                        case "adaptive": return <ActivityIcon className="text-gray-600" size={20} />;
-                        default: return <User size={20} />;
-                      }
-                    };
-
-                    const getPersonalityColor = (type: string) => {
-                      switch (type) {
-                        case "early_bird": return "border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800";
-                        case "night_owl": return "border-purple-200 bg-purple-50 dark:bg-purple-950 dark:border-purple-800";
-                        case "steady_pacer": return "border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800";
-                        case "sprint_recover": return "border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800";
-                        case "collaborative": return "border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800";
-                        case "adaptive": return "border-gray-200 bg-gray-50 dark:bg-gray-950 dark:border-gray-800";
-                        default: return "border-gray-200 bg-gray-50 dark:bg-gray-950 dark:border-gray-800";
-                      }
-                    };
-
-                    return (
-                      <Card 
-                        key={preset.personalityType} 
-                        className={`cursor-pointer transition-all hover:shadow-md ${
-                          isActive 
-                            ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-950' 
-                            : `border-2 ${getPersonalityColor(preset.personalityType)}`
-                        }`}
-                        onClick={() => !isActive && applyPresetMutation.mutate(preset.personalityType)}
-                      >
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {getPersonalityIcon(preset.personalityType)}
-                              <span className="text-sm">{preset.strategyName}</span>
-                            </div>
-                            {isActive && (
-                              <Badge variant="default" className="bg-blue-600 text-xs">Actief</Badge>
-                            )}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <p className="text-sm text-gray-700 dark:text-gray-300">{preset.description}</p>
-
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Werkuren:</span>
-                                <span className="font-medium">{preset.workingHours.start} - {preset.workingHours.end}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Piek Focus:</span>
-                                <span className="font-medium">{preset.workingHours.peakStart} - {preset.workingHours.peakEnd}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Max Taak Switches:</span>
-                                <span className="font-medium">{preset.maxTaskSwitches}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-400">Focus Blok:</span>
-                                <span className="font-medium">{preset.focusBlockDuration}min</span>
-                              </div>
-                            </div>
-
-                            {preset.preferredTaskTypes && preset.preferredTaskTypes.length > 0 && (
-                              <div>
-                                <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Geoptimaliseerd Voor:</h5>
-                                <div className="flex flex-wrap gap-1">
-                                  {preset.preferredTaskTypes.slice(0, 3).map((type: string) => (
-                                    <Badge key={type} variant="outline" className="text-xs">
-                                      {type}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {!isActive && (
-                              <Button 
-                                size="sm" 
-                                className="w-full mt-3"
-                                disabled={applyPresetMutation.isPending}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  applyPresetMutation.mutate(preset.personalityType);
-                                }}
-                              >
-                                {applyPresetMutation.isPending ? "Toepassen..." : "Strategie Toepassen"}
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
         </div>

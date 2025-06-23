@@ -341,3 +341,137 @@ export class FlowProtectionService {
 }
 
 export const flowProtectionService = new FlowProtectionService();
+export interface FlowPreset {
+  personalityType: string;
+  strategyName: string;
+  description: string;
+  workingHours: {
+    start: string;
+    end: string;
+    timezone: string;
+  };
+  maxTaskSwitches: number;
+  focusBlockDuration: number; // minutes
+  breakDuration: number; // minutes
+  preferredTaskTypes: string[];
+  energyPattern: {
+    peak: string[];
+    low: string[];
+  };
+  notificationSettings: {
+    enabled: boolean;
+    quietHours: {
+      start: string;
+      end: string;
+    };
+  };
+}
+
+class FlowProtectionService {
+  getPersonalityPresets(): FlowPreset[] {
+    return [
+      {
+        personalityType: "Deep Thinker",
+        strategyName: "Extended Focus Blocks",
+        description: "Long uninterrupted work sessions with minimal context switching",
+        workingHours: {
+          start: "09:00",
+          end: "17:00",
+          timezone: "Europe/Amsterdam"
+        },
+        maxTaskSwitches: 2,
+        focusBlockDuration: 120,
+        breakDuration: 15,
+        preferredTaskTypes: ["analysis", "research", "planning"],
+        energyPattern: {
+          peak: ["09:00-12:00", "14:00-16:00"],
+          low: ["12:00-13:00", "16:00-17:00"]
+        },
+        notificationSettings: {
+          enabled: true,
+          quietHours: {
+            start: "09:00",
+            end: "12:00"
+          }
+        }
+      },
+      {
+        personalityType: "Quick Executor",
+        strategyName: "Rapid Task Switching",
+        description: "Short focused bursts with frequent task rotation",
+        workingHours: {
+          start: "08:00",
+          end: "18:00",
+          timezone: "Europe/Amsterdam"
+        },
+        maxTaskSwitches: 6,
+        focusBlockDuration: 45,
+        breakDuration: 10,
+        preferredTaskTypes: ["communication", "quick_tasks", "meetings"],
+        energyPattern: {
+          peak: ["08:00-10:00", "13:00-15:00"],
+          low: ["10:00-11:00", "15:00-16:00"]
+        },
+        notificationSettings: {
+          enabled: true,
+          quietHours: {
+            start: "17:00",
+            end: "18:00"
+          }
+        }
+      },
+      {
+        personalityType: "Collaborative Leader",
+        strategyName: "Meeting-Optimized Schedule",
+        description: "Balanced focus time with protected collaboration windows",
+        workingHours: {
+          start: "08:30",
+          end: "17:30",
+          timezone: "Europe/Amsterdam"
+        },
+        maxTaskSwitches: 4,
+        focusBlockDuration: 90,
+        breakDuration: 15,
+        preferredTaskTypes: ["leadership", "meetings", "strategy"],
+        energyPattern: {
+          peak: ["09:00-11:00", "14:00-16:00"],
+          low: ["11:00-12:00", "16:00-17:00"]
+        },
+        notificationSettings: {
+          enabled: true,
+          quietHours: {
+            start: "16:00",
+            end: "17:30"
+          }
+        }
+      },
+      {
+        personalityType: "Creative Innovator",
+        strategyName: "Inspiration-Based Flow",
+        description: "Flexible scheduling that adapts to creative energy cycles",
+        workingHours: {
+          start: "10:00",
+          end: "18:00",
+          timezone: "Europe/Amsterdam"
+        },
+        maxTaskSwitches: 3,
+        focusBlockDuration: 75,
+        breakDuration: 20,
+        preferredTaskTypes: ["creative", "innovation", "design"],
+        energyPattern: {
+          peak: ["10:00-12:00", "15:00-17:00"],
+          low: ["12:00-13:00", "17:00-18:00"]
+        },
+        notificationSettings: {
+          enabled: false,
+          quietHours: {
+            start: "10:00",
+            end: "12:00"
+          }
+        }
+      }
+    ];
+  }
+}
+
+export const flowProtectionService = new FlowProtectionService();

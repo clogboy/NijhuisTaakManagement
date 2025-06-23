@@ -60,7 +60,6 @@ export default function Dashboard() {
     totalSubtasks: stats?.totalSubtasks || 0,
     totalRoadblocks: stats?.totalRoadblocks || 0,
     productivityScore: stats?.productivityScore || 0,
-	productivity: stats?.productivity || { score: 0 } // Ensure productivity exists
   };
 
   const recentActivities = activities.slice(0, 5);
@@ -234,22 +233,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
-	  {/* Productivity Score Display - Corrected access */}
-      {stats?.productivity && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Productivity Score</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-              <div className="text-2xl font-bold">{Math.round((stats?.productivity?.score || 0) * 100)}%</div>
-              <p className="text-xs text-muted-foreground">
-                {(stats?.productivity?.score || 0) >= 0.8 ? "Excellent productivity!" : 
-                 (stats?.productivity?.score || 0) >= 0.6 ? "Good progress" : 
-                 "Room for improvement"}
-              </p>
-            </CardContent>
-        </Card>
-      )}
+	  
     </div>
   );
 }
