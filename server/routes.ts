@@ -209,16 +209,21 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Quick wins endpoints
+  // Quick wins endpoints - ensure this route is registered early
   app.get("/api/quickwins", requireAuth, async (req, res) => {
     try {
+      console.log(`[QUICKWINS] Fetching quick wins for user ${req.user.id}`);
       res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-cache');
+      
       const quickWins = await storage.getQuickWins(req.user.id);
       const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
-      res.json(safeQuickWins);
+      
+      console.log(`[QUICKWINS] Returning ${safeQuickWins.length} quick wins`);
+      return res.json(safeQuickWins);
     } catch (error) {
       console.error("Error fetching quick wins:", error);
-      res.status(500).json({ message: "Failed to fetch quick wins", data: [] });
+      return res.status(500).json({ error: "Failed to fetch quick wins", data: [] });
     }
   });
 
@@ -281,6 +286,35 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error creating roadblock:", error);
       res.status(500).json({ message: "Failed to create roadblock" });
+    }
+  });
+
+  // Daily reflections endpoint
+  app.get("/api/daily-reflections", requireAuth, async (req, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      
+      // Get today's stats for reflection
+      const stats = await storage.getActivityStats(req.user.id, false);
+      
+      const reflection = {
+        date: new Date().toISOString().split('T')[0],
+        completedToday: stats.completedCount || 0,
+        pendingUrgent: stats.urgentCount || 0,
+        weeklyProgress: stats.dueThisWeek || 0,
+        insights: [
+          stats.completedCount > 0 
+            ? "Great progress today! Every completed task brings you closer to your goals."
+            : stats.urgentCount > 0
+            ? "Focus on urgent items when energy is high. Break larger tasks into smaller steps."
+            : "Steady progress is the key. Small consistent actions lead to big results."
+        ]
+      };
+      
+      res.json(reflection);
+    } catch (error) {
+      console.error("Error fetching daily reflections:", error);
+      res.status(500).json({ error: "Failed to fetch reflections", data: null });
     }
   });
 

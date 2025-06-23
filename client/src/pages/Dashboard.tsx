@@ -185,6 +185,10 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     enabled: !!currentFlowStrategy,
   });
 
+  const { data: dailyReflections } = useQuery<any>({
+    queryKey: ["/api/daily-reflections"],
+  });
+
   // Auto-deactivate low stimulus mode when no active deep focus
   useEffect(() => {
     if (!activeDeepFocus && lowStimulus) {
@@ -620,13 +624,22 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
                     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                       <p className="text-base text-gray-600 leading-relaxed">
-                        {(stats?.completedCount || 0) > 0 
+                        {dailyReflections?.insights?.[0] || 
+                         ((stats?.completedCount || 0) > 0 
                           ? "Je hebt al vooruitgang geboekt vandaag. Elke afgeronde taak draagt bij aan je doelen."
                           : (stats?.urgentCount || 0) > 0
                           ? "Urgente zaken vragen focus en aandacht. Neem de tijd die je nodig hebt."
                           : "Elke stap voorwaarts telt, ook de kleine. Vooruitgang hoeft niet perfect te zijn om waardevol te zijn."
+                         )
                         }
                       </p>
+                      {dailyReflections && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <p className="text-sm text-gray-500">
+                            Laatste reflectie: {new Date(dailyReflections.date).toLocaleDateString('nl-NL')}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
