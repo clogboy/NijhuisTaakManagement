@@ -46,45 +46,30 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const url = Array.isArray(queryKey) ? queryKey[0] as string : queryKey as string;
-        try {
-          const response = await fetch(url, {
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
-          
-          if (!response.ok) {
-            if (response.status === 401) {
-              // Handle unauthorized - redirect to login
-              window.location.href = '/login';
-              throw new Error('Unauthorized');
-            }
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        const response = await fetch(url, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
-          
-          return await response.json();
-        } catch (error) {
-          console.error(`Query error for ${url}:`, error);
-          throw error;
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Don't redirect here, let components handle it
+            throw new Error('Unauthorized');
+          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        return await response.json();
       },
-      retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors (client errors)
-        if (error?.message?.includes('HTTP 4')) {
-          return false;
-        }
-        // Don't retry on auth errors
-        if (error?.message?.includes('Unauthorized')) {
-          return false;
-        }
-        // Retry up to 2 times for other errors
-        return failureCount < 2;
-      },
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: false, // Disable retry to prevent cascading errors
+      staleTime: 1 * 60 * 1000, // 1 minute
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      refetchOnMount: true,
     },
     mutations: {
       retry: false,

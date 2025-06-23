@@ -11,20 +11,25 @@ import { Component, ReactNode } from "react";
 // Global error handling
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  
-  // Handle specific authentication errors
-  if (event.reason?.message?.includes('Unauthorized') || 
-      event.reason?.message?.includes('401')) {
-    console.log('Authentication error detected, redirecting to login...');
+
+  // Handle common authentication errors
+  if (event.reason?.message?.includes('401') || event.reason?.message?.includes('Unauthorized')) {
+    console.log('Authentication error detected, redirecting to login');
     window.location.href = '/login';
   }
-  
+
   event.preventDefault(); // Prevent the error from crashing the app
 });
 
 window.addEventListener('error', (event) => {
   console.error('Global error:', event.error);
   event.preventDefault();
+});
+
+// Handle React errors
+window.addEventListener('beforeunload', () => {
+  // Clean up any pending promises
+  console.log('Cleaning up before unload');
 });
 
 // React Error Boundary Component

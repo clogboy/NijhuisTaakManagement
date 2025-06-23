@@ -14,56 +14,52 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
+  
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            email: 'dev@nijhuis.nl',
-            name: 'Development User' 
-          }),
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Login failed: ${response.status} ${errorText}`);
-        }
-        
-        const data = await response.json();
-        if (!data.success) {
-          throw new Error(data.message || 'Login failed');
-        }
-        
-        return data;
-      } catch (error) {
-        console.error('Login mutation error:', error);
-        throw error;
-      } finally {
-        setIsLoading(false);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          email: 'dev@nijhuis.nl',
+          name: 'Development User' 
+        }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Login failed: ${response.status} ${errorText}`);
       }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      return data;
     },
     onSuccess: (data) => {
-      console.log('Login successful:', data);
+      // Clear any existing queries before setting new user data
+      queryClient.clear();
       queryClient.setQueryData(["/api/auth/me"], { user: data.user });
+      
       toast({
         title: "Welcome!",
         description: `Successfully signed in as ${data.user?.name || 'User'}`,
       });
-      setTimeout(() => setLocation("/"), 100);
+      
+      // Navigate immediately without delay
+      setLocation("/");
     },
     onError: (error: any) => {
       console.error('Login error:', error);
       toast({
-        title: "Sign In Failed",
+        title: "Sign In Failed", 
         description: error.message || "Failed to sign in",
         variant: "destructive",
       });
@@ -71,7 +67,9 @@ export default function Login() {
   });
 
   const handleMicrosoftLogin = () => {
-    loginMutation.mutate();
+    if (!loginMutation.isPending) {
+      loginMutation.mutate();
+    }
   };
 
   return (
@@ -102,10 +100,10 @@ export default function Login() {
 
             <Button
               onClick={handleMicrosoftLogin}
-              disabled={isLoading}
+              disabled={loginMutation.isPending}
               className="w-full bg-ms-blue hover:bg-ms-blue-dark text-white py-3 font-medium"
             >
-              {isLoading ? (
+              {loginMutation.isPending ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Signing in...
