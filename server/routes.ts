@@ -6,10 +6,46 @@ import {
   insertRoadblockSchema, insertContactSchema, insertActivityLogSchema 
 } from "../shared/schema";
 
-export function setupRoutes(app: express.Application) {
+export function registerRoutes(app: express.Application) {
+  const httpServer = require('http').createServer(app);
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  // Auth endpoints
+  app.post("/api/auth/login", async (req, res) => {
+    // Create a session for both dev and deployment
+    const user = {
+      id: 1,
+      email: 'dev@nijhuis.nl',
+      name: 'Development User',
+      role: 'user',
+      tenant_id: 1,
+      microsoft_id: 'dev-user',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    
+    if (req.session) {
+      req.session.user = user;
+    }
+    req.user = user;
+    return res.json({ success: true, user: req.user });
+  });
+
+  app.get("/api/auth/me", requireAuth, async (req, res) => {
+    res.json({ user: req.user });
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    if (req.session) {
+      req.session.destroy(() => {
+        res.json({ success: true });
+      });
+    } else {
+      res.json({ success: true });
+    }
   });
 
   // User stats for dashboard
@@ -249,4 +285,6 @@ export function setupRoutes(app: express.Application) {
       res.status(500).json({ message: "Failed to create activity log" });
     }
   });
+
+  return httpServer;
 }
