@@ -256,7 +256,7 @@ export default function Agenda() {
                       className="w-full bg-ms-blue hover:bg-ms-blue-dark text-white"
                     >
                       <Brain size={16} className="mr-2" />
-                      {generateAgendaMutation.isPending ? t("common.loading") : t("agenda.generateAgenda")}
+                      {generateAgendaMutation.isPending ? "Loading..." : "Generate Agenda"}
                     </Button>
                     <Button
                       onClick={() => setIsDeepFocusModalOpen(true)}
