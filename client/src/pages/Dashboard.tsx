@@ -102,27 +102,27 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
   const getRemainingTime = () => {
     if (!activeDeepFocus || !activeDeepFocus.scheduledEnd) return null;
-    
+
     const endTime = new Date(activeDeepFocus.scheduledEnd);
     const now = currentTime;
     const diffMs = endTime.getTime() - now.getTime();
-    
+
     if (diffMs <= 0) return null;
-    
+
     const totalMinutes = Math.floor(diffMs / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-    
+
     // Show seconds only in the last 2 minutes
     if (totalMinutes < 2) {
       const minutes = Math.floor(totalMinutes);
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
-    
+
     // Show exact minutes in the last 10 minutes
     if (totalMinutes < 10) {
       return `${totalMinutes} min`;
     }
-    
+
     // Round up to nearest 5 minutes for longer sessions
     const roundedMinutes = Math.ceil(totalMinutes / 5) * 5;
     return `~${roundedMinutes} min`;
@@ -221,7 +221,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     mutationFn: async ({ title, duration, subtaskId }: { title: string; duration: number; subtaskId?: number }) => {
       const now = new Date();
       const endTime = new Date(now.getTime() + duration * 60000);
-      
+
       // Create the block
       const createResponse = await apiRequest("/api/deep-focus", "POST", {
         title,
@@ -230,14 +230,14 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         focusType: "deep",
         lowStimulusMode: true,
       });
-      
+
       const block = await createResponse.json();
-      
+
       // Start the block with selected subtask
       const startResponse = await apiRequest(`/api/deep-focus/${block.id}/start`, "POST", {
         selectedSubtaskId: subtaskId
       });
-      
+
       return await startResponse.json();
     },
     onSuccess: () => {
@@ -342,11 +342,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   const taskRoadblocks = subtasks?.filter((subtask: any) => {
     const participantTypes = subtask.participantTypes || subtask.participant_types;
     if (!participantTypes) return false;
-    
+
     const participants = typeof participantTypes === 'string' 
       ? JSON.parse(participantTypes) 
       : participantTypes;
-    
+
     return Object.values(participants).some((type: any) => type === 'roadblock');
   }) || [];
 
@@ -384,16 +384,16 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
 
   const getDeadlineWarningColor = (dueDate: string | null) => {
     if (!dueDate) return "";
-    
+
     const today = new Date();
     const deadline = new Date(dueDate);
-    
+
     // Set both to start of day for accurate comparison
     today.setHours(0, 0, 0, 0);
     deadline.setHours(0, 0, 0, 0);
-    
+
     const diffInDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays < 0) {
       // Overdue - red background
       return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
@@ -404,7 +404,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
       // Due within 3 days - yellow background
       return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
     }
-    
+
     return "";
   };
 
@@ -422,10 +422,10 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     // Archive filter - show archived only if toggle is on
     if (activity.status === "archived" && !showArchived) return false;
     if (activity.status !== "archived" && showArchived) return false;
-    
+
     // Priority filter
     if (!priorityFilters.includes(activity.priority)) return false;
-    
+
     // Contact filter - check if any participants match selected contacts
     if (selectedContacts.length > 0 && activity.participants && activity.participants.length > 0) {
       const hasMatchingParticipant = activity.participants.some(participantEmail => 
@@ -435,46 +435,56 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         return false;
       }
     }
-    
+
     // Date range filter
     if (dateRange.from && activity.dueDate) {
       const activityDate = new Date(activity.dueDate);
       const fromDate = new Date(dateRange.from);
       if (activityDate < fromDate) return false;
     }
-    
+
     if (dateRange.to && activity.dueDate) {
       const activityDate = new Date(activity.dueDate);
       const toDate = new Date(dateRange.to);
       if (activityDate > toDate) return false;
     }
-    
+
     return true;
   }).sort((a, b) => {
     if (sortBy === "priority") {
-      // Use smart prioritization if available, fall back to basic priority
+      // TODO: Re-enable smart prioritization once scoring system is fixed
+      // Smart prioritization temporarily disabled due to undefined score errors
+      /*
       if (smartInsights) {
-        const allPrioritizedActivities = [
-          ...(smartInsights.topPriority || []),
-          ...(smartInsights.quickWins || []),
-          ...Object.values(smartInsights.timeSlotSuggestions || {}).flat()
-        ];
-        
-        const aSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === a.id);
-        const bSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === b.id);
-        
-        if (aSmartActivity && bSmartActivity && aSmartActivity.smartPriority && bSmartActivity.smartPriority) {
-          return (bSmartActivity.smartPriority.score || 0) - (aSmartActivity.smartPriority.score || 0);
-        } else if (aSmartActivity && aSmartActivity.smartPriority) {
-          return -1;
-        } else if (bSmartActivity && bSmartActivity.smartPriority) {
-          return 1;
+        try {
+          const allPrioritizedActivities = [
+            ...(Array.isArray(smartInsights.topPriority) ? smartInsights.topPriority : []),
+            ...(Array.isArray(smartInsights.quickWins) ? smartInsights.quickWins : []),
+            ...(smartInsights.timeSlotSuggestions ? Object.values(smartInsights.timeSlotSuggestions).flat() : [])
+          ].filter(Boolean);
+
+          const aSmartActivity = allPrioritizedActivities.find((sa: any) => sa && sa.id === a.id);
+          const bSmartActivity = allPrioritizedActivities.find((sa: any) => sa && sa.id === b.id);
+
+          const aScore = aSmartActivity?.smartPriority?.score ?? 0;
+          const bScore = bSmartActivity?.smartPriority?.score ?? 0;
+
+          if (aSmartActivity && bSmartActivity) {
+            return bScore - aScore;
+          } else if (aSmartActivity) {
+            return -1;
+          } else if (bSmartActivity) {
+            return 1;
+          }
+        } catch (error) {
+          console.warn('Error in smart prioritization sorting:', error);
         }
       }
-      
-      // Fallback to basic priority
+      */
+
+      // Use basic priority sorting
       const priorityOrder = { urgent: 3, normal: 2, low: 1 };
-      return priorityOrder[b.priority as keyof typeof priorityOrder] - priorityOrder[a.priority as keyof typeof priorityOrder];
+      return (priorityOrder[b.priority as keyof typeof priorityOrder] || 1) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 1);
     } else if (sortBy === "dueDate") {
       if (!a.dueDate && !b.dueDate) return 0;
       if (!a.dueDate) return 1;
@@ -512,12 +522,12 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
   // Helper function to get participant names from emails
   const getParticipantNames = (participantEmails: string[]) => {
     if (!participantEmails || participantEmails.length === 0) return "No participants";
-    
+
     const names = participantEmails.map(email => {
       const contact = contacts?.find(c => c.email === email);
       return contact ? contact.name : email;
     });
-    
+
     return names.join(", ");
   };
 
@@ -624,7 +634,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                       <BarChart3 className="mr-3 text-gray-500" size={24} />
                       Reflectie & Voortgang
                     </h3>
-                    
+
                     <div className="grid grid-cols-2 gap-6 mb-6">
                       <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                         <div className="text-3xl font-bold text-green-600 mb-2">
@@ -692,7 +702,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                 <Card className="border-gray-100">
                   <CardContent className="p-6">
                     <Button
-                      onClick={() => setIsDeepFocusModalOpen(true)}
+                      onClick={()={() => setIsDeepFocusModalOpen(true)}
                       variant="outline"
                       className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                     >
@@ -971,7 +981,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           <div className="lg:col-span-1">
             <TodaysTasks />
           </div>
-          
+
           <div className="lg:col-span-2">
             <Card>
               <div className="px-4 md:px-6 py-4 border-b border-gray-200">
@@ -1030,7 +1040,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                         {activity.priority}
                       </Badge>
                     </div>
-                    
+
                     {/* Details Row */}
                     <div className="flex items-center justify-between text-xs text-neutral-medium">
                       <div className="flex items-center gap-4">
@@ -1046,7 +1056,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                         {activity.status.replace("_", " ")}
                       </Badge>
                     </div>
-                    
+
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
                       <Button
@@ -1494,7 +1504,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
               }
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             {activeDeepFocus ? (
               // Active session display
@@ -1505,13 +1515,13 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                       {getRemainingTime() || "Actief"}
                     </div>
                   </div>
-                  
+
                   {/* Show full subtask card */}
                   {activeDeepFocus?.selectedSubtaskId && subtasks && (
                     <div className="bg-white border border-blue-300 rounded-lg p-3">
                       {(() => {
                         const currentSubtask = subtasks.find(s => s.id === activeDeepFocus.selectedSubtaskId);
-                        
+
                         if (!currentSubtask) {
                           return (
                             <div className="text-center text-gray-500">
@@ -1519,7 +1529,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                             </div>
                           );
                         }
-                        
+
                         return (
                           <div>
                             <div className="flex items-center gap-2 mb-2">
@@ -1548,7 +1558,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">💡 Focus Tips</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
@@ -1559,7 +1569,7 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                   </ul>
                 </div>
               </div>
-            ) : (
+            ) :(
               <div className="space-y-4">
                 {/* Duration Selection */}
                 <div>
@@ -1651,13 +1661,13 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
                         productivityRating: 4, // Default good rating
                         completionNotes: "Session ended by user"
                       });
-                      
+
                       // Update UI state
                       deactivateLowStimulus();
                       queryClient.invalidateQueries({ queryKey: ["/api/deep-focus/active"] });
                       queryClient.invalidateQueries({ queryKey: ["/api/deep-focus"] });
                       setIsDeepFocusModalOpen(false);
-                      
+
                       toast({
                         title: "Deep Focus beëindigd",
                         description: "Je sessie is gestopt. Welkom terug!",
