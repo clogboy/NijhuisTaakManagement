@@ -41,3 +41,32 @@ export function useLowStimulus() {
   }
   return context;
 }
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+interface LowStimulusContextType {
+  isLowStimulusMode: boolean;
+  setIsLowStimulusMode: (enabled: boolean) => void;
+}
+
+const LowStimulusContext = createContext<LowStimulusContextType | undefined>(undefined);
+
+export const LowStimulusProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isLowStimulusMode, setIsLowStimulusMode] = useState(false);
+
+  return (
+    <LowStimulusContext.Provider value={{
+      isLowStimulusMode,
+      setIsLowStimulusMode
+    }}>
+      {children}
+    </LowStimulusContext.Provider>
+  );
+};
+
+export const useLowStimulus = () => {
+  const context = useContext(LowStimulusContext);
+  if (context === undefined) {
+    throw new Error('useLowStimulus must be used within a LowStimulusProvider');
+  }
+  return context;
+};

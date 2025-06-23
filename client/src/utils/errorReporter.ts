@@ -98,3 +98,24 @@ class ErrorReporter {
 }
 
 export const errorReporter = ErrorReporter.getInstance();
+class ErrorReporter {
+  private static instance: ErrorReporter;
+
+  static getInstance(): ErrorReporter {
+    if (!ErrorReporter.instance) {
+      ErrorReporter.instance = new ErrorReporter();
+    }
+    return ErrorReporter.instance;
+  }
+
+  reportError(error: Error, context?: any) {
+    console.error('Error reported:', error, context);
+    // In a real app, this would send to an error tracking service
+  }
+
+  reportWarning(message: string, context?: any) {
+    console.warn('Warning reported:', message, context);
+  }
+}
+
+export const errorReporter = ErrorReporter.getInstance();
