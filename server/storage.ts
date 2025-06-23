@@ -465,6 +465,7 @@ export class DatabaseStorage implements IStorage {
 
   async getQuickWins(userId: number): Promise<any[]> {
     try {
+      const { db } = await import('./db');
       // Get activities that are marked as quick wins or have quick win type
       const quickWinActivities = await db.select().from(activities)
         .where(and(
@@ -496,6 +497,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuickWin(quickWinData: any): Promise<any> {
+    const { db } = await import('./db');
     const data = {
       title: quickWinData.title,
       description: quickWinData.description,
