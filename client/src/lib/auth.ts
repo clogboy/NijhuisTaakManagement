@@ -1,66 +1,76 @@
+
 import { User } from "@shared/schema";
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-  isLoading: boolean;
+let currentUser: User | null = null;
+
+export function setCurrentUser(user: User | null) {
+  currentUser = user;
 }
 
-export const mockMSALConfig = {
-  auth: {
-    clientId: import.meta.env.VITE_MICROSOFT_CLIENT_ID || "mock-client-id",
-    authority: "https://login.microsoftonline.com/common",
-    redirectUri: window.location.origin,
-  },
-  cache: {
-    cacheLocation: "localStorage",
-    storeAuthStateInCookie: false,
-  },
-};
+export function getCurrentUser(): User | null {
+  return currentUser;
+}
 
-export const mockLoginRequest = {
-  scopes: ["openid", "profile", "email", "User.Read"],
-};
+export function clearCurrentUser() {
+  currentUser = null;
+}
 
-// Mock Microsoft Graph integration for demo purposes
-export const mockMicrosoftLogin = async (): Promise<{
-  email: string;
-  name: string;
-  microsoftId: string;
-}> => {
-  // In production, this would use MSAL library
-  // For now, return mock data for b.weinreder@nijhuis.nl
-  return {
-    email: "b.weinreder@nijhuis.nl",
-    name: "Bram Weinreder",
-    microsoftId: "mock-microsoft-id-123",
-  };
-};
-
-export const sendEmail = async (to: string[], subject: string, body: string): Promise<void> => {
-  // In production, this would use Microsoft Graph API
-  const response = await fetch("/api/send-email", {
-    method: "POST",
+export async function apiRequest(method: string, url: string, data?: any): Promise<Response> {
+  const options: RequestInit = {
+    method,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    credentials: "include",
-    body: JSON.stringify({ to, subject, body }),
-  });
+    credentials: 'include',
+  };
 
-  if (!response.ok) {
-    throw new Error("Failed to send email");
+  if (data && method !== 'GET') {
+    options.body = JSON.stringify(data);
   }
-};
-export const apiRequest = async (url: string, options?: RequestInit): Promise<Response> => {
+
   try {
     const response = await fetch(url, options);
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
     return response;
   } catch (error) {
-    console.error("API request failed:", error);
+    console.error('API request failed:', error);
     throw error;
   }
-};
+}
+
+export async function loginUser(credentials?: any): Promise<User> {
+  const response = await apiRequest('POST', '/api/auth/login', credentials);
+  const data = await response.json();
+  
+  if (data.success && data.user) {
+    setCurrentUser(data.user);
+    return data.user;
+  }
+  
+  throw new Error('Login failed');
+}
+
+export async function logoutUser(): Promise<void> {
+  await apiRequest('POST', '/api/auth/logout');
+  clearCurrentUser();
+}
+
+export async function checkAuthStatus(): Promise<User | null> {
+  try {
+    const response = await apiRequest('GET', '/api/auth/me');
+    const data = await response.json();
+    
+    if (data.user) {
+      setCurrentUser(data.user);
+      return data.user;
+    }
+  } catch (error) {
+    console.error('Auth check failed:', error);
+  }
+  
+  return null;
+}
