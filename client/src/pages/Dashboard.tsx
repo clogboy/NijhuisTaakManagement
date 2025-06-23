@@ -177,6 +177,15 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
     refetchInterval: 5000, // Check every 5 seconds
   });
 
+  const { data: currentFlowStrategy } = useQuery<any>({
+    queryKey: ["/api/flow/current-strategy"],
+  });
+
+  const { data: flowRecommendations } = useQuery<any>({
+    queryKey: ["/api/flow/recommendations"],
+    enabled: !!currentFlowStrategy,
+  });
+
   // Auto-deactivate low stimulus mode when no active deep focus
   useEffect(() => {
     if (!activeDeepFocus && lowStimulus) {
@@ -757,6 +766,51 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
           </div>
         ) : (
           <>
+        {/* Flow Strategy Display */}
+        {currentFlowStrategy && (
+          <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <Shield className="text-white" size={16} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                      {currentFlowStrategy.strategyName}
+                    </h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      {currentFlowStrategy.personalityType?.replace('_', ' ')} • Actieve flow strategie
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {flowRecommendations && (
+                    <Badge variant="outline" className="text-xs bg-blue-100 border-blue-300">
+                      {Math.round(flowRecommendations.energyLevel * 100)}% energie
+                    </Badge>
+                  )}
+                  <Badge className="bg-blue-600 text-white">Actief</Badge>
+                </div>
+              </div>
+              {flowRecommendations && (
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                    {flowRecommendations.recommendation}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {flowRecommendations.suggestedTaskTypes?.slice(0, 3).map((type: string) => (
+                      <Badge key={type} variant="outline" className="text-xs bg-white/50 border-blue-300">
+                        {type.replace('_', ' ')}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Cards - Hidden when productivity reflection is active */}
         {(userPreferences?.productivityHealthEnabled === false || healthCardDismissed) && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
