@@ -52,3 +52,15 @@ export const sendEmail = async (to: string[], subject: string, body: string): Pr
     throw new Error("Failed to send email");
   }
 };
+export const apiRequest = async (url: string, options?: RequestInit): Promise<Response> => {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  } catch (error) {
+    console.error("API request failed:", error);
+    throw error;
+  }
+};

@@ -1,3 +1,53 @@
+import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+
+export function requireAuth(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+
+  if (!authHeader) {
+    return NextResponse.json(
+      { success: false, message: 'Authorization header missing' },
+      { status: 401 }
+    );
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (!token) {
+    return NextResponse.json(
+      { success: false, message: 'Invalid authorization header' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    // Verify the token (replace with your actual verification logic)
+    // This is a placeholder, you'll need to integrate with your actual auth system (e.g., JWT verification)
+    if (token !== 'YOUR_ACTUAL_TOKEN') {
+      return NextResponse.json(
+        { success: false, message: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // If the token is valid, proceed to the next handler
+    return NextResponse.next();
+
+  } catch (error) {
+    console.error("Token verification error:", error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to authenticate' },
+      { status: 401 }
+    );
+  }
+}
+
+export const config = {
+  matcher: '/api/protected/:path*',
+}
+```
+
+```javascript
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +110,7 @@ export default function Dashboard() {
     totalSubtasks: stats?.totalSubtasks || 0,
     totalRoadblocks: stats?.totalRoadblocks || 0,
     productivityScore: stats?.productivityScore || 0,
+	productivity: stats?.productivity || { score: 0 } // Ensure productivity exists
   };
 
   const recentActivities = activities.slice(0, 5);
@@ -229,6 +280,24 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+	  {/* Productivity Score Display - Corrected access */}
+      {stats?.productivity && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Productivity Score</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4">
+              {/* Assuming `stats.productivity.score` exists */}
+              <TrendingUp className="h-8 w-8 text-green-500" />
+              <div>
+                <div className="text-3xl font-bold">{stats?.productivity?.score || 0}%</div>
+                <p className="text-gray-500">Overall performance</p>
+              </div>
             </div>
           </CardContent>
         </Card>
