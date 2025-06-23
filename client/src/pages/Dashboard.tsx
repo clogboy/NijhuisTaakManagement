@@ -463,11 +463,11 @@ export default function Dashboard({ lowStimulusMode: lowStimulus = false, setLow
         const aSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === a.id);
         const bSmartActivity = allPrioritizedActivities.find((sa: any) => sa.id === b.id);
         
-        if (aSmartActivity && bSmartActivity) {
-          return bSmartActivity.smartPriority.score - aSmartActivity.smartPriority.score;
-        } else if (aSmartActivity) {
+        if (aSmartActivity && bSmartActivity && aSmartActivity.smartPriority && bSmartActivity.smartPriority) {
+          return (bSmartActivity.smartPriority.score || 0) - (aSmartActivity.smartPriority.score || 0);
+        } else if (aSmartActivity && aSmartActivity.smartPriority) {
           return -1;
-        } else if (bSmartActivity) {
+        } else if (bSmartActivity && bSmartActivity.smartPriority) {
           return 1;
         }
       }
