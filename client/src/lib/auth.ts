@@ -40,20 +40,40 @@ export async function getCurrentUser() {
   }
 }
 
-export async function apiRequest(url: string, options: RequestInit = {}) {
+export async function apiRequest(url: string, method: string = 'GET', data?: any) {
   try {
-    const response = await fetch(url, {
-      ...options,
-      credentials: "include",
-    });
+    const options: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include', // Important for sessions
+    };
+
+    if (data && method !== 'GET') {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(url, options);
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`API request failed for ${url}:`, errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const responseText = await response.text();
+      console.error(`Non-JSON response from ${url}:`, responseText);
+      throw new Error('Server returned non-JSON response');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("API request error:", error);
+    console.error(`API request failed for ${url}:`, error);
     throw error;
   }
 }

@@ -14,39 +14,39 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
 
   const loginMutation = useMutation({
     mutationFn: async () => {
       console.log('[LOGIN] Starting login attempt...');
-      
+
       const response = await apiRequest('/api/auth/login', 'POST', {
         email: 'dev@nijhuis.nl',
         name: 'Development User'
       });
-      
+
       console.log('[LOGIN] Response data:', response);
-      
+
       if (!response.success) {
         throw new Error(response.message || 'Login failed');
       }
-      
+
       return response;
     },
     onSuccess: (data) => {
       console.log('[LOGIN] Login successful, updating client state...');
-      
+
       // Clear any existing queries and set new user data
       queryClient.clear();
       queryClient.setQueryData(["/api/auth/me"], { user: data.user });
-      
+
       toast({
         title: "Welcome!",
         description: `Successfully signed in as ${data.user?.name || 'User'}`,
       });
-      
+
       console.log('[LOGIN] Navigating to dashboard...');
-      
+
       // Use setTimeout to ensure state is updated before navigation
       setTimeout(() => {
         setLocation("/");
@@ -67,7 +67,7 @@ export default function Login() {
       console.log('[LOGIN] Login already in progress, ignoring click');
       return;
     }
-    
+
     console.log('[LOGIN] Starting new login attempt');
     loginMutation.mutate();
   };
