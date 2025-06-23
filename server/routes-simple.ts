@@ -224,6 +224,43 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Quick wins endpoint - critical for dashboard
+  app.get("/api/quickwins", requireAuth, async (req: any, res) => {
+    try {
+      console.log(`[QUICKWINS] Fetching quick wins for user ${req.user.id}`);
+      res.setHeader('Content-Type', 'application/json');
+      
+      const quickWins = await storage.getQuickWins(req.user.id);
+      const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
+      
+      console.log(`[QUICKWINS] Returning ${safeQuickWins.length} quick wins`);
+      res.json(safeQuickWins);
+    } catch (error) {
+      console.error("Error fetching quick wins:", error);
+      res.status(500).json({ error: "Failed to fetch quick wins", data: [] });
+    }
+  });
+
+  // Daily reflections endpoint
+  app.get("/api/daily-reflections", requireAuth, async (req: any, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      
+      const reflection = {
+        date: new Date().toISOString().split('T')[0],
+        completedToday: 0,
+        pendingUrgent: 0,
+        weeklyProgress: 0,
+        insights: ["Steady progress is the key. Small consistent actions lead to big results."]
+      };
+      
+      res.json(reflection);
+    } catch (error) {
+      console.error("Error fetching daily reflections:", error);
+      res.status(500).json({ error: "Failed to fetch reflections", data: null });
+    }
+  });
+
   // Flow Protection endpoints
   app.get("/api/flow/personality-presets", async (req, res) => {
     try {
