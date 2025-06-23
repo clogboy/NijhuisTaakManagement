@@ -6,8 +6,10 @@ import {
   insertRoadblockSchema, insertContactSchema, insertActivityLogSchema 
 } from "../shared/schema";
 
+import { createServer } from 'http';
+
 export function registerRoutes(app: express.Application) {
-  const httpServer = require('http').createServer(app);
+  const httpServer = createServer(app);
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
