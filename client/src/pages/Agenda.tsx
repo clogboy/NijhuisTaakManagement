@@ -216,24 +216,55 @@ export default function Agenda() {
             </TabsList>
 
             <TabsContent value="today" className="space-y-4 md:space-y-6">
-              {/* Current Strategy Indicator */}
-              {currentStrategy && (
+              {/* Current Strategy Message Box */}
+              {currentStrategy ? (
                 <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <Brain className="text-blue-600" size={20} />
                         <div>
                           <h4 className="font-semibold text-blue-900 dark:text-blue-100">
-                            Actieve Flow Strategie: {currentStrategy.strategyName}
+                            🎯 Actieve Flow Strategie: {currentStrategy.strategyName}
                           </h4>
                           <p className="text-sm text-blue-700 dark:text-blue-300">
-                            {currentStrategy.personalityType} • Max {currentStrategy.maxTaskSwitches} task switches • 
+                            Type: {currentStrategy.personalityType} • Max {currentStrategy.maxTaskSwitches} task switches • 
                             Focus blokken van {currentStrategy.focusBlockDuration}min
                           </p>
                         </div>
                       </div>
                       <Badge className="bg-blue-600 text-white">Actief</Badge>
+                    </div>
+                    <div className="border-t border-blue-200 pt-3">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        📅 <strong>Werkuren:</strong> {currentStrategy.workingHours?.start} - {currentStrategy.workingHours?.end}
+                        {currentStrategy.workingHours?.peakStart && (
+                          <span className="ml-4">
+                            ⚡ <strong>Piek Focus:</strong> {currentStrategy.workingHours.peakStart} - {currentStrategy.workingHours.peakEnd}
+                          </span>
+                        )}
+                      </p>
+                      {currentStrategy.description && (
+                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-2 italic">
+                          "{currentStrategy.description}"
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="text-yellow-600" size={20} />
+                      <div>
+                        <h4 className="font-semibold text-yellow-900 dark:text-yellow-100">
+                          Geen Flow Strategie Actief
+                        </h4>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                          Ga naar de "Flow Strategie" tab om een persoonlijkheid-gebaseerde strategie te selecteren voor geoptimaliseerde productiviteit.
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
