@@ -28,17 +28,22 @@ export const queryClient = new QueryClient({
   },
 });
 
-export async function apiRequest(endpoint: string, init?: RequestInit) {
+export async function apiRequest(endpoint: string, method: string = 'GET', body?: any): Promise<any> {
   try {
-    const response = await fetch(endpoint, {
-      ...init,
+    const init: RequestInit = {
+      method,
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        ...init?.headers,
       },
-    });
+    };
+
+    if (body && method !== 'GET') {
+      init.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(endpoint, init);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -52,3 +57,14 @@ export async function apiRequest(endpoint: string, init?: RequestInit) {
     throw error;
   }
 }
+
+// Set default query function for all queries
+queryClient.setQueryDefaults(['*'], {
+  queryFn: async ({ queryKey }) => {
+    const [endpoint] = queryKey as [string];
+    console.log('Making API request to:', endpoint);
+    const result = await apiRequest(endpoint);
+    console.log('API response for', endpoint, ':', result);
+    return result;
+  },
+});

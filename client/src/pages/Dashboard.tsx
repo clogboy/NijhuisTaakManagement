@@ -140,16 +140,23 @@ function DashboardContent() {
     return "Algemene focus sessie";
   };
 
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
   });
 
-  const { data: activities, isLoading: activitiesLoading } = useQuery<Activity[]>({
+  const { data: activities, isLoading: activitiesLoading, error: activitiesError } = useQuery<Activity[]>({
     queryKey: ["/api/activities"],
   });
 
-  const { data: contacts, isLoading: contactsLoading } = useQuery<Contact[]>({
+  const { data: contacts, isLoading: contactsLoading, error: contactsError } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
+  });
+
+  // Debug logging
+  console.log('Dashboard Query States:', {
+    stats: { loading: statsLoading, error: statsError, data: !!stats },
+    activities: { loading: activitiesLoading, error: activitiesError, data: !!activities },
+    contacts: { loading: contactsLoading, error: contactsError, data: !!contacts }
   });
 
   const { data: quickWins } = useQuery<QuickWin[]>({
@@ -787,7 +794,8 @@ function DashboardContent() {
 
             {/* Dashboard Content */}
             <div className="space-y-6">
-              {!statsLoading && !activitiesLoading && !contactsLoading ? (
+              {/* Force show content for debugging */}
+              {(!statsLoading && !activitiesLoading && !contactsLoading) || true ? (
                 <>
                   {/* Stats Cards Row */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
