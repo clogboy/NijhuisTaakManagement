@@ -622,6 +622,32 @@ export function registerOptimizedRoutes(app: Express): Server {
     }
   });
 
+  // Error reporting endpoint
+  app.post("/api/errors/report", async (req, res) => {
+    try {
+      const { message, stack, url, userAgent, timestamp, level = 'error' } = req.body;
+      
+      // Log the error to the error reporting service
+      const { errorReportingService } = await import("./error-reporting-service");
+      errorReportingService.logError({
+        message,
+        stack,
+        url,
+        userAgent,
+        timestamp,
+        level,
+        userId: (req as any).user?.id
+      });
+
+      console.log('[ERROR REPORT]', { message, url, level });
+      
+      res.json({ success: true, message: 'Error reported successfully' });
+    } catch (error) {
+      console.error('Error reporting endpoint failed:', error);
+      res.status(500).json({ success: false, message: 'Failed to report error' });
+    }
+  });
+
   // AI Key Status endpoint
   app.get("/api/ai-key-status", async (req, res) => {
     try {
