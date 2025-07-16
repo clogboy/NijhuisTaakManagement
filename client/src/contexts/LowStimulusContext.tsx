@@ -13,14 +13,22 @@ export function LowStimulusProvider({ children }: { children: ReactNode }) {
 
   const activateLowStimulus = () => {
     setIsLowStimulusMode(true);
-    // Apply low stimulus styling to body
-    document.body.classList.add('low-stimulus-mode');
+    // Apply low stimulus styling to body with error handling
+    try {
+      document.body?.classList.add('low-stimulus-mode');
+    } catch (error) {
+      console.warn('Failed to add low-stimulus-mode class:', error);
+    }
   };
 
   const deactivateLowStimulus = () => {
     setIsLowStimulusMode(false);
-    // Remove low stimulus styling from body
-    document.body.classList.remove('low-stimulus-mode');
+    // Remove low stimulus styling from body with error handling
+    try {
+      document.body?.classList.remove('low-stimulus-mode');
+    } catch (error) {
+      console.warn('Failed to remove low-stimulus-mode class:', error);
+    }
   };
 
   return (

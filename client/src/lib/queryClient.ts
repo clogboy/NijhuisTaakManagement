@@ -1,10 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 
-// Global error handler for unhandled promise rejections
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
-  event.preventDefault(); // Prevent browser error logging
-});
+// Note: Global error handling is done in main.tsx to avoid duplicate listeners
 
 export const queryClient = new QueryClient({
   defaultOptions: {

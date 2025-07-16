@@ -23,14 +23,7 @@ class ErrorReporter {
       });
     });
 
-    // Handler for unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      this.reportError({
-        message: `Unhandled Promise Rejection: ${event.reason}`,
-        stack: event.reason?.stack,
-        url: window.location.href
-      });
-    });
+    // Note: Unhandled rejection handling is done in main.tsx to avoid duplicate listeners
 
     // React error boundary integration (if needed)
     this.setupReactErrorBoundary();

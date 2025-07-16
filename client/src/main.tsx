@@ -12,6 +12,13 @@ import { Component, ReactNode } from "react";
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
 
+  // Handle DOMException specifically
+  if (event.reason instanceof DOMException) {
+    console.error('DOMException caught:', event.reason.name, event.reason.message);
+    event.preventDefault();
+    return;
+  }
+
   // Handle common authentication errors
   if (event.reason?.message?.includes('401') || event.reason?.message?.includes('Unauthorized')) {
     console.log('Authentication error detected, redirecting to login');

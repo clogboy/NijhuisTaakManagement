@@ -33,14 +33,20 @@ export const exportToXML = (): string => {
 export const downloadXMLFile = () => {
   const xmlContent = exportToXML();
   const blob = new Blob([xmlContent], { type: 'application/xml' });
-  const url = URL.createObjectURL(blob);
-  
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'nl-translations.xml';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  URL.revokeObjectURL(url);
+  try {
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'nl-translations.xml';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the object URL
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Failed to download XML file:', error);
+    throw new Error('Download failed. Please try again.');
+  }
 };
