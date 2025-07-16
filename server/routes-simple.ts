@@ -134,6 +134,41 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/subtasks", requireAuth, async (req: any, res) => {
+    try {
+      const subtask = await storage.createSubtask({
+        ...req.body,
+        createdBy: req.user.id
+      });
+      res.json(subtask);
+    } catch (error) {
+      console.error("Create subtask error:", error);
+      res.status(500).json({ message: "Failed to create subtask" });
+    }
+  });
+
+  app.put("/api/subtasks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const subtask = await storage.updateSubtask(id, req.body);
+      res.json(subtask);
+    } catch (error) {
+      console.error("Update subtask error:", error);
+      res.status(500).json({ message: "Failed to update subtask" });
+    }
+  });
+
+  app.delete("/api/subtasks/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSubtask(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete subtask error:", error);
+      res.status(500).json({ message: "Failed to delete subtask" });
+    }
+  });
+
   app.get("/api/roadblocks", requireAuth, async (req: any, res) => {
     try {
       const roadblocks = await storage.getRoadblocks(req.user.id);

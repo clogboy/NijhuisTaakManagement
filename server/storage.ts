@@ -399,8 +399,32 @@ export class DatabaseStorage implements IStorage {
   // Subtasks
   async getSubtasks(userId: number): Promise<any[]> {
     try {
-      // Return empty array for now to prevent 500 errors
-      return [];
+      // Get subtask entries from activity_entries
+      const subtaskEntries = await db.select()
+        .from(activity_entries)
+        .where(and(
+          eq(activity_entries.type, 'subtask'),
+          eq(activity_entries.createdBy, userId)
+        ))
+        .orderBy(desc(activity_entries.createdAt));
+
+      // Transform to expected format
+      return subtaskEntries.map(entry => ({
+        id: entry.id,
+        title: entry.content,
+        description: entry.metadata?.description || null,
+        type: entry.metadata?.type || 'task',
+        status: entry.metadata?.status || 'pending',
+        priority: entry.metadata?.priority || 'medium',
+        dueDate: entry.metadata?.dueDate || null,
+        participants: entry.metadata?.participants || [],
+        participantTypes: entry.metadata?.participantTypes || {},
+        linkedActivityId: entry.activityId,
+        createdBy: entry.createdBy,
+        createdAt: entry.createdAt,
+        updatedAt: entry.createdAt,
+        completedDate: entry.metadata?.completedDate || null
+      }));
     } catch (error) {
       console.error('Error fetching subtasks:', error);
       return [];
@@ -413,36 +437,97 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSubtask(subtaskData: any): Promise<any> {
-    const data = {
+    // Create a proper subtask entry
+    const subtaskEntry = {
       title: subtaskData.title,
-      description: subtaskData.description,
+      description: subtaskData.description || null,
       type: subtaskData.type || 'task',
-      priority: subtaskData.priority || 'normal',
       status: subtaskData.status || 'pending',
-      dueDate: subtaskData.dueDate,
-      parentId: subtaskData.linkedActivityId,
+      priority: subtaskData.priority || 'medium',
+      dueDate: subtaskData.dueDate ? new Date(subtaskData.dueDate) : null,
       participants: subtaskData.participants || [],
-      metadata: {
-        participantTypes: subtaskData.participantTypes || {},
-        ...subtaskData.metadata
-      },
+      participantTypes: subtaskData.participantTypes || {},
+      linkedActivityId: subtaskData.linkedActivityId,
       createdBy: subtaskData.createdBy
     };
 
-    const [newSubtask] = await db.insert(activities).values(data).returning();
-    return newSubtask;
+    // Insert into activity_entries as a subtask entry
+    const [newSubtask] = await db.insert(activity_entries).values({
+      activityId: subtaskData.linkedActivityId,
+      type: 'subtask',
+      content: subtaskEntry.title,
+      metadata: {
+        ...subtaskEntry,
+        isSubtask: true
+      },
+      createdBy: subtaskData.createdBy
+    }).returning();
+
+    // Return in expected format
+    return {
+      id: newSubtask.id,
+      title: subtaskEntry.title,
+      description: subtaskEntry.description,
+      type: subtaskEntry.type,
+      status: subtaskEntry.status,
+      priority: subtaskEntry.priority,
+      dueDate: subtaskEntry.dueDate,
+      participants: subtaskEntry.participants,
+      participantTypes: subtaskEntry.participantTypes,
+      linkedActivityId: subtaskEntry.linkedActivityId,
+      createdBy: subtaskEntry.createdBy,
+      createdAt: newSubtask.createdAt,
+      updatedAt: newSubtask.createdAt
+    };
   }
 
   async updateSubtask(id: number, updates: any): Promise<any> {
-    const [updatedSubtask] = await db.update(activities)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(activities.id, id))
+    // Get current subtask entry
+    const [currentEntry] = await db.select()
+      .from(activity_entries)
+      .where(eq(activity_entries.id, id));
+
+    if (!currentEntry) {
+      throw new Error('Subtask not found');
+    }
+
+    // Merge updates with existing metadata
+    const updatedMetadata = {
+      ...currentEntry.metadata,
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    // Update the entry
+    const [updatedEntry] = await db.update(activity_entries)
+      .set({
+        content: updates.title || currentEntry.content,
+        metadata: updatedMetadata
+      })
+      .where(eq(activity_entries.id, id))
       .returning();
-    return updatedSubtask;
+
+    // Return in expected format
+    return {
+      id: updatedEntry.id,
+      title: updatedEntry.content,
+      description: updatedMetadata.description || null,
+      type: updatedMetadata.type || 'task',
+      status: updatedMetadata.status || 'pending',
+      priority: updatedMetadata.priority || 'medium',
+      dueDate: updatedMetadata.dueDate || null,
+      participants: updatedMetadata.participants || [],
+      participantTypes: updatedMetadata.participantTypes || {},
+      linkedActivityId: updatedEntry.activityId,
+      createdBy: updatedEntry.createdBy,
+      createdAt: updatedEntry.createdAt,
+      updatedAt: updatedMetadata.updatedAt,
+      completedDate: updatedMetadata.completedDate || null
+    };
   }
 
   async deleteSubtask(id: number): Promise<void> {
-    await db.delete(activities).where(eq(activities.id, id));
+    await db.delete(activity_entries).where(eq(activity_entries.id, id));
   }
 
   async getSubtasksByActivity(activityId: number): Promise<any[]> {
