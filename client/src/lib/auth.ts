@@ -43,7 +43,7 @@ export async function getCurrentUser() {
 export async function apiRequest(url: string, method: string = 'GET', data?: any) {
   try {
     console.log(`[API] Making ${method} request to ${url}`);
-    
+
     const options: RequestInit = {
       method,
       headers: {
@@ -130,3 +130,49 @@ export async function sendEmail(data: any) {
     throw error;
   }
 }
+
+export const login = async (email: string, password?: string) => {
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+    });
+
+    let data;
+    try {
+      const text = await response.text();
+      console.log('Raw login response:', text);
+
+      // Try to parse as JSON
+      if (text.trim().startsWith('{')) {
+        data = JSON.parse(text);
+      } else {
+        console.error('Non-JSON response:', text);
+        throw new Error('Server returned invalid response format');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse login response:', parseError);
+      throw new Error('Invalid server response');
+    }
+
+    if (!response.ok) {
+      console.error('Login failed:', response.status, data);
+      throw new Error(data?.message || `Login failed: ${response.status}`);
+    }
+
+    console.log('Login response:', data);
+
+    if (data.success) {
+      return data.user;
+    } else {
+      throw new Error(data.message || 'Login failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};

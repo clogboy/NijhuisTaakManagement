@@ -261,6 +261,75 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Activity logs endpoint
+  app.get("/api/activity-logs/:activityId", requireAuth, async (req: any, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      res.status(500).json({ error: "Failed to fetch activity logs", data: [] });
+    }
+  });
+
+  // Task comments endpoint
+  app.get("/api/task-comments/:activityId", requireAuth, async (req: any, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching task comments:", error);
+      res.status(500).json({ error: "Failed to fetch task comments", data: [] });
+    }
+  });
+
+  // Smart insights endpoint
+  app.get("/api/smart-insights", requireAuth, async (req: any, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      
+      const insights = {
+        timeSlotSuggestions: {
+          morning: [],
+          afternoon: [],
+          evening: []
+        },
+        insights: [
+          "Morning hours are best for high-priority tasks",
+          "Afternoon is ideal for collaborative work",
+          "Evening works well for quick wins and admin tasks"
+        ]
+      };
+      
+      res.json(insights);
+    } catch (error) {
+      console.error("Error fetching smart insights:", error);
+      res.status(500).json({ error: "Failed to fetch smart insights", data: insights });
+    }
+  });
+
+  // User metrics endpoint
+  app.get("/api/user-metrics", requireAuth, async (req: any, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching user metrics:", error);
+      res.status(500).json({ error: "Failed to fetch user metrics", data: [] });
+    }
+  });
+
+  // Time blocks endpoint
+  app.get("/api/time-blocks", requireAuth, async (req: any, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching time blocks:", error);
+      res.status(500).json({ error: "Failed to fetch time blocks", data: [] });
+    }
+  });
+
   // Flow Protection endpoints
   app.get("/api/flow/personality-presets", async (req, res) => {
     try {

@@ -48,10 +48,15 @@ app.use(session({
   }
 }));
 
-// Add user session middleware
+// Add user session middleware with error handling
 app.use((req, res, next) => {
-  if (req.session?.user) {
-    req.user = req.session.user;
+  try {
+    if (req.session?.user) {
+      req.user = req.session.user;
+    }
+  } catch (error) {
+    console.error('Session middleware error:', error);
+    // Don't fail the request, just continue without user
   }
   next();
 });
@@ -90,6 +95,7 @@ app.use((req, res, next) => {
   const { registerRoutes } = await import("./routes-simple");
   const server = await registerRoutes(app);
 
+  // Comprehensive error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -98,7 +104,22 @@ app.use((req, res, next) => {
     
     // Ensure response is sent and don't re-throw to prevent unhandled rejections
     if (!res.headersSent) {
-      res.status(status).json({ message });
+      res.status(status).json({ 
+        success: false,
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      });
+    }
+  });
+
+  // Catch 404s for API routes
+  app.use('/api/*', (req, res) => {
+    console.log(`API route not found: ${req.method} ${req.path}`);
+    if (!res.headersSent) {
+      res.status(404).json({ 
+        success: false, 
+        message: `API endpoint not found: ${req.method} ${req.path}` 
+      });
     }
   });
 
