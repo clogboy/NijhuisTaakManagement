@@ -19,7 +19,7 @@ localPort = 8080
 externalPort = 8080
 
 [workflows]
-runButton = "Auth Fix Restart"
+runButton = "Simple Restart"
 
 [[workflows.workflow]]
 name = "Project"
@@ -135,6 +135,23 @@ args = "pkill -f \"tsx server/index.ts\" || true"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "sleep 2"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Simple Restart"
+author = 876735
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pkill -f \"node\" || true"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sleep 3"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"

@@ -115,69 +115,53 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Authentication endpoints
-  app.post("/api/auth/login", async (req, res) => {
+  // Authentication endpoints  
+  app.post("/api/auth/login", (req, res) => {
+    console.log(`[AUTH] Login endpoint hit`);
+    console.log(`[AUTH] Request body:`, req.body);
+    console.log(`[AUTH] Session before:`, req.session);
+
     try {
-      console.log(`[AUTH] Login endpoint hit with body:`, req.body);
       res.setHeader('Content-Type', 'application/json');
 
-      const { email, password } = req.body;
-      console.log(`[AUTH] Login attempt for: ${email}`);
-
+      const { email, name } = req.body;
+      
       if (!email) {
+        console.log(`[AUTH] No email provided`);
         return res.status(400).json({ 
           success: false, 
           message: "Email is required" 
         });
       }
 
-      // For development, create user if not exists
-      let user = await storage.getUserByEmail(email);
-      if (!user) {
-        console.log(`[AUTH] Creating new user: ${email}`);
-        user = {
-          id: Math.floor(Math.random() * 100000),
-          email,
-          name: email.split('@')[0],
-          role: 'user',
-          isAdmin: false
-        };
-      }
+      console.log(`[AUTH] Processing login for: ${email}`);
 
-      console.log(`[AUTH] Login successful for: ${email}`);
-
-      // Set session
-      req.session.user = {
-        id: user.id,
-        email: user.email,
-        name: user.name || email.split('@')[0],
-        role: user.role || 'user',
-        isAdmin: user.isAdmin || false
+      // Create user object
+      const user = {
+        id: Math.floor(Math.random() * 100000),
+        email,
+        name: name || email.split('@')[0],
+        role: 'user',
+        isAdmin: false
       };
 
-      // Save session
-      req.session.save((err) => {
-        if (err) {
-          console.error('[AUTH] Session save error:', err);
-          return res.status(500).json({ 
-            success: false, 
-            message: "Session save failed" 
-          });
-        }
+      // Set session directly
+      req.session.user = user;
 
-        res.json({ 
-          success: true, 
-          user: req.session.user,
-          message: "Login successful" 
-        });
+      console.log(`[AUTH] Session set:`, req.session.user);
+
+      // Respond immediately
+      res.status(200).json({ 
+        success: true, 
+        user: user,
+        message: "Login successful" 
       });
 
     } catch (error) {
-      console.error("Login error:", error);
-      res.setHeader('Content-Type', 'application/json');
+      console.error("[AUTH] Login error:", error);
       res.status(500).json({ 
         success: false, 
-        message: "Internal server error" 
+        message: error.message || "Login failed" 
       });
     }
   });
