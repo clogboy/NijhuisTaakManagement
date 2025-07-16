@@ -37,14 +37,32 @@ interface AuthenticatedRequest extends Request {
 }
 
 const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
-  // Demo mode: always authenticate with demo user
-  (req as any).user = {
-    id: 1,
-    email: 'demo@example.com',
-    name: 'Demo User',
-    role: 'user',
-    isAdmin: false
-  };
+  // In test environment, enforce authentication
+  if (process.env.NODE_ENV === 'test') {
+    if (!(req as any).user) {
+      res.status(401).json({ message: 'Not authenticated' });
+      return;
+    }
+  }
+  
+  // In development, create a mock user for testing
+  if (process.env.NODE_ENV === 'development') {
+    if (!(req as any).user) {
+      (req as any).user = {
+        id: 1,
+        email: 'demo@example.com',
+        name: 'Demo User',
+        role: 'user',
+        isAdmin: false
+      };
+    }
+  }
+  
+  if (!(req as any).user) {
+    res.status(401).json({ message: 'Not authenticated' });
+    return;
+  }
+  
   next();
 };
 
@@ -271,6 +289,23 @@ const setupStatsRoutes = (app: Express): void => {
       });
     } catch (error) {
       handleApiError(error, res);
+    }
+  });
+
+  // Simple health check endpoint for basic tests
+  app.get("/api/health", async (req, res) => {
+    try {
+      res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        message: 'Service is running'
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        message: 'Health check failed'
+      });
     }
   });
 

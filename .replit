@@ -18,26 +18,6 @@ externalPort = 80
 localPort = 8080
 externalPort = 8080
 
-[[ports]]
-localPort = 35293
-externalPort = 3003
-
-[[ports]]
-localPort = 41173
-externalPort = 3002
-
-[[ports]]
-localPort = 41213
-externalPort = 4200
-
-[[ports]]
-localPort = 45345
-externalPort = 3001
-
-[[ports]]
-localPort = 45719
-externalPort = 3000
-
 [workflows]
 runButton = "Debug Console Check"
 
