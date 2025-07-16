@@ -3,30 +3,17 @@ import express, { type Express, type Request, type Response } from "express";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 
-// Simple auth middleware for development
+// Simple auth middleware for demo mode
 function requireAuth(req: Request, res: Response, next: any) {
-  const session = (req as any).session;
-
-  // Development mode: auto-authenticate
-  if (process.env.NODE_ENV === 'development' || process.env.REPL_ENVIRONMENT === 'development') {
-    (req as any).user = {
-      id: 1,
-      email: 'demo@nijhuis.nl',
-      name: 'Demo User',
-      role: 'user',
-      isAdmin: false
-    };
-    return next();
-  }
-
-  // Production: check session
-  if (session && session.user) {
-    (req as any).user = session.user;
-    return next();
-  }
-
-  res.setHeader('Content-Type', 'application/json');
-  return res.status(401).json({ message: "Authentication required" });
+  // Demo mode: always authenticate with demo user
+  (req as any).user = {
+    id: 1,
+    email: 'demo@example.com',
+    name: 'Demo User',
+    role: 'user',
+    isAdmin: false
+  };
+  return next();
 }
 
 export function registerRoutes(app: Express): Server {

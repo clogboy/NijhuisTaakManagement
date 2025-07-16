@@ -64,8 +64,15 @@ export default function AppLayout({
   const [location] = useLocation();
   const queryClient = useQueryClient();
   const { t } = useTranslations();
-  const { data: userPreferences } = useQuery<any>({
+  // Demo mode - mock user preferences
+  const userPreferences = { 
+    compactSidebar: false, 
+    darkMode: false,
+    productivityHealthEnabled: true 
+  };
+  const { data: userPreferencesFromApi } = useQuery<any>({
     queryKey: ["/api/user/preferences"],
+    enabled: false, // Disable API call in demo mode
   });
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
