@@ -19,7 +19,7 @@ localPort = 8080
 externalPort = 8080
 
 [workflows]
-runButton = "Final Auth Fix"
+runButton = "Restart Dev Server"
 
 [[workflows.workflow]]
 name = "Project"
