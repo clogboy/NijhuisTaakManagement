@@ -787,10 +787,84 @@ function DashboardContent() {
 
             {/* Dashboard Content */}
             <div className="space-y-6">
-              {/* Dashboard stats and main content will go here */}
-              <div className="text-center text-gray-500">
-                Dashboard loading...
-              </div>
+              {!statsLoading && !activitiesLoading && !contactsLoading ? (
+                <>
+                  {/* Stats Cards Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-red-600">{stats?.urgentCount || 0}</div>
+                        <div className="text-sm text-gray-500">Urgent</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-blue-600">{stats?.dueThisWeek || 0}</div>
+                        <div className="text-sm text-gray-500">Due This Week</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-green-600">{stats?.completedCount || 0}</div>
+                        <div className="text-sm text-gray-500">Completed</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-purple-600">{stats?.roadblocksCount || 0}</div>
+                        <div className="text-sm text-gray-500">Roadblocks</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-teal-600">{stats?.activeContacts || 0}</div>
+                        <div className="text-sm text-gray-500">Contacts</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-orange-600">{stats?.overdueCount || 0}</div>
+                        <div className="text-sm text-gray-500">Overdue</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Main Dashboard Content */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Today's Tasks */}
+                    <Card>
+                      <CardContent className="p-6">
+                        <h2 className="text-xl font-semibold mb-4">Today's Tasks</h2>
+                        <TodaysTasks />
+                      </CardContent>
+                    </Card>
+
+                    {/* Recent Activities */}
+                    <Card>
+                      <CardContent className="p-6">
+                        <h2 className="text-xl font-semibold mb-4">Recent Activities</h2>
+                        <div className="space-y-3">
+                          {activities?.slice(0, 5).map((activity: Activity) => (
+                            <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div className="flex-1">
+                                <h4 className="font-medium">{activity.title}</h4>
+                                <p className="text-sm text-gray-500">{activity.description}</p>
+                              </div>
+                              <Badge variant={activity.priority === 'urgent' ? 'destructive' : 'secondary'}>
+                                {activity.priority}
+                              </Badge>
+                            </div>
+                          )) || <div className="text-gray-500">No activities yet</div>}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center text-gray-500">
+                  Loading dashboard data...
+                </div>
+              )}
             </div>
           </>
         )}

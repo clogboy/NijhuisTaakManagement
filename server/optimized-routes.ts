@@ -275,6 +275,153 @@ const setupStatsRoutes = (app: Express): void => {
   });
 };
 
+// Activities routes
+const setupActivitiesRoutes = (app: Express): void => {
+  app.get("/api/activities", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const activities = await storage.getActivities(req.user.id, req.user.role === "admin");
+      res.json(activities);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+
+  app.post("/api/activities", 
+    requireAuth, 
+    validateBody(insertActivitySchema),
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        const activity = await storage.createActivity({
+          ...req.body,
+          createdBy: req.user.id,
+        });
+        res.status(201).json(activity);
+      } catch (error) {
+        handleApiError(error, res);
+      }
+    }
+  );
+};
+
+// Contacts routes
+const setupContactsRoutes = (app: Express): void => {
+  app.get("/api/contacts", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const contacts = await storage.getContacts(req.user.id, req.user.role === "admin");
+      res.json(contacts);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+};
+
+// Quick wins routes
+const setupQuickWinsRoutes = (app: Express): void => {
+  app.get("/api/quickwins", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const quickWins = await storage.getQuickWins(req.user.id, req.user.role === "admin");
+      res.json(quickWins);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+};
+
+// User routes
+const setupUserRoutes = (app: Express): void => {
+  app.get("/api/user/preferences", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const preferences = await storage.getUserPreferences(req.user.id);
+      res.json(preferences || {});
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+
+  app.put("/api/user/preferences", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const preferences = await storage.updateUserPreferences(req.user.id, req.body);
+      res.json(preferences);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+};
+
+// Deep focus routes
+const setupDeepFocusRoutes = (app: Express): void => {
+  app.get("/api/deep-focus/active", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const activeSession = await storage.getActiveDeepFocusSession(req.user.id);
+      res.json(activeSession);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+};
+
+// Flow routes
+const setupFlowRoutes = (app: Express): void => {
+  app.get("/api/flow/current-strategy", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const strategy = await storage.getCurrentFlowStrategy(req.user.id);
+      res.json(strategy);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+
+  app.get("/api/flow/recommendations", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      // Return empty recommendations for now
+      res.json([]);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+};
+
+// Daily routes
+const setupDailyRoutes = (app: Express): void => {
+  app.get("/api/daily-reflections", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      // Return empty reflections for now
+      res.json(null);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+
+  app.get("/api/daily-task-completions", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const completions = await storage.getDailyTaskCompletions(req.user.id);
+      res.json(completions || []);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+
+  app.post("/api/daily-task-completions", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const completion = await storage.createDailyTaskCompletion({
+        ...req.body,
+        userId: req.user.id,
+      });
+      res.status(201).json(completion);
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+
+  app.get("/api/auth/me", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      res.json({ user: req.user });
+    } catch (error) {
+      handleApiError(error, res);
+    }
+  });
+};
+
 // Main route registration function
 export function registerOptimizedRoutes(app: Express): Server {
   // Setup enhanced error handling
@@ -286,6 +433,13 @@ export function registerOptimizedRoutes(app: Express): Server {
   setupRoadblocksRoutes(app);
   setupSubtasksRoutes(app);
   setupStatsRoutes(app);
+  setupActivitiesRoutes(app);
+  setupContactsRoutes(app);
+  setupQuickWinsRoutes(app);
+  setupUserRoutes(app);
+  setupDeepFocusRoutes(app);
+  setupFlowRoutes(app);
+  setupDailyRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
