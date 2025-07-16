@@ -163,11 +163,11 @@ function DashboardContent() {
     queryKey: ["/api/quickwins"],
   });
 
-  const { data: subtasks, isLoading: subtasksLoading } = useQuery<any[]>({
+  const { data: subtasks } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
   });
 
-  const { data: roadblocks, isLoading: roadblocksLoading } = useQuery<any[]>({
+  const { data: roadblocks } = useQuery<any[]>({
     queryKey: ["/api/roadblocks"],
   });
 
@@ -341,8 +341,8 @@ function DashboardContent() {
     }
   }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
 
-  // Show loading screen if critical data is still loading
-  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
+  // Show loading screen if critical data is still loading (reduced to core essentials)
+  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading;
 
   if (isInitialLoading) {
     return <DashboardLoadingScreen />;
