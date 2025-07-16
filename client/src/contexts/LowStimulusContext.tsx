@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 interface LowStimulusContextType {
+  lowStimulus: boolean;
   isLowStimulusMode: boolean;
   activateLowStimulus: () => void;
   deactivateLowStimulus: () => void;
+  setLowStimulus: (value: boolean) => void;
 }
 
 const LowStimulusContext = createContext<LowStimulusContextType | undefined>(undefined);
@@ -31,11 +33,21 @@ export function LowStimulusProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setLowStimulus = (value: boolean) => {
+    if (value) {
+      activateLowStimulus();
+    } else {
+      deactivateLowStimulus();
+    }
+  };
+
   return (
     <LowStimulusContext.Provider value={{
+      lowStimulus: isLowStimulusMode,
       isLowStimulusMode,
       activateLowStimulus,
       deactivateLowStimulus,
+      setLowStimulus,
     }}>
       {children}
     </LowStimulusContext.Provider>
