@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import cors from "cors";
-import { registerOptimizedRoutes } from "./optimized-routes";
+import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { dailyScheduler } from "./scheduler";
 import { errorReportingService } from "./error-reporting-service";
@@ -100,8 +100,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const { registerOptimizedRoutes } = await import("./optimized-routes");
-  const server = await registerOptimizedRoutes(app);
+  const { registerRoutes } = await import("./routes");
+  const server = await registerRoutes(app);
 
   // Comprehensive error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
