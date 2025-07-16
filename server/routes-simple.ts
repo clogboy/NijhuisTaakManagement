@@ -113,6 +113,28 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.put("/api/activities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const activity = await storage.updateActivity(id, req.body);
+      res.json(activity);
+    } catch (error) {
+      console.error("Update activity error:", error);
+      res.status(500).json({ message: "Failed to update activity" });
+    }
+  });
+
+  app.delete("/api/activities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteActivity(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete activity error:", error);
+      res.status(500).json({ message: "Failed to delete activity" });
+    }
+  });
+
   // Other data routes
   app.get("/api/contacts", requireAuth, async (req: any, res) => {
     try {
