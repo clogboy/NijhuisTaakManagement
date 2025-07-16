@@ -47,6 +47,12 @@ interface TestHealthData {
     status: 'pass' | 'fail';
     timestamp: string;
   }>;
+  testSummary?: {
+    passedTests: number;
+    failedTests: number;
+  };
+  hasErrors?: boolean;
+  errors?: string[];
 }
 
 function TestHealthCheckInner() {
@@ -60,19 +66,22 @@ function TestHealthCheckInner() {
 
     try {
       const response = await fetch('/api/health/tests');
-      
+
       if (!response.ok) {
         throw new Error('Failed to run tests');
       }
 
       const data = await response.json();
-      
+
       // Ensure data has the expected structure
       const normalizedData = {
         status: data.status || 'healthy',
         timestamp: data.timestamp || new Date().toISOString(),
         overall: data.overall || 'pass',
-        tests: Array.isArray(data.tests) ? data.tests : []
+        tests: Array.isArray(data.tests) ? data.tests : [],
+        testSummary: data.testSummary || {passedTests: 0, failedTests: 0},
+        hasErrors: data.hasErrors || false,
+        errors: data.errors || []
       };
 
       setTestData(normalizedData);
@@ -156,74 +165,55 @@ function TestHealthCheckInner() {
 
         {testData && (
           <div className="space-y-4">
-            {/* Test Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-gray-900">
-                  {(testData.tests && Array.isArray(testData.tests)) ? testData.tests.length : 0}
-                </div>
-                <div className="text-sm text-gray-600">Total Tests</div>
-              </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {(testData.tests && Array.isArray(testData.tests)) 
-                    ? testData.tests.filter((t: any) => t && t.status === 'pass').length 
-                    : 0}
-                </div>
-                <div className="text-sm text-gray-600">Passed</div>
-              </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
-                  {(testData.tests && Array.isArray(testData.tests)) 
-                    ? testData.tests.filter((t: any) => t && t.status === 'fail').length 
-                    : 0}
-                </div>
-                <div className="text-sm text-gray-600">Failed</div>
-              </div>
-              <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">
-                  0
-                </div>
-                <div className="text-sm text-gray-600">Skipped</div>
-              </div>
-            </div>
-
-            {/* Test Status */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
+                <span className="font-medium">Overall Status:</span>
                 <Badge className={getStatusColor(testData.status || 'healthy')}>
                   {(testData.status || 'healthy').toUpperCase()}
                 </Badge>
-                <span className="text-sm text-gray-600">
-                  Overall: {testData.overall || 'pass'}
-                </span>
               </div>
-              <div className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500">
                 {testData.timestamp ? new Date(testData.timestamp).toLocaleString() : 'Just now'}
-              </div>
+              </span>
             </div>
 
-            {/* Test Details */}
+            {testData.testSummary && (
+              <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-green-600">{testData.testSummary.passedTests}</div>
+                  <div className="text-xs text-gray-600">Passed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-red-600">{testData.testSummary.failedTests}</div>
+                  <div className="text-xs text-gray-600">Failed</div>
+                </div>
+              </div>
+            )}
+
             {testData.tests && Array.isArray(testData.tests) && testData.tests.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">Test Details</h4>
-                <div className="space-y-2">
-                  {testData.tests.map((test: any, index: number) => (
-                    test && (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Badge className={getStatusColor(test.status || 'pass')} variant="outline">
-                            {test.status || 'pass'}
-                          </Badge>
-                          <span className="font-mono text-sm">{test.name || `Test ${index + 1}`}</span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {test.timestamp ? new Date(test.timestamp).toLocaleString() : 'Just now'}
-                        </div>
-                      </div>
-                    )
-                  ))}
-                </div>
+                <h4 className="font-medium text-sm">Test Details:</h4>
+                {testData.tests.map((test: any, index: number) => (
+                  test && (
+                    <div key={index} className="flex items-center justify-between p-2 rounded border">
+                      <span className="text-sm">{test.name}</span>
+                      <Badge className={getStatusColor(test.status === 'pass' ? 'passed' : 'failed')}>
+                        {test.status ? test.status.toUpperCase() : 'UNKNOWN'}
+                      </Badge>
+                    </div>
+                  )
+                ))}
+              </div>
+            )}
+
+            {testData.hasErrors && testData.errors && Array.isArray(testData.errors) && testData.errors.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-red-600">Errors:</h4>
+                {testData.errors.map((error: any, index: number) => (
+                  <div key={index} className="p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                    {error}
+                  </div>
+                ))}
               </div>
             )}
           </div>
