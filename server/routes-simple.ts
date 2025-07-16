@@ -118,28 +118,32 @@ export function registerRoutes(app: Express): Server {
   // Authentication endpoints
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log(`[AUTH] Login endpoint hit with body:`, req.body);
+      res.setHeader('Content-Type', 'application/json');
+
       const { email, password } = req.body;
       console.log(`[AUTH] Login attempt for: ${email}`);
 
-      if (!email || !password) {
+      if (!email) {
         return res.status(400).json({ 
           success: false, 
-          message: "Email and password are required" 
+          message: "Email is required" 
         });
       }
 
-      // Get user from storage
-      const user = await storage.getUserByEmail(email);
+      // For development, create user if not exists
+      let user = await storage.getUserByEmail(email);
       if (!user) {
-        console.log(`[AUTH] User not found: ${email}`);
-        return res.status(401).json({ 
-          success: false, 
-          message: "Invalid credentials" 
-        });
+        console.log(`[AUTH] Creating new user: ${email}`);
+        user = {
+          id: Math.floor(Math.random() * 100000),
+          email,
+          name: email.split('@')[0],
+          role: 'user',
+          isAdmin: false
+        };
       }
 
-      // For development, allow any password for existing users
-      // In production, you'd verify the password hash
       console.log(`[AUTH] Login successful for: ${email}`);
 
       // Set session
@@ -151,20 +155,26 @@ export function registerRoutes(app: Express): Server {
         isAdmin: user.isAdmin || false
       };
 
-      await new Promise((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) reject(err);
-          else resolve(true);
+      // Save session
+      req.session.save((err) => {
+        if (err) {
+          console.error('[AUTH] Session save error:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Session save failed" 
+          });
+        }
+
+        res.json({ 
+          success: true, 
+          user: req.session.user,
+          message: "Login successful" 
         });
       });
 
-      res.json({ 
-        success: true, 
-        user: req.session.user,
-        message: "Login successful" 
-      });
     } catch (error) {
       console.error("Login error:", error);
+      res.setHeader('Content-Type', 'application/json');
       res.status(500).json({ 
         success: false, 
         message: "Internal server error" 
