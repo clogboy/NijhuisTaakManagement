@@ -115,15 +115,14 @@ export default function AppLayout({
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
-  const { data: user, isLoading } = useQuery<{ user: User }>({
-    queryKey: ["/api/auth/me"],
-  });
+  // Demo mode - no auth needed
+  const user = { user: { name: 'Demo User', email: 'demo@example.com', role: 'user' } };
+  const isLoading = false;
 
   const logoutMutation = useMutation({
-    mutationFn: () => apiRequest("/api/auth/logout", "POST"),
+    mutationFn: () => Promise.resolve(),
     onSuccess: () => {
-      queryClient.clear();
-      window.location.href = "/login";
+      // Demo mode - no logout needed
     },
   });
 
@@ -148,17 +147,7 @@ export default function AppLayout({
     { path: "/calendar", icon: Clock, label: "Calendar Integration" }
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ms-blue"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
+  // Demo mode - always show layout
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

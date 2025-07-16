@@ -64,7 +64,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Demo mode - no auth endpoints needed
+  // Demo mode - provide mock auth endpoints to prevent errors
+  app.get("/api/auth/me", (req, res) => {
+    res.json({ 
+      user: { 
+        id: 1, 
+        email: 'demo@example.com', 
+        name: 'Demo User', 
+        role: 'user',
+        isAdmin: false 
+      } 
+    });
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    res.json({ success: true });
+  });
 
   // User preferences
   app.get("/api/user/preferences", requireAuth, async (req: any, res) => {
