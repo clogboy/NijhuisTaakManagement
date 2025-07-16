@@ -127,7 +127,7 @@ export function registerRoutes(app: Express): Server {
   app.delete("/api/activities/:id", requireAuth, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      await storage.deleteActivity(id);
+      await storage.deleteActivity(id, req.user.id, req.user.email);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete activity error:", error);
