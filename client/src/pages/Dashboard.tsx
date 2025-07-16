@@ -152,23 +152,37 @@ function DashboardContent() {
     queryKey: ["/api/contacts"],
   });
 
-  // Debug logging (reduced to prevent spam)
-  // console.log('Dashboard Query States:', {
-  //   stats: { loading: statsLoading, error: statsError, data: !!stats },
-  //   activities: { loading: activitiesLoading, error: activitiesError, data: !!activities },
-  //   contacts: { loading: contactsLoading, error: contactsError, data: !!contacts }
-  // });
+  // Debug logging for subtasks
+  console.log('Dashboard Subtasks Debug:', {
+    subtasks: subtasks,
+    subtasksLoading: subtasksLoading,
+    subtasksLength: subtasks?.length || 0
+  });
 
   const { data: quickWins } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
   });
 
-  const { data: subtasks, isLoading: subtasksLoading } = useQuery<any[]>({
+  const { data: subtasks = [], isLoading: subtasksLoading } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
+    queryFn: async () => {
+      const response = await fetch("/api/subtasks", { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch subtasks");
+      }
+      return response.json();
+    },
   });
 
-  const { data: roadblocks, isLoading: roadblocksLoading } = useQuery<any[]>({
+  const { data: roadblocks = [], isLoading: roadblocksLoading } = useQuery<any[]>({
     queryKey: ["/api/roadblocks"],
+    queryFn: async () => {
+      const response = await fetch("/api/roadblocks", { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch roadblocks");
+      }
+      return response.json();
+    },
   });
 
   const { data: userPreferences } = useQuery<any>({
