@@ -70,7 +70,7 @@ interface DashboardProps {
 function DashboardContent() {
   const { t } = useTranslations();
   const { state: onboardingState, completeTutorial, showGuide, hideGuide } = useOnboarding();
-  const { activateLowStimulus, deactivateLowStimulus } = useLowStimulus();
+  const { lowStimulus, activateLowStimulus, deactivateLowStimulus, setLowStimulus } = useLowStimulus();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isNewActivityModalOpen, setIsNewActivityModalOpen] = useState(false);
@@ -757,65 +757,48 @@ function DashboardContent() {
           </div>
         ) : (
           <>
-        {/* Flow Strategy Display */}
-        {currentFlowStrategy && (
-          <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <Shield className="text-white" size={16} />
+            {/* Flow Strategy Display */}
+            {currentFlowStrategy && (
+              <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 mb-4">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <Shield className="text-white" size={16} />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                          {currentFlowStrategy.strategyName}
+                        </h3>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          {currentFlowStrategy.personalityType?.replace('_', ' ')} • Actieve flow strategie
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-blue-700 border-blue-300">
+                        Actief
+                      </Badge>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-                      {currentFlowStrategy.strategyName}
-                    </h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {currentFlowStrategy.personalityType?.replace('_', ' ')} • Actieve flow strategie
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Badge variant="outline" className="text-blue-700 border-blue-300">
-                    Actief
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Dashboard Content */}
-        <div className="space-y-6">
-          {/* Dashboard stats and main content will go here */}
-          <div className="text-center text-gray-500">
-            Dashboard loading...
-          </div>
-        </div>
-        </>
-      )}
+            {/* Dashboard Content */}
+            <div className="space-y-6">
+              {/* Dashboard stats and main content will go here */}
+              <div className="text-center text-gray-500">
+                Dashboard loading...
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function Dashboard() {
-  try {
-    return <DashboardContent />;
-  } catch (error) {
-    console.error('Dashboard render error:', error);
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Dashboard Error</h2>
-          <p className="text-red-600">There was an issue loading the dashboard. Please refresh the page.</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  return <DashboardContent />;
 }
