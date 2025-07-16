@@ -121,7 +121,13 @@ export default function TodaysTasks() {
   // Get user's assigned subtasks from active activities and exclude completed
   const userEmail = currentUser?.user?.email;
   const assignedSubtasks = subtasks.filter(subtask => {
-    if (!userEmail || !subtask.participants.includes(userEmail)) return false;
+    // For demo mode, show all subtasks or allow assignment by role/user ID
+    const isAssignedToUser = !userEmail || 
+      subtask.participants.includes(userEmail) || 
+      subtask.participants.length === 0 || // Show unassigned subtasks in demo mode
+      (currentUser?.user?.role === 'admin' || currentUser?.user?.role === 'user'); // Show all for demo users
+      
+    if (!isAssignedToUser) return false;
     if (subtask.status === "completed" || subtask.status === "resolved") return false;
     
     // Also check if it's marked as completed in daily completions
