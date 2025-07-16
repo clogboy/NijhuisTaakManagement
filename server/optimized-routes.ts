@@ -379,44 +379,6 @@ const setupFlowRoutes = (app: Express): void => {
       handleApiError(error, res);
     }
   });
-
-  app.get("/api/flow/personality-presets", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const presets = await storage.getFlowPersonalityPresets();
-      res.json(presets);
-    } catch (error) {
-      handleApiError(error, res);
-    }
-  });
-
-  app.post("/api/flow/apply-strategy", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const { preset } = req.body;
-      const success = await storage.applyFlowStrategy(req.user.id, preset);
-      res.json({ success });
-    } catch (error) {
-      handleApiError(error, res);
-    }
-  });
-
-  // Additional endpoints that are being called by the frontend
-  app.get("/api/priority-matrix", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const matrix = await storage.getPriorityMatrix(req.user.id);
-      res.json(matrix);
-    } catch (error) {
-      handleApiError(error, res);
-    }
-  });
-
-  app.get("/api/scheduler/status", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const status = await storage.getSchedulerStatus();
-      res.json(status);
-    } catch (error) {
-      handleApiError(error, res);
-    }
-  });
 };
 
 // Daily routes
