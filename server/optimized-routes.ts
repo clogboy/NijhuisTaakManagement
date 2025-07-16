@@ -309,59 +309,6 @@ const setupStatsRoutes = (app: Express): void => {
     }
   });
 
-  // Missing AI/Flow endpoints
-  app.get("/api/flow/personality-presets", async (req, res) => {
-    try {
-      res.json([
-        { id: 'focused', name: 'Focused Professional', description: 'Minimize interruptions and maximize deep work' },
-        { id: 'collaborative', name: 'Collaborative Multitasker', description: 'Balance individual work with team collaboration' },
-        { id: 'creative', name: 'Creative Flow', description: 'Optimize for creative work with flexible time blocks' }
-      ]);
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to fetch personality presets' });
-    }
-  });
-
-  app.get("/api/priority-matrix", async (req, res) => {
-    try {
-      res.json({
-        urgentImportant: [],
-        importantNotUrgent: [],
-        urgentNotImportant: [],
-        neitherUrgentNorImportant: []
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to fetch priority matrix' });
-    }
-  });
-
-  app.get("/api/calendar/integrations", async (req, res) => {
-    try {
-      res.json({
-        microsoft: { connected: false, lastSync: null },
-        google: { connected: false, lastSync: null }
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to fetch calendar integrations' });
-    }
-  });
-
-  app.get("/api/calendar/events", async (req, res) => {
-    try {
-      res.json([]);
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to fetch calendar events' });
-    }
-  });
-
-  app.get("/api/deadline-reminders", async (req, res) => {
-    try {
-      res.json([]);
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to fetch deadline reminders' });
-    }
-  });
-
   // Health check endpoint - runs actual tests
   app.get("/api/health/tests", async (req, res) => {
     try {

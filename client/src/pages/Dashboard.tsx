@@ -152,17 +152,22 @@ function DashboardContent() {
     queryKey: ["/api/contacts"],
   });
 
-  // Debug logging removed - loading loop fixed
+  // Debug logging (reduced to prevent spam)
+  // console.log('Dashboard Query States:', {
+  //   stats: { loading: statsLoading, error: statsError, data: !!stats },
+  //   activities: { loading: activitiesLoading, error: activitiesError, data: !!activities },
+  //   contacts: { loading: contactsLoading, error: contactsError, data: !!contacts }
+  // });
 
   const { data: quickWins } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
   });
 
-  const { data: subtasks } = useQuery<any[]>({
+  const { data: subtasks, isLoading: subtasksLoading } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
   });
 
-  const { data: roadblocks } = useQuery<any[]>({
+  const { data: roadblocks, isLoading: roadblocksLoading } = useQuery<any[]>({
     queryKey: ["/api/roadblocks"],
   });
 
@@ -336,37 +341,11 @@ function DashboardContent() {
     }
   }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
 
-  // Enhanced loading state with timeout for Edge compatibility
-  const [showLoading, setShowLoading] = useState(true);
-  const [hasInitialData, setHasInitialData] = useState(false);
+  // Show loading screen if critical data is still loading
+  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading || subtasksLoading;
 
-  // Check if we have essential data
-  useEffect(() => {
-    const hasData = stats !== undefined || activities !== undefined || contacts !== undefined;
-    if (hasData && !hasInitialData) {
-      setHasInitialData(true);
-      setShowLoading(false);
-    }
-  }, [stats, activities, contacts, hasInitialData]);
-
-  // Safety timeout to prevent infinite loading (Edge compatibility)
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (showLoading) {
-        console.log('Loading timeout reached, showing dashboard');
-        setShowLoading(false);
-      }
-    }, 5000); // 5 second timeout
-
-    return () => clearTimeout(timeout);
-  }, [showLoading]);
-
-  // Show loading screen only if we haven't loaded any data yet and within timeout
-  if (showLoading && !hasInitialData) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <span className="ml-2 text-gray-600">Loading dashboard...</span>
-    </div>;
+  if (isInitialLoading) {
+    return <DashboardLoadingScreen />;
   }
 
   // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
