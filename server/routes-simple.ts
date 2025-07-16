@@ -5,21 +5,34 @@ import { storage } from "./storage";
 
 // Add auth middleware
 function requireAuth(req: Request, res: Response, next: any) {
+  const session = (req as any).session;
+  
+  // Check if user is in session
+  if (session && (session.user || session.userId)) {
+    (req as any).user = session.user || {
+      id: session.userId || 1,
+      email: 'user@example.com',
+      name: 'Test User',
+      role: 'user',
+      isAdmin: false
+    };
+    return next();
+  }
+
   // For development, create a mock user if none exists
-  if (!req.user && process.env.NODE_ENV === 'development') {
-    req.user = {
+  if (process.env.NODE_ENV === 'development' || process.env.REPL_ENVIRONMENT === 'development') {
+    (req as any).user = {
       id: 1,
       email: 'user@example.com',
       name: 'Test User',
       role: 'user',
       isAdmin: false
-    } as any;
+    };
+    return next();
   }
 
-  if (!req.user) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
-  next();
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(401).json({ message: "Authentication required" });
 }
 
 export function registerRoutes(app: Express): Server {
@@ -85,15 +98,33 @@ export function registerRoutes(app: Express): Server {
 
   // Auth routes
   app.get("/api/auth/me", requireAuth, (req: any, res) => {
-    res.json(req.user);
+    try {
+      console.log("[AUTH] Me endpoint hit for user:", req.user?.email);
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ 
+        user: req.user,
+        success: true 
+      });
+    } catch (error) {
+      console.error("[AUTH] Me endpoint error:", error);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to get user info" 
+      });
+    }
   });
 
   app.post("/api/auth/login", async (req: any, res) => {
     try {
-      const { email, password } = req.body;
+      console.log("[AUTH] Login endpoint hit with body:", req.body);
+      
+      // Ensure we always return JSON
+      res.setHeader('Content-Type', 'application/json');
+      
+      const { email, password } = req.body || {};
 
       // Simple authentication for both development and production
-      // In production, you can add proper password validation here
       const user = {
         id: 1,
         email: email || 'user@example.com',
@@ -102,17 +133,24 @@ export function registerRoutes(app: Express): Server {
         isAdmin: false
       };
 
-      req.session.user = user;
+      // Set session
+      if (req.session) {
+        req.session.user = user;
+        req.session.userId = user.id;
+      }
       req.user = user;
 
-      res.json({ 
+      console.log("[AUTH] Login successful for user:", user.email);
+
+      return res.status(200).json({ 
         success: true, 
         user,
         message: "Login successful" 
       });
     } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ 
+      console.error("[AUTH] Login error:", error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ 
         success: false, 
         message: "Login failed" 
       });

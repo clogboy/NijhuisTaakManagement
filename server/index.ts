@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import cors from "cors";
 import { registerRoutes } from "./routes-simple";
 import { setupVite, serveStatic, log } from "./vite";
 import { dailyScheduler } from "./scheduler";
@@ -32,19 +33,26 @@ declare global {
 }
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+}));
+
+// Body parser middleware - must come before routes
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'nijhuis-activity-manager-secret-key',
+  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // HTTPS in production, HTTP in development
-    httpOnly: true, // Secure cookie access
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax' // CSRF protection
+    secure: false, // Set to true in production with HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
@@ -101,7 +109,7 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     console.error('Express error handler caught:', err);
-    
+
     // Ensure response is sent and don't re-throw to prevent unhandled rejections
     if (!res.headersSent) {
       res.status(status).json({ 
@@ -135,7 +143,7 @@ app.use((req, res, next) => {
   // Use PORT environment variable for deployment flexibility
   // Default to 5000 for development, 8080 for production
   const port = parseInt(process.env.PORT || (process.env.NODE_ENV === "production" ? "8080" : "5000"));
-  
+
   // Graceful shutdown handling
   const gracefulShutdown = (signal: string) => {
     console.log(`\nReceived ${signal}. Graceful shutdown starting...`);
@@ -151,7 +159,7 @@ app.use((req, res, next) => {
 
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  
+
   server.listen({
     port,
     host: "0.0.0.0",
