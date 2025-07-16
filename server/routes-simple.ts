@@ -6,7 +6,7 @@ import { storage } from "./storage";
 // Add auth middleware
 function requireAuth(req: Request, res: Response, next: any) {
   const session = (req as any).session;
-  
+
   // Check if user is in session
   if (session && (session.user || session.userId)) {
     (req as any).user = session.user || {
@@ -115,44 +115,126 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/auth/login", async (req: any, res) => {
+  // Authentication endpoints
+  app.post("/api/auth/login", async (req, res) => {
     try {
-      console.log("[AUTH] Login endpoint hit with body:", req.body);
-      
-      // Ensure we always return JSON
-      res.setHeader('Content-Type', 'application/json');
-      
-      const { email, password } = req.body || {};
+      const { email, password } = req.body;
+      console.log(`[AUTH] Login attempt for: ${email}`);
 
-      // Simple authentication for both development and production
-      const user = {
-        id: 1,
-        email: email || 'user@example.com',
-        name: 'Test User',
+      if (!email || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email and password are required" 
+        });
+      }
+
+      // Get user from storage
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        console.log(`[AUTH] User not found: ${email}`);
+        return res.status(401).json({ 
+          success: false, 
+          message: "Invalid credentials" 
+        });
+      }
+
+      // For development, allow any password for existing users
+      // In production, you'd verify the password hash
+      console.log(`[AUTH] Login successful for: ${email}`);
+
+      // Set session
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        name: user.name || email.split('@')[0],
+        role: user.role || 'user',
+        isAdmin: user.isAdmin || false
+      };
+
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
+      });
+
+      res.json({ 
+        success: true, 
+        user: req.session.user,
+        message: "Login successful" 
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Internal server error" 
+      });
+    }
+  });
+
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+
+      const { email, password } = req.body;
+      console.log(`[AUTH] Signup attempt for: ${email}`);
+
+      if (!email || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email and password are required" 
+        });
+      }
+
+       // Get user from storage
+       let user = await storage.getUserByEmail(email);
+
+       if (user) {
+         console.log(`[AUTH] User already exists: ${email}`);
+         return res.status(409).json({ 
+           success: false, 
+           message: "User already exists" 
+         });
+       }
+
+      user = {
+        id: Math.floor(Math.random() * 100000),
+        email,
+        name: email.split('@')[0],
         role: 'user',
         isAdmin: false
       };
 
+      // For development, allow any password for existing users
+      // In production, you'd verify the password hash
+      console.log(`[AUTH] Signup successful for: ${email}`);
+
       // Set session
-      if (req.session) {
-        req.session.user = user;
-        req.session.userId = user.id;
-      }
-      req.user = user;
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        name: user.name || email.split('@')[0],
+        role: user.role || 'user',
+        isAdmin: user.isAdmin || false
+      };
 
-      console.log("[AUTH] Login successful for user:", user.email);
-
-      return res.status(200).json({ 
-        success: true, 
-        user,
-        message: "Login successful" 
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
       });
+
+      res.json({ 
+        success: true, 
+        user: req.session.user,
+        message: "Signup successful" 
+      });
+
     } catch (error) {
-      console.error("[AUTH] Login error:", error);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({ 
+      console.error("Signup error:", error);
+      res.status(500).json({ 
         success: false, 
-        message: "Login failed" 
+        message: "Internal server error" 
       });
     }
   });
@@ -267,10 +349,10 @@ export function registerRoutes(app: Express): Server {
     try {
       console.log(`[QUICKWINS] Fetching quick wins for user ${req.user.id}`);
       res.setHeader('Content-Type', 'application/json');
-      
+
       const quickWins = await storage.getQuickWins(req.user.id);
       const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
-      
+
       console.log(`[QUICKWINS] Returning ${safeQuickWins.length} quick wins`);
       res.json(safeQuickWins);
     } catch (error) {
@@ -283,7 +365,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/daily-reflections", requireAuth, async (req: any, res) => {
     try {
       res.setHeader('Content-Type', 'application/json');
-      
+
       const reflection = {
         date: new Date().toISOString().split('T')[0],
         completedToday: 0,
@@ -291,7 +373,7 @@ export function registerRoutes(app: Express): Server {
         weeklyProgress: 0,
         insights: ["Steady progress is the key. Small consistent actions lead to big results."]
       };
-      
+
       res.json(reflection);
     } catch (error) {
       console.error("Error fetching daily reflections:", error);
@@ -325,7 +407,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/smart-insights", requireAuth, async (req: any, res) => {
     try {
       res.setHeader('Content-Type', 'application/json');
-      
+
       const insights = {
         timeSlotSuggestions: {
           morning: [],
@@ -338,7 +420,7 @@ export function registerRoutes(app: Express): Server {
           "Evening works well for quick wins and admin tasks"
         ]
       };
-      
+
       res.json(insights);
     } catch (error) {
       console.error("Error fetching smart insights:", error);
