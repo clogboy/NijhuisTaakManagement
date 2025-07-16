@@ -350,13 +350,18 @@ export class DatabaseStorage implements IStorage {
   async deleteActivity(id: number, userId?: number, userEmail?: string): Promise<void> {
     console.log(`[STORAGE] Deleting activity ${id} for user ${userId}`);
     
-    // First delete related entries (comments, subtasks, etc.)
-    await db.delete(activity_entries).where(eq(activity_entries.activityId, id));
-    
-    // Then delete the activity itself
-    await db.delete(activities).where(eq(activities.id, id));
-    
-    console.log(`[STORAGE] Successfully deleted activity ${id}`);
+    try {
+      // First delete related entries (comments, subtasks, etc.)
+      await db.delete(activity_entries).where(eq(activity_entries.activityId, id));
+      
+      // Then delete the activity itself
+      await db.delete(activities).where(eq(activities.id, id));
+      
+      console.log(`[STORAGE] Successfully deleted activity ${id}`);
+    } catch (error) {
+      console.error(`[STORAGE] Error deleting activity ${id}:`, error);
+      throw error;
+    }
   }
 
   // Daily task completions

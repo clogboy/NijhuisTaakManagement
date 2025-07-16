@@ -100,8 +100,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const { registerRoutes } = await import("./routes");
-  const server = await registerRoutes(app);
+  const { registerOptimizedRoutes } = await import("./optimized-routes");
+  const server = await registerOptimizedRoutes(app);
 
   // Comprehensive error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

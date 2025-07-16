@@ -103,7 +103,19 @@ const asyncHandler = (fn: (req: Request, res: Response, next: any) => Promise<an
   };
 };
 
-export function registerRoutes(app: Express): Server {
+// Fallback export - main routes now in optimized-routes.ts
+// Re-export the optimized routes as the main implementation
+export { registerOptimizedRoutes as registerRoutes } from "./optimized-routes";
+
+function registerRoutesLegacy(app: Express): Server {
+  console.log("[ROUTES] Using fallback routes - consider switching to optimized-routes.ts");
+  return registerOptimizedRoutes(app);
+}
+
+// Re-export the optimized routes as the main implementation
+export { registerOptimizedRoutes } from "./optimized-routes";
+
+function registerOptimizedRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
   // Debug middleware to log all requests
