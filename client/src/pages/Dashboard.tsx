@@ -152,17 +152,6 @@ function DashboardContent() {
     queryKey: ["/api/contacts"],
   });
 
-  // Debug logging for subtasks
-  console.log('Dashboard Subtasks Debug:', {
-    subtasks: subtasks,
-    subtasksLoading: subtasksLoading,
-    subtasksLength: subtasks?.length || 0
-  });
-
-  const { data: quickWins } = useQuery<QuickWin[]>({
-    queryKey: ["/api/quickwins"],
-  });
-
   const { data: subtasks = [], isLoading: subtasksLoading } = useQuery<any[]>({
     queryKey: ["/api/subtasks"],
     queryFn: async () => {
@@ -172,6 +161,10 @@ function DashboardContent() {
       }
       return response.json();
     },
+  });
+
+  const { data: quickWins } = useQuery<QuickWin[]>({
+    queryKey: ["/api/quickwins"],
   });
 
   const { data: roadblocks = [], isLoading: roadblocksLoading } = useQuery<any[]>({
@@ -363,7 +356,7 @@ function DashboardContent() {
   }
 
   // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
-  const taskRoadblocks = subtasks?.filter((subtask: any) => {
+  const taskRoadblocks = (subtasks && Array.isArray(subtasks)) ? subtasks.filter((subtask: any) => {
     const participantTypes = subtask.participantTypes || subtask.participant_types;
     if (!participantTypes) return false;
 
@@ -372,7 +365,7 @@ function DashboardContent() {
       : participantTypes;
 
     return Object.values(participants).some((type: any) => type === 'roadblock');
-  }) || [];
+  }) : [];
 
   // Total roadblocks including both traditional and task roadblocks  
   const totalActiveRoadblocks = (roadblocks?.filter(r => r.status !== 'completed' && r.status !== 'resolved').length || 0) + 
