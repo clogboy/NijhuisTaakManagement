@@ -11,10 +11,25 @@ import { Component, ReactNode } from "react";
 // Global error handling
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
+  console.error('Error type:', typeof event.reason);
+  console.error('Error constructor:', event.reason?.constructor?.name);
+  console.error('Full error details:', {
+    name: event.reason?.name,
+    message: event.reason?.message,
+    stack: event.reason?.stack,
+    code: event.reason?.code
+  });
 
   // Handle DOMException specifically
   if (event.reason instanceof DOMException) {
-    console.error('DOMException caught:', event.reason.name, event.reason.message);
+    console.error('DOMException caught:', event.reason.name, event.reason.message, event.reason.code);
+    event.preventDefault();
+    return;
+  }
+
+  // Handle network/fetch errors
+  if (event.reason instanceof TypeError && event.reason.message?.includes('fetch')) {
+    console.error('Network error caught:', event.reason.message);
     event.preventDefault();
     return;
   }

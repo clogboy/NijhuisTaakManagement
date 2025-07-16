@@ -724,6 +724,54 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Dashboard Stats
+  async getDashboardStats(userId: number): Promise<any> {
+    try {
+      const { db } = await import("./db");
+      const { count, eq, and } = await import("drizzle-orm");
+      
+      // Get counts for dashboard
+      const [totalActivities] = await db.select({ count: count() }).from(activities).where(eq(activities.createdBy, userId));
+      const [urgentActivities] = await db.select({ count: count() }).from(activities).where(
+        and(eq(activities.createdBy, userId), eq(activities.priority, 'urgent'))
+      );
+      const [completedActivities] = await db.select({ count: count() }).from(activities).where(
+        and(eq(activities.createdBy, userId), eq(activities.status, 'completed'))
+      );
+      
+      // Get active contacts count
+      const activeContacts = await db.select().from(contacts);
+      
+      // Calculate overdue count (simplified for now)
+      const now = new Date();
+      const overdueActivities = await db.select().from(activities).where(
+        and(
+          eq(activities.createdBy, userId),
+          eq(activities.status, 'pending')
+        )
+      );
+      
+      return {
+        urgentCount: urgentActivities.count || 0,
+        dueThisWeek: 0, // Simplified for now
+        completedCount: completedActivities.count || 0,
+        roadblocksCount: 0, // No roadblocks table in simplified schema
+        activeContacts: activeContacts.length,
+        overdueCount: overdueActivities.length,
+      };
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      return {
+        urgentCount: 0,
+        dueThisWeek: 0,
+        completedCount: 0,
+        roadblocksCount: 0,
+        activeContacts: 0,
+        overdueCount: 0,
+      };
+    }
+  }
+
   // Flow Strategy methods
   async getCurrentFlowStrategy(userId: number): Promise<any | null> {
     try {

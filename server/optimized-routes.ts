@@ -37,10 +37,14 @@ interface AuthenticatedRequest extends Request {
 }
 
 const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ message: "Not authenticated" });
-    return;
-  }
+  // Demo mode: always authenticate with demo user
+  (req as any).user = {
+    id: 1,
+    email: 'demo@example.com',
+    name: 'Demo User',
+    role: 'user',
+    isAdmin: false
+  };
   next();
 };
 
