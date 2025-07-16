@@ -72,7 +72,7 @@ export default function AppLayout({
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
-  
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hasManuallyToggled, setHasManuallyToggled] = useState(() => {
@@ -87,7 +87,7 @@ export default function AppLayout({
         setIsMobileMenuOpen(false);
       }
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -100,7 +100,7 @@ export default function AppLayout({
       if (userPreferences.compactSidebar !== undefined && !hasManuallyToggled) {
         setIsSidebarCollapsed(userPreferences.compactSidebar);
       }
-      
+
       if (userPreferences.darkMode !== undefined) {
         if (userPreferences.darkMode) {
           document.documentElement.classList.add('dark');
@@ -232,7 +232,7 @@ export default function AppLayout({
             {navItems.map((item) => {
               const isActive = location === item.path;
               const Icon = item.icon;
-              
+
               return (
                 <li key={item.path} className="relative group">
                   {/* Main menu item */}
@@ -254,14 +254,14 @@ export default function AppLayout({
                       {!isSidebarCollapsed && item.label}
                     </div>
                   </Link>
-                  
+
                   {/* Sub-items - normal view when expanded */}
                   {item.subItems && !isSidebarCollapsed && (
                     <ul className="mt-1 ml-6 space-y-1">
                       {item.subItems.map((subItem) => {
                         const isSubActive = location === subItem.path;
                         const SubIcon = subItem.icon;
-                        
+
                         return (
                           <li key={subItem.path}>
                             <Link href={subItem.path}>
@@ -297,7 +297,7 @@ export default function AppLayout({
                         {item.subItems.map((subItem) => {
                           const isSubActive = location === subItem.path;
                           const SubIcon = subItem.icon;
-                          
+
                           return (
                             <Link key={subItem.path} href={subItem.path}>
                               <div 
@@ -373,7 +373,7 @@ export default function AppLayout({
                   {!isMobile && "New Activity"}
                 </Button>
               )}
-              
+
               {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -414,12 +414,9 @@ export default function AppLayout({
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => logoutMutation.mutate()}
-                    disabled={logoutMutation.isPending}
-                  >
+                  <DropdownMenuItem className="text-gray-500 cursor-not-allowed">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>{logoutMutation.isPending ? "Signing out..." : "Sign out"}</span>
+                    Demo Mode
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -444,4 +441,3 @@ export default function AppLayout({
       <TutorialButton />
     </div>
   );
-}
