@@ -152,12 +152,12 @@ function DashboardContent() {
     queryKey: ["/api/contacts"],
   });
 
-  // Debug logging
-  console.log('Dashboard Query States:', {
-    stats: { loading: statsLoading, error: statsError, data: !!stats },
-    activities: { loading: activitiesLoading, error: activitiesError, data: !!activities },
-    contacts: { loading: contactsLoading, error: contactsError, data: !!contacts }
-  });
+  // Debug logging (reduced to prevent spam)
+  // console.log('Dashboard Query States:', {
+  //   stats: { loading: statsLoading, error: statsError, data: !!stats },
+  //   activities: { loading: activitiesLoading, error: activitiesError, data: !!activities },
+  //   contacts: { loading: contactsLoading, error: contactsError, data: !!contacts }
+  // });
 
   const { data: quickWins } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
