@@ -12,18 +12,18 @@ interface ApiError extends Error {
 
 const handleApiError = (error: unknown, res: Response): void => {
   console.error("API Error:", error);
-  
+
   if (error instanceof z.ZodError) {
     return res.status(400).json({ 
       message: "Validation error", 
       errors: error.errors.map(e => ({ path: e.path.join('.'), message: e.message }))
     });
   }
-  
+
   const apiError = error as ApiError;
   const statusCode = apiError.statusCode || 500;
   const message = apiError.message || "Internal server error";
-  
+
   res.status(statusCode).json({ message });
 };
 
@@ -44,7 +44,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
       return;
     }
   }
-  
+
   // In development, create a mock user for testing
   if (process.env.NODE_ENV === 'development') {
     if (!(req as any).user) {
@@ -57,12 +57,12 @@ const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
       };
     }
   }
-  
+
   if (!(req as any).user) {
     res.status(401).json({ message: 'Not authenticated' });
     return;
   }
-  
+
   next();
 };
 
@@ -98,7 +98,7 @@ const setupRoadblocksRoutes = (app: Express): void => {
     async (req: AuthenticatedRequest, res: Response) => {
       try {
         const { isRescueMode, linkedTaskId, ...roadblockData } = req.body;
-        
+
         const roadblock = await storage.createRoadblock({
           ...roadblockData,
           createdBy: req.user.id,
@@ -226,13 +226,13 @@ const setupStatsRoutes = (app: Express): void => {
   app.get("/api/stats", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const stats = await storage.getDashboardStats(req.user.id);
-      
+
       // Add cache headers for performance
       res.set({
         'Cache-Control': 'private, max-age=30', // 30 seconds cache
         'ETag': `"stats-${req.user.id}-${Date.now()}"`,
       });
-      
+
       res.json(stats);
     } catch (error) {
       handleApiError(error, res);
@@ -245,10 +245,10 @@ const setupStatsRoutes = (app: Express): void => {
       const { activities, subtasks } = require("@shared/schema");
       const { db } = require("./db");
       const { and, sql, ne, eq } = require("drizzle-orm");
-      
+
       const userId = req.user.id;
       const isAdmin = req.user.role === 'admin';
-      
+
       // Get overdue activities
       const overdueActivities = await db.select().from(activities).where(
         and(
@@ -315,7 +315,7 @@ const setupStatsRoutes = (app: Express): void => {
       const { spawn } = await import('child_process');
       const { promisify } = await import('util');
       const exec = promisify(spawn);
-      
+
       // Run actual vitest tests
       const testProcess = spawn('npm', ['run', 'test'], {
         cwd: process.cwd(),
@@ -352,14 +352,14 @@ const setupStatsRoutes = (app: Express): void => {
 
       testProcess.on('close', (code) => {
         testResults.exitCode = code || 0;
-        
+
         // Parse vitest output for test results
         const lines = stdout.split('\n');
         const testFiles: any[] = [];
         let totalTests = 0;
         let passedTests = 0;
         let failedTests = 0;
-        
+
         // Look for test file results
         lines.forEach(line => {
           if (line.includes('✓') || line.includes('✗')) {
@@ -394,7 +394,7 @@ const setupStatsRoutes = (app: Express): void => {
             { name: 'database-connection.test.ts', status: 'passed', numTests: 2, numPassed: 2, numFailed: 0 },
             { name: 'comprehensive.test.ts', status: code === 0 ? 'passed' : 'failed', numTests: 11, numPassed: 7, numFailed: 4 }
           ];
-          
+
           actualTestResults.forEach(testFile => {
             testFiles.push({
               name: testFile.name,
@@ -406,7 +406,7 @@ const setupStatsRoutes = (app: Express): void => {
               failures: testFile.numFailed > 0 ? ['Authentication and validation tests failed'] : []
             });
           });
-          
+
           totalTests = 37;
           passedTests = 33;
           failedTests = 4;
@@ -418,7 +418,7 @@ const setupStatsRoutes = (app: Express): void => {
         testResults.testSummary.success = code === 0;
         testResults.testFiles = testFiles;
         testResults.status = code === 0 ? 'healthy' : 'unhealthy';
-        
+
         if (code !== 0) {
           testResults.hasErrors = true;
           testResults.errors = stderr ? [stderr] : ['Tests failed'];
@@ -536,6 +536,29 @@ const setupActivitiesRoutes = (app: Express): void => {
       }
     }
   );
+
+  app.put("/api/activities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const activity = await storage.updateActivity(id, req.body);
+      res.json(activity);
+    } catch (error) {
+      console.error("Update activity error:", error);
+      res.status(500).json({ message: "Failed to update activity" });
+    }
+  });
+
+  app.delete("/api/activities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[ROUTES] DELETE /api/activities/${id} - User: ${req.user.id}`);
+      await storage.deleteActivity(id, req.user.id, req.user.email);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete activity error:", error);
+      res.status(500).json({ message: "Failed to delete activity" });
+    }
+  });
 };
 
 // Contacts routes
