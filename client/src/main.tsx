@@ -1,7 +1,8 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { LowStimulusProvider } from "@/contexts/LowStimulusContext";
@@ -124,14 +125,7 @@ const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
 window.addEventListener('error', handleGlobalError);
 window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: false,
-    },
-  },
-});
+// QueryClient is imported from lib/queryClient.ts
 
 // Initialize error reporting
 errorReporter.init();

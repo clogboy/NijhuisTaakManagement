@@ -15,15 +15,16 @@ export const queryClient = new QueryClient({
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-      onError: (error: any) => {
-        console.error('Query error:', error);
+      queryFn: async ({ queryKey }) => {
+        const [endpoint] = queryKey as [string];
+        console.log('Making API request to:', endpoint);
+        const result = await apiRequest(endpoint);
+        console.log('API response for', endpoint, ':', result);
+        return result;
       },
     },
     mutations: {
       retry: false,
-      onError: (error: any) => {
-        console.error('Mutation error:', error);
-      },
     },
   },
 });
@@ -58,13 +59,4 @@ export async function apiRequest(endpoint: string, method: string = 'GET', body?
   }
 }
 
-// Set default query function for all queries
-queryClient.setQueryDefaults(['*'], {
-  queryFn: async ({ queryKey }) => {
-    const [endpoint] = queryKey as [string];
-    console.log('Making API request to:', endpoint);
-    const result = await apiRequest(endpoint);
-    console.log('API response for', endpoint, ':', result);
-    return result;
-  },
-});
+// Remove the duplicate queryFn setup
