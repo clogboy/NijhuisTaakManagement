@@ -19,6 +19,12 @@ function requireAuth(req: Request, res: Response, next: any) {
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
+  // Debug middleware to log all requests
+  app.use((req, res, next) => {
+    console.log(`[ROUTES] ${req.method} ${req.path} - Headers: ${JSON.stringify(req.headers['content-type'] || 'none')}`);
+    next();
+  });
+
   // Initialize WebSocket server
   const wss = new WebSocketServer({ 
     server: httpServer,
@@ -113,6 +119,18 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.delete("/api/activities/:id", requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`[ROUTES] DELETE /api/activities/${id} - User: ${req.user.id}`);
+      await storage.deleteActivity(id, req.user.id, req.user.email);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete activity error:", error);
+      res.status(500).json({ message: "Failed to delete activity" });
+    }
+  });
+
   app.put("/api/activities/:id", requireAuth, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -121,17 +139,6 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Update activity error:", error);
       res.status(500).json({ message: "Failed to update activity" });
-    }
-  });
-
-  app.delete("/api/activities/:id", requireAuth, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteActivity(id, req.user.id, req.user.email);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Delete activity error:", error);
-      res.status(500).json({ message: "Failed to delete activity" });
     }
   });
 
