@@ -777,7 +777,7 @@ function DashboardContent() {
                 </div>
                 <div className="flex items-center gap-1 line analysis: The code applies the requested changes to remove the authentication check from the Dashboard component, allowing direct access to the dashboard without requiring login.
 ```
-<replit_final_file>
+<replit_final_file>"
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";

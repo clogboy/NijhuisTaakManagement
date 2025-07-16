@@ -429,4 +429,5 @@ export default function AppLayout({
       {/* Tutorial Button - Always Available */}
       <TutorialButton />
     </div>
-  );
+    );
+}
