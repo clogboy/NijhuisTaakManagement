@@ -336,12 +336,37 @@ function DashboardContent() {
     }
   }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
 
-  // Show loading screen if critical data is still loading (Edge-compatible)
-  const isInitialLoading = statsLoading || activitiesLoading || contactsLoading;
+  // Enhanced loading state with timeout for Edge compatibility
+  const [showLoading, setShowLoading] = useState(true);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
-  // More robust loading check - only show loading if we have no data AND queries are loading
-  if (isInitialLoading && !stats && !activities && !contacts) {
-    return <DashboardLoadingScreen />;
+  // Check if we have essential data
+  useEffect(() => {
+    const hasData = stats !== undefined || activities !== undefined || contacts !== undefined;
+    if (hasData && !hasInitialData) {
+      setHasInitialData(true);
+      setShowLoading(false);
+    }
+  }, [stats, activities, contacts, hasInitialData]);
+
+  // Safety timeout to prevent infinite loading (Edge compatibility)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (showLoading) {
+        console.log('Loading timeout reached, showing dashboard');
+        setShowLoading(false);
+      }
+    }, 5000); // 5 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [showLoading]);
+
+  // Show loading screen only if we haven't loaded any data yet and within timeout
+  if (showLoading && !hasInitialData) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span className="ml-2 text-gray-600">Loading dashboard...</span>
+    </div>;
   }
 
   // Calculate task roadblocks (subtasks with participant_types containing "roadblock")
