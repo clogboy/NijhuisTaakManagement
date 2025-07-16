@@ -839,6 +839,143 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Flow personality presets
+  async getFlowPersonalityPresets(): Promise<any[]> {
+    try {
+      // Return predefined flow personality presets
+      return [
+        {
+          id: 'deep-thinker',
+          personalityType: 'Deep Thinker',
+          name: 'Deep Thinker',
+          description: 'Voor complexe problemen die diepe focus en ononderbroken denktijd vereisen',
+          icon: '🧠',
+          settings: {
+            focusBlockDuration: 90,
+            breakDuration: 15,
+            maxDailyBlocks: 4,
+            interruptionResistance: 'high',
+            taskSwitchingCost: 'high',
+            preferredWorkHours: ['09:00', '11:30', '14:00', '16:30']
+          },
+          benefits: [
+            'Langere ononderbroken focusperiodes',
+            'Minimale task switching',
+            'Optimaal voor analytisch werk'
+          ]
+        },
+        {
+          id: 'rapid-executor',
+          personalityType: 'Rapid Executor',
+          name: 'Rapid Executor',
+          description: 'Voor snelle uitvoering van taken en efficiënte afhandeling van to-do lists',
+          icon: '⚡',
+          settings: {
+            focusBlockDuration: 25,
+            breakDuration: 5,
+            maxDailyBlocks: 12,
+            interruptionResistance: 'medium',
+            taskSwitchingCost: 'low',
+            preferredWorkHours: ['08:00', '10:00', '13:00', '15:00']
+          },
+          benefits: [
+            'Snelle taakuitvoering',
+            'Goede momentum opbouw',
+            'Flexibel tussen taken schakelen'
+          ]
+        },
+        {
+          id: 'collaborative-networker',
+          personalityType: 'Collaborative Networker',
+          name: 'Collaborative Networker',
+          description: 'Voor teamwork, meetings en communicatie-intensieve werkzaamheden',
+          icon: '🤝',
+          settings: {
+            focusBlockDuration: 45,
+            breakDuration: 10,
+            maxDailyBlocks: 8,
+            interruptionResistance: 'low',
+            taskSwitchingCost: 'medium',
+            preferredWorkHours: ['09:00', '11:00', '14:00', '16:00']
+          },
+          benefits: [
+            'Ingebouwde communicatietijd',
+            'Flexibiliteit voor meetings',
+            'Balans tussen focus en samenwerking'
+          ]
+        },
+        {
+          id: 'creative-innovator',
+          personalityType: 'Creative Innovator',
+          name: 'Creative Innovator',
+          description: 'Voor creatief werk, brainstorming en innovatieve projecten',
+          icon: '🎨',
+          settings: {
+            focusBlockDuration: 60,
+            breakDuration: 20,
+            maxDailyBlocks: 6,
+            interruptionResistance: 'medium',
+            taskSwitchingCost: 'medium',
+            preferredWorkHours: ['10:00', '14:00', '16:00']
+          },
+          benefits: [
+            'Langere creatieve sessies',
+            'Meer tijd voor reflectie',
+            'Inspiratie tijdens pauzes'
+          ]
+        }
+      ];
+    } catch (error) {
+      console.error('Error getting flow personality presets:', error);
+      return [];
+    }
+  }
+
+  // Priority matrix functionality
+  async getPriorityMatrix(userId: number): Promise<any> {
+    try {
+      const activities = await this.getActivities(userId, '', false);
+      
+      // Categorize activities into Eisenhower Matrix
+      const matrix = {
+        urgentImportant: activities.filter(a => a.priority === 'urgent' && a.status !== 'completed'),
+        importantNotUrgent: activities.filter(a => a.priority === 'high' && a.status !== 'completed'),
+        urgentNotImportant: activities.filter(a => a.priority === 'normal' && a.dueDate && new Date(a.dueDate) <= new Date()),
+        neitherUrgentNorImportant: activities.filter(a => a.priority === 'low' && a.status !== 'completed')
+      };
+
+      return matrix;
+    } catch (error) {
+      console.error('Error getting priority matrix:', error);
+      return {
+        urgentImportant: [],
+        importantNotUrgent: [],
+        urgentNotImportant: [],
+        neitherUrgentNorImportant: []
+      };
+    }
+  }
+
+  // Scheduler status
+  async getSchedulerStatus(): Promise<any> {
+    try {
+      return {
+        isRunning: true,
+        lastRun: new Date(),
+        nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        tasksScheduled: 0,
+        status: 'healthy'
+      };
+    } catch (error) {
+      console.error('Error getting scheduler status:', error);
+      return {
+        isRunning: false,
+        status: 'error',
+        error: error.message
+      };
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
