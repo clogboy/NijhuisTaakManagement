@@ -5,85 +5,59 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FolderOpen } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { mockMicrosoftLogin } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from "@/hooks/useTranslations";
 
 export default function Login() {
-  const { t } = useTranslations();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-
   const loginMutation = useMutation({
     mutationFn: async () => {
-      if (isLoggingIn) {
-        throw new Error('Login already in progress');
-      }
-      
+      if (isLoggingIn) return;
+
       setIsLoggingIn(true);
-      console.log('[LOGIN] Starting login attempt...');
+      console.log('[LOGIN] Starting demo login...');
 
-      try {
-        const response = await apiRequest('/api/auth/login', 'POST', {
-          email: 'dev@nijhuis.nl',
-          name: 'Development User'
-        });
+      const response = await apiRequest('/api/auth/login', 'POST', {
+        email: 'demo@nijhuis.nl'
+      });
 
-        console.log('[LOGIN] Response data:', response);
-
-        if (!response.success) {
-          throw new Error(response.message || 'Login failed');
-        }
-
-        return response;
-      } catch (error) {
-        setIsLoggingIn(false);
-        throw error;
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed');
       }
+
+      return response;
     },
     onSuccess: (data) => {
-      console.log('[LOGIN] Login successful, updating client state...');
+      console.log('[LOGIN] Demo login successful');
 
-      // Clear any existing queries and set new user data
       queryClient.clear();
       queryClient.setQueryData(["/api/auth/me"], { user: data.user });
 
       toast({
-        title: "Welcome!",
-        description: `Successfully signed in as ${data.user?.name || 'User'}`,
+        title: "Welcome to NijFlow Demo!",
+        description: "You're now logged in as a demo user",
       });
 
-      console.log('[LOGIN] Navigating to dashboard...');
-      
-      // Navigate immediately since login was successful
       setLocation("/");
       setIsLoggingIn(false);
     },
     onError: (error: any) => {
-      console.error('[LOGIN] Login mutation error:', error);
+      console.error('[LOGIN] Login error:', error);
       setIsLoggingIn(false);
-      
-      // Only show error toast if it's not a duplicate request
-      if (!error.message?.includes('already in progress')) {
-        toast({
-          title: "Sign In Failed", 
-          description: error.message || "Failed to sign in. Please try again.",
-          variant: "destructive",
-        });
-      }
+
+      toast({
+        title: "Demo Login Failed", 
+        description: "Please try again or check the console for details",
+        variant: "destructive",
+      });
     },
   });
 
-  const handleMicrosoftLogin = () => {
-    if (loginMutation.isPending || isLoggingIn) {
-      console.log('[LOGIN] Login already in progress, ignoring click');
-      return;
-    }
-
-    console.log('[LOGIN] Starting new login attempt');
+  const handleDemoLogin = () => {
+    if (loginMutation.isPending || isLoggingIn) return;
     loginMutation.mutate();
   };
 
@@ -96,7 +70,7 @@ export default function Login() {
               <FolderOpen className="text-white" size={32} />
             </div>
             <CardTitle className="text-2xl font-semibold text-neutral-dark">
-              NijFlow
+              NijFlow Demo
             </CardTitle>
             <p className="text-sm text-neutral-medium mt-2">
               Smart Productivity Platform
@@ -106,50 +80,40 @@ export default function Login() {
           <CardContent className="space-y-6">
             <div className="text-center">
               <h2 className="text-lg font-semibold text-neutral-dark mb-2">
-                {t("login.title")}
+                Demo Access
               </h2>
               <p className="text-sm text-neutral-medium">
-                Gebruik je Microsoft account om toegang te krijgen tot de applicatie
+                Click below to explore the demo environment. 
+                Future versions will integrate with Azure AD.
               </p>
             </div>
 
             <Button
-              onClick={handleMicrosoftLogin}
+              onClick={handleDemoLogin}
               disabled={loginMutation.isPending || isLoggingIn}
               className="w-full bg-ms-blue hover:bg-ms-blue-dark text-white py-3 font-medium"
             >
               {(loginMutation.isPending || isLoggingIn) ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+                  Loading Demo...
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 21 21">
-                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-                    <rect x="12" y="1" width="9" height="9" fill="#00a4ef"/>
-                    <rect x="1" y="12" width="9" height="9" fill="#ffb900"/>
-                    <rect x="12" y="12" width="9" height="9" fill="#7fba00"/>
-                  </svg>
-                  Sign in with Microsoft
+                  <FolderOpen className="w-5 h-5 mr-2" />
+                  Enter Demo
                 </div>
               )}
             </Button>
 
             <div className="text-center">
               <p className="text-xs text-neutral-medium">
-                This application requires Microsoft authentication to access.
-                Please ensure you have appropriate permissions to use this system.
+                This is a demonstration environment. 
+                Production deployment will use Azure Active Directory authentication.
               </p>
             </div>
           </CardContent>
         </Card>
-
-        <div className="text-center mt-6">
-          <p className="text-xs text-neutral-medium">
-            Having trouble signing in? Contact your system administrator.
-          </p>
-        </div>
       </div>
     </div>
   );

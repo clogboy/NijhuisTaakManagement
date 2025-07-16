@@ -3,31 +3,25 @@ import express, { type Express, type Request, type Response } from "express";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 
-// Add auth middleware
+// Simple auth middleware for development
 function requireAuth(req: Request, res: Response, next: any) {
   const session = (req as any).session;
 
-  // Check if user is in session
-  if (session && (session.user || session.userId)) {
-    (req as any).user = session.user || {
-      id: session.userId || 1,
-      email: 'user@example.com',
-      name: 'Test User',
+  // Development mode: auto-authenticate
+  if (process.env.NODE_ENV === 'development' || process.env.REPL_ENVIRONMENT === 'development') {
+    (req as any).user = {
+      id: 1,
+      email: 'demo@nijhuis.nl',
+      name: 'Demo User',
       role: 'user',
       isAdmin: false
     };
     return next();
   }
 
-  // For development, create a mock user if none exists
-  if (process.env.NODE_ENV === 'development' || process.env.REPL_ENVIRONMENT === 'development') {
-    (req as any).user = {
-      id: 1,
-      email: 'user@example.com',
-      name: 'Test User',
-      role: 'user',
-      isAdmin: false
-    };
+  // Production: check session
+  if (session && session.user) {
+    (req as any).user = session.user;
     return next();
   }
 
@@ -38,7 +32,7 @@ function requireAuth(req: Request, res: Response, next: any) {
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // Initialize WebSocket server with path to avoid conflicts with Vite HMR
+  // Initialize WebSocket server
   const wss = new WebSocketServer({ 
     server: httpServer,
     path: '/api/ws'
@@ -61,7 +55,7 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
-  // Health check endpoint
+  // Health check
   app.get("/api/health", async (req, res) => {
     try {
       res.json({ status: "healthy", timestamp: new Date().toISOString() });
@@ -70,44 +64,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Health tests endpoint
-  app.get("/api/health/tests", async (req, res) => {
-    try {
-      const tests = [
-        { name: "Database Connection", status: "pass", timestamp: new Date().toISOString() },
-        { name: "API Routes", status: "pass", timestamp: new Date().toISOString() },
-        { name: "Flow Protection Service", status: "pass", timestamp: new Date().toISOString() },
-        { name: "Storage Layer", status: "pass", timestamp: new Date().toISOString() }
-      ];
-
-      res.json({ 
-        status: "healthy", 
-        tests,
-        overall: "pass",
-        timestamp: new Date().toISOString() 
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      res.status(500).json({ 
-        status: "unhealthy", 
-        error: errorMessage,
-        timestamp: new Date().toISOString() 
-      });
-    }
-  });
-
-  // Auth routes
+  // Auth routes - simplified for demo
   app.get("/api/auth/me", requireAuth, (req: any, res) => {
     try {
-      console.log("[AUTH] Me endpoint hit for user:", req.user?.email);
-      res.setHeader('Content-Type', 'application/json');
       res.json({ 
         user: req.user,
         success: true 
       });
     } catch (error) {
       console.error("[AUTH] Me endpoint error:", error);
-      res.setHeader('Content-Type', 'application/json');
       res.status(500).json({ 
         success: false, 
         message: "Failed to get user info" 
@@ -115,120 +80,35 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Authentication endpoints  
+  // Development login endpoint - will be replaced with Azure AD
   app.post("/api/auth/login", (req, res) => {
-    console.log(`[AUTH] Login endpoint hit`);
-    console.log(`[AUTH] Request body:`, req.body);
-    console.log(`[AUTH] Session before:`, req.session);
+    console.log("[AUTH] Development login");
 
     try {
-      res.setHeader('Content-Type', 'application/json');
+      const { email } = req.body;
 
-      const { email, name } = req.body;
-      
-      if (!email) {
-        console.log(`[AUTH] No email provided`);
-        return res.status(400).json({ 
-          success: false, 
-          message: "Email is required" 
-        });
-      }
-
-      console.log(`[AUTH] Processing login for: ${email}`);
-
-      // Create user object
       const user = {
-        id: Math.floor(Math.random() * 100000),
-        email,
-        name: name || email.split('@')[0],
+        id: 1,
+        email: email || 'demo@nijhuis.nl',
+        name: 'Demo User',
         role: 'user',
         isAdmin: false
       };
 
-      // Set session directly
-      req.session.user = user;
+      // Set session for development
+      (req as any).session.user = user;
 
-      console.log(`[AUTH] Session set:`, req.session.user);
-
-      // Respond immediately
-      res.status(200).json({ 
+      res.json({ 
         success: true, 
         user: user,
-        message: "Login successful" 
+        message: "Development login successful" 
       });
 
     } catch (error) {
       console.error("[AUTH] Login error:", error);
       res.status(500).json({ 
         success: false, 
-        message: error.message || "Login failed" 
-      });
-    }
-  });
-
-  app.post("/api/auth/signup", async (req, res) => {
-    try {
-
-      const { email, password } = req.body;
-      console.log(`[AUTH] Signup attempt for: ${email}`);
-
-      if (!email || !password) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Email and password are required" 
-        });
-      }
-
-       // Get user from storage
-       let user = await storage.getUserByEmail(email);
-
-       if (user) {
-         console.log(`[AUTH] User already exists: ${email}`);
-         return res.status(409).json({ 
-           success: false, 
-           message: "User already exists" 
-         });
-       }
-
-      user = {
-        id: Math.floor(Math.random() * 100000),
-        email,
-        name: email.split('@')[0],
-        role: 'user',
-        isAdmin: false
-      };
-
-      // For development, allow any password for existing users
-      // In production, you'd verify the password hash
-      console.log(`[AUTH] Signup successful for: ${email}`);
-
-      // Set session
-      req.session.user = {
-        id: user.id,
-        email: user.email,
-        name: user.name || email.split('@')[0],
-        role: user.role || 'user',
-        isAdmin: user.isAdmin || false
-      };
-
-      await new Promise((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) reject(err);
-          else resolve(true);
-        });
-      });
-
-      res.json({ 
-        success: true, 
-        user: req.session.user,
-        message: "Signup successful" 
-      });
-
-    } catch (error) {
-      console.error("Signup error:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Internal server error" 
+        message: "Login failed" 
       });
     }
   });
@@ -258,12 +138,10 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // User preferences routes
+  // User preferences
   app.get("/api/user/preferences", requireAuth, async (req: any, res) => {
-    console.log("User preferences route hit for user:", req.user?.id);
     try {
       const preferences = await storage.getUserPreferences(req.user.id);
-      console.log("Fetched preferences:", preferences);
       res.json(preferences || { productivityHealthEnabled: true });
     } catch (error) {
       console.error("Error fetching user preferences:", error);
@@ -281,7 +159,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Basic activity routes
+  // Activity routes
   app.get("/api/activities", requireAuth, async (req: any, res) => {
     try {
       const activities = await storage.getActivities(req.user.id);
@@ -305,7 +183,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Basic contact routes
+  // Other data routes
   app.get("/api/contacts", requireAuth, async (req: any, res) => {
     try {
       const contacts = await storage.getContacts(req.user.id);
@@ -316,7 +194,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Basic subtask routes
   app.get("/api/subtasks", requireAuth, async (req: any, res) => {
     try {
       const subtasks = await storage.getSubtasks(req.user.id);
@@ -327,7 +204,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Basic roadblock routes
   app.get("/api/roadblocks", requireAuth, async (req: any, res) => {
     try {
       const roadblocks = await storage.getRoadblocks(req.user.id);
@@ -338,16 +214,10 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Quick wins endpoint - critical for dashboard
   app.get("/api/quickwins", requireAuth, async (req: any, res) => {
     try {
-      console.log(`[QUICKWINS] Fetching quick wins for user ${req.user.id}`);
-      res.setHeader('Content-Type', 'application/json');
-
       const quickWins = await storage.getQuickWins(req.user.id);
       const safeQuickWins = Array.isArray(quickWins) ? quickWins : [];
-
-      console.log(`[QUICKWINS] Returning ${safeQuickWins.length} quick wins`);
       res.json(safeQuickWins);
     } catch (error) {
       console.error("Error fetching quick wins:", error);
@@ -355,11 +225,9 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Daily reflections endpoint
+  // Dashboard data endpoints
   app.get("/api/daily-reflections", requireAuth, async (req: any, res) => {
     try {
-      res.setHeader('Content-Type', 'application/json');
-
       const reflection = {
         date: new Date().toISOString().split('T')[0],
         completedToday: 0,
@@ -367,7 +235,6 @@ export function registerRoutes(app: Express): Server {
         weeklyProgress: 0,
         insights: ["Steady progress is the key. Small consistent actions lead to big results."]
       };
-
       res.json(reflection);
     } catch (error) {
       console.error("Error fetching daily reflections:", error);
@@ -375,33 +242,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Activity logs endpoint
-  app.get("/api/activity-logs/:activityId", requireAuth, async (req: any, res) => {
-    try {
-      res.setHeader('Content-Type', 'application/json');
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching activity logs:", error);
-      res.status(500).json({ error: "Failed to fetch activity logs", data: [] });
-    }
-  });
-
-  // Task comments endpoint
-  app.get("/api/task-comments/:activityId", requireAuth, async (req: any, res) => {
-    try {
-      res.setHeader('Content-Type', 'application/json');
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching task comments:", error);
-      res.status(500).json({ error: "Failed to fetch task comments", data: [] });
-    }
-  });
-
-  // Smart insights endpoint
   app.get("/api/smart-insights", requireAuth, async (req: any, res) => {
     try {
-      res.setHeader('Content-Type', 'application/json');
-
       const insights = {
         timeSlotSuggestions: {
           morning: [],
@@ -410,11 +252,10 @@ export function registerRoutes(app: Express): Server {
         },
         insights: [
           "Morning hours are best for high-priority tasks",
-          "Afternoon is ideal for collaborative work",
+          "Afternoon is ideal for collaborative work", 
           "Evening works well for quick wins and admin tasks"
         ]
       };
-
       res.json(insights);
     } catch (error) {
       console.error("Error fetching smart insights:", error);
@@ -422,27 +263,11 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // User metrics endpoint
-  app.get("/api/user-metrics", requireAuth, async (req: any, res) => {
-    try {
-      res.setHeader('Content-Type', 'application/json');
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching user metrics:", error);
-      res.status(500).json({ error: "Failed to fetch user metrics", data: [] });
-    }
-  });
-
-  // Time blocks endpoint
-  app.get("/api/time-blocks", requireAuth, async (req: any, res) => {
-    try {
-      res.setHeader('Content-Type', 'application/json');
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching time blocks:", error);
-      res.status(500).json({ error: "Failed to fetch time blocks", data: [] });
-    }
-  });
+  // Placeholder endpoints for dashboard
+  app.get("/api/activity-logs/:activityId", requireAuth, (req, res) => res.json([]));
+  app.get("/api/task-comments/:activityId", requireAuth, (req, res) => res.json([]));
+  app.get("/api/user-metrics", requireAuth, (req, res) => res.json([]));
+  app.get("/api/time-blocks", requireAuth, (req, res) => res.json([]));
 
   // Flow Protection endpoints
   app.get("/api/flow/personality-presets", async (req, res) => {
@@ -478,7 +303,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Invalid personality type" });
       }
 
-      // Apply the flow strategy
       const success = await storage.applyFlowStrategy(req.user.id, preset);
 
       if (success) {
@@ -495,8 +319,6 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/flow/recommendations", requireAuth, async (req: any, res) => {
     try {
       const { flowProtectionService } = await import("./flow-protection-service");
-
-      // Get current strategy
       const currentStrategy = await storage.getCurrentFlowStrategy(req.user.id);
 
       if (!currentStrategy) {
