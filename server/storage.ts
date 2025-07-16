@@ -814,31 +814,6 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-
-  async getUserPreferences(userId: number): Promise<any | null> {
-    try {
-      // Return default preferences
-      return {
-        productivityHealthEnabled: true,
-        lowStimulusMode: false,
-        darkMode: false,
-        language: 'nl'
-      };
-    } catch (error) {
-      console.error('Error getting user preferences:', error);
-      return null;
-    }
-  }
-
-  async updateUserPreferences(userId: number, preferences: any): Promise<any> {
-    try {
-      // For now, just return the updated preferences
-      return preferences;
-    } catch (error) {
-      console.error('Error updating user preferences:', error);
-      throw error;
-    }
-  }
 }
 
 export const storage = new DatabaseStorage();

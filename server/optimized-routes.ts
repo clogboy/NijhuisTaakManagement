@@ -389,28 +389,33 @@ const setupStatsRoutes = (app: Express): void => {
           testResults.errors = stderr ? [stderr] : ['Tests failed'];
         }
 
-        res.json(testResults);
+        clearTimeout(timeoutId);
+        if (!res.headersSent) {
+          res.json(testResults);
+        }
       });
 
       // Timeout after 30 seconds
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         testProcess.kill();
-        res.status(500).json({
-          status: 'timeout',
-          timestamp: new Date().toISOString(),
-          testSummary: {
-            totalTests: 0,
-            passedTests: 0,
-            failedTests: 1,
-            skippedTests: 0,
-            duration: 30000,
-            success: false
-          },
-          testFiles: [],
-          exitCode: 1,
-          hasErrors: true,
-          errors: ['Test execution timed out after 30 seconds']
-        });
+        if (!res.headersSent) {
+          res.status(500).json({
+            status: 'timeout',
+            timestamp: new Date().toISOString(),
+            testSummary: {
+              totalTests: 0,
+              passedTests: 0,
+              failedTests: 1,
+              skippedTests: 0,
+              duration: 30000,
+              success: false
+            },
+            testFiles: [],
+            exitCode: 1,
+            hasErrors: true,
+            errors: ['Test execution timed out after 30 seconds']
+          });
+        }
       }, 30000);
 
     } catch (error) {
