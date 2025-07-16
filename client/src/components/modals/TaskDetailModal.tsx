@@ -50,7 +50,14 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
   // Fetch comments
   const { data: comments = [] } = useQuery<TaskComment[]>({
     queryKey: ["/api/activities", activity.id, "comments"],
-    queryFn: () => fetch(`/api/activities/${activity.id}/comments`).then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch(`/api/activities/${activity.id}/comments`);
+      if (!response.ok) {
+        // Return empty array if endpoint doesn't exist yet
+        return [];
+      }
+      return response.json();
+    },
     enabled: isOpen,
   });
 
@@ -236,7 +243,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                   </Card>
 
                   <div className="space-y-3">
-                    {comments.map((comment) => (
+                    {Array.isArray(comments) && comments.map((comment) => (
                       <Card key={comment.id}>
                         <CardContent className="pt-4">
                           <div className="flex items-center gap-2 mb-2">
@@ -249,7 +256,7 @@ export function TaskDetailModal({ activity, isOpen, onClose }: TaskDetailModalPr
                         </CardContent>
                       </Card>
                     ))}
-                    {comments.length === 0 && (
+                    {(!Array.isArray(comments) || comments.length === 0) && (
                       <div className="text-center py-8 text-gray-500">
                         Nog geen opmerkingen. Voeg de eerste toe!
                       </div>
