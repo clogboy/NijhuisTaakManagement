@@ -152,12 +152,7 @@ function DashboardContent() {
     queryKey: ["/api/contacts"],
   });
 
-  // Debug logging (reduced to prevent spam)
-  // console.log('Dashboard Query States:', {
-  //   stats: { loading: statsLoading, error: statsError, data: !!stats },
-  //   activities: { loading: activitiesLoading, error: activitiesError, data: !!activities },
-  //   contacts: { loading: contactsLoading, error: contactsError, data: !!contacts }
-  // });
+  // Debug logging removed - loading loop fixed
 
   const { data: quickWins } = useQuery<QuickWin[]>({
     queryKey: ["/api/quickwins"],
@@ -341,10 +336,11 @@ function DashboardContent() {
     }
   }, [activities, onboardingState.hasCompletedTutorial, showGuide]);
 
-  // Show loading screen if critical data is still loading (reduced to core essentials)
+  // Show loading screen if critical data is still loading (Edge-compatible)
   const isInitialLoading = statsLoading || activitiesLoading || contactsLoading;
 
-  if (isInitialLoading) {
+  // More robust loading check - only show loading if we have no data AND queries are loading
+  if (isInitialLoading && !stats && !activities && !contacts) {
     return <DashboardLoadingScreen />;
   }
 
